@@ -7,7 +7,7 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMessageBox,
     QPlainTextEdit, QPushButton, QSplitter, QTableWidget, QTableWidgetItem,
-    QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget,
+    QStackedWidget, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget,
 )
 
 from app.controller import AppController, ControllerError
@@ -169,7 +169,6 @@ class ResultsScreen(QWidget):
         self.table.setColumnWidth(4, 360)
         self.table.setColumnWidth(5, 115)
         self.table.itemSelectionChanged.connect(self._on_table_selection)
-        table_layout.addWidget(self.table, 1)
 
         self.editor = QFrame()
         self.editor.setObjectName("record_editor")
@@ -238,10 +237,17 @@ class ResultsScreen(QWidget):
         edit_actions.addWidget(self.reset_button)
         edit_actions.addWidget(self.save_button)
         editor_layout.addLayout(edit_actions)
-        table_layout.addWidget(self.editor)
+        self.table_page = QWidget()
+        table_page_layout = QVBoxLayout(self.table_page)
+        table_page_layout.setContentsMargins(0, 0, 0, 0)
+        table_page_layout.setSpacing(7)
+        table_page_layout.addWidget(self.table, 1)
+        table_page_layout.addWidget(self.editor)
         self.empty = EmptyState("等待生成记录", "导入现场材料并生成记录草稿后，设备和核查记录会显示在这里。")
-        self.empty.setVisible(False)
-        self.empty.setMinimumHeight(280)
+        self.content_stack = QStackedWidget()
+        self.content_stack.addWidget(self.empty)
+        self.content_stack.addWidget(self.table_page)
+        table_layout.addWidget(self.content_stack, 1)
         records.addWidget(table_panel)
         records.setStretchFactor(0, 1)
         records.setStretchFactor(1, 4)
@@ -331,16 +337,9 @@ class ResultsScreen(QWidget):
         self.table.setRowCount(0)
         self._visible_results = []
         if run is None:
-            self.editor.setVisible(False)
-            self.table.setVisible(True)
-            self.table.setRowCount(1)
-            self.table.setSpan(0, 0, 1, self.table.columnCount())
-            self.table.setCellWidget(0, 0, self.empty)
-            self.table.setRowHeight(0, 420)
+            self.content_stack.setCurrentWidget(self.empty)
             return
-        self.editor.setVisible(True)
-        self.table.setVisible(True)
-        self.empty.setVisible(False)
+        self.content_stack.setCurrentWidget(self.table_page)
         keyword = self.search.text().strip().lower()
         chosen = self.filter.currentText()
         for result in run.items:
