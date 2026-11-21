@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -28,7 +29,12 @@ from core.render.result_record import (
 )
 from core.rules.dsl import RuleError
 from core.rules.engine import RulesError
-from core.store.corrections import CorrectionError, CorrectionStore, apply_notes
+from core.store.corrections import (
+    CorrectionError,
+    CorrectionStore,
+    apply_notes,
+    apply_record_overrides,
+)
 from core.store.project import ProjectStoreError, load_project, save_project
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -176,6 +182,7 @@ class AppController:
         store = self._store()
         try:
             apply_notes(result, store, self.project.level)
+            apply_record_overrides(result, store, self.project.level)
         finally:
             store.close()
         self.run_result = result
@@ -189,13 +196,56 @@ class AppController:
             else:
                 path = REPO_ROOT / "fixtures" / "samples" / "corrections.db"
             return CorrectionStore(path)
-        except CorrectionError as exc:
+        except (CorrectionError, sqlite3.Error) as exc:
             raise ControllerError(str(exc)) from exc
 
     def save_note(self, item_id: str, asset_type: str, note: str) -> None:
         store = self._store()
         try:
             store.set(self.project.level, item_id, asset_type, "note", note)
+        finally:
+            store.close()
+
+    def save_record_override(
+        self,
+        item_id: str,
+        asset_key: str,
+        result_text: str,
+        verdict: str,
+        note: str,
+        reason: str,
+    ) -> str:
+        store = self._store()
+        try:
+            return store.save_record_override(
+                self.project.level,
+                item_id,
+                asset_key,
+                result_text,
+                verdict,
+                note,
+                reason,
+            )
+        except (CorrectionError, sqlite3.Error) as exc:
+            raise ControllerError(str(exc)) from exc
+        finally:
+            store.close()
+
+    def clear_record_override(self, item_id: str, asset_key: str) -> None:
+        store = self._store()
+        try:
+            store.clear_record_override(self.project.level, item_id, asset_key)
+        except (CorrectionError, sqlite3.Error) as exc:
+            raise ControllerError(str(exc)) from exc
+        finally:
+            store.close()
+
+    def confirm_record(self, item_id: str, asset_key: str) -> str:
+        store = self._store()
+        try:
+            return store.confirm_record(self.project.level, item_id, asset_key)
+        except (CorrectionError, sqlite3.Error) as exc:
+            raise ControllerError(str(exc)) from exc
         finally:
             store.close()
 

@@ -55,8 +55,8 @@ class EvidenceScreen(QWidget):
         layout.setSpacing(14)
 
         self.header = PageHeader(
-            "证据与资产",
-            "本次核查以单设备为单位：把采集日志拖入即可解析，字段自动回填，冲突项人工裁定。",
+            "项目与材料",
+            "导入现场日志，检查识别结果并维护设备信息；解析完成后即可生成记录草稿。",
         )
         refresh_button = QPushButton("刷新")
         refresh_button.setObjectName("subtle")
@@ -66,7 +66,7 @@ class EvidenceScreen(QWidget):
 
         # ---- 统计卡 ----
         self.stat_assets = StatCard("设备总数", "0", "已纳入本次核查")
-        self.stat_linked = StatCard("已关联证据", "0", "可直接开始核查")
+        self.stat_linked = StatCard("已关联材料", "0", "可生成记录草稿")
         self.stat_blocks = StatCard("可核查块", "0", "解析出的检查块")
         self.stat_warn = StatCard("需处理", "0", "仅附件 / 不可用")
         stat_row = QHBoxLayout()
@@ -134,7 +134,7 @@ class EvidenceScreen(QWidget):
         self.remove_button = QPushButton("删除设备")
         self.remove_button.setObjectName("danger")
         self.remove_button.clicked.connect(self._remove_asset)
-        self.run_button = QPushButton("开始核查")
+        self.run_button = QPushButton("生成记录草稿")
         self.run_button.setObjectName("primary")
         self.run_button.clicked.connect(self.run_requested.emit)
         asset_card.add_action(import_button)

@@ -20,10 +20,7 @@ from PySide6.QtWidgets import (
 from app.controller import AppController
 from app.widgets import Badge, Card, PageHeader, hbox
 
-EXPORT_HINT = (
-    "四张表各自独立导出，不设「先分析完才能导出」的闸门；"
-    "资产表只补空白不覆盖人工值，重大隐患表只收已确认行。"
-)
+EXPORT_HINT = "导出已确认的测评记录表；导出前自动检查表格结构、结论文本和数据行。"
 
 
 class ExportScreen(QWidget):
@@ -38,7 +35,7 @@ class ExportScreen(QWidget):
         layout.setContentsMargins(20, 16, 20, 16)
         layout.setSpacing(14)
 
-        self.header = PageHeader("导出与设置", EXPORT_HINT)
+        self.header = PageHeader("导出记录表", EXPORT_HINT)
         pick_dir = QPushButton("选择输出目录…")
         pick_dir.setObjectName("subtle")
         pick_dir.clicked.connect(self._pick_dir)
@@ -69,7 +66,7 @@ class ExportScreen(QWidget):
         asset_card.body.addLayout(hbox(self.asset_source, pick_asset))
         result_card = self._export_card(
             "结果记录表",
-            "由判定结果生成，按设备 × 指导书分 sheet。",
+            "使用已确认并可编辑的记录内容，按设备 × 指导书生成工作表。",
             "导出结果记录表",
             self._export,
             self.status_result,

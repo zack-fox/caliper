@@ -15,11 +15,11 @@ class NavStep:
 
 
 NAV_STEPS: tuple[NavStep, ...] = (
-    NavStep("evidence", "证据与资产", "1", "工作流", "导入采集日志与资产记录表，自动解析"),
-    NavStep("results", "结果记录", "2", "工作流", "逐项核对判定结果与证据原文"),
-    NavStep("issues", "问题与重大", "3", "工作流", "汇总问题清单，确认重大安全隐患"),
-    NavStep("export", "导出与设置", "4", "工作流", "独立导出四张表，维护运行设置"),
-    NavStep("rules", "规则库", "", "规则", "浏览控制项、判例与采集脚本映射"),
+    NavStep("evidence", "项目与材料", "1", "工作流", "管理项目资料并导入现场材料"),
+    NavStep("results", "测评记录", "2", "工作流", "编辑记录表内容并核对证据依据"),
+    NavStep("issues", "问题与重大", "", "后续", "汇总问题清单，确认重大安全隐患"),
+    NavStep("export", "导出记录表", "3", "工作流", "校验并导出公司格式的测评记录表"),
+    NavStep("rules", "规则库", "", "后续", "浏览控制项、判例与采集脚本映射"),
 )
 
 STEP_BY_KEY: dict[str, NavStep] = {step.key: step for step in NAV_STEPS}

@@ -32,7 +32,7 @@ QToolTip {
 }
 
 /* ============================ 顶栏 ============================ */
-QFrame#topbar { background: @nav@; border: none; }
+QFrame#topbar { background: @surface@; border: none; border-bottom: 1px solid @border@; }
 QFrame#topbar_sep { background: @nav_alt@; border: none; }
 QLabel#brand_name {
     color: @nav_text_strong@;
@@ -42,16 +42,70 @@ QLabel#brand_name {
 }
 QLabel#brand_sub { color: @nav_section@; font-size: 11px; background: transparent; }
 QLabel#project_code {
-    color: @nav_text@;
+    color: @text_secondary@;
     font-family: @font_mono@;
     font-size: 11px;
     background: transparent;
 }
-QLabel#project_name { color: @nav_text_strong@; font-size: 13px; background: transparent; }
-QLabel#project_caption { color: @nav_section@; font-size: 11px; background: transparent; }
+QLabel#project_name { color: @text@; font-size: 13px; background: transparent; }
+QLabel#project_caption { color: @muted@; font-size: 11px; background: transparent; }
+QLabel#context_badge { background: @primary_soft@; color: @primary_ink@; border-radius: 6px; padding: 5px 9px; font-size: 12px; font-weight: 600; }
 
 /* ============================ 侧导航 ============================ */
-QFrame#sidebar { background: @nav@; border: none; }
+QFrame#sidebar { background: @primary@; border: none; }
+QLabel#rail_mark {
+    background: @white@;
+    color: @primary@;
+    border-radius: 12px;
+    font-size: 21px;
+    font-weight: 800;
+}
+QToolButton#rail_button {
+    background: transparent;
+    color: @white@;
+    border: none;
+    border-radius: 10px;
+    font-size: 21px;
+    font-weight: 500;
+}
+QToolButton#rail_button:hover { background: @primary_hover@; }
+QToolButton#rail_button:checked { background: @white@; color: @primary@; }
+QFrame#workflowbar { background: @surface@; border: none; border-bottom: 1px solid @border@; }
+QLabel#workflow_caption { color: @muted@; font-size: 12px; font-weight: 600; }
+QToolButton#workflow_step {
+    background: @surface_alt@;
+    color: @text_secondary@;
+    border: 1px solid @border@;
+    border-radius: 8px;
+    padding: 0 14px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+}
+QToolButton#workflow_step:hover { color: @primary@; border-color: @primary@; }
+QToolButton#workflow_step:checked {
+    background: @primary_soft@;
+    color: @primary_ink@;
+    border-color: @primary@;
+}
+QFrame#context_panel, QFrame#tree_panel {
+    background: @surface@;
+    border: 1px solid @border@;
+    border-radius: 8px;
+}
+QLabel#project_value { color: @text@; font-size: 13px; font-weight: 600; }
+QLabel#context_hint { color: @primary_ink@; background: @primary_soft@; border-radius: 6px; padding: 8px; }
+QPushButton#domain_tab_active {
+    background: @surface@;
+    color: @primary@;
+    border: 1px solid @border@;
+    border-bottom: 2px solid @primary@;
+    border-radius: 6px 6px 0 0;
+    padding: 0 14px;
+    font-weight: 600;
+}
+QFrame#record_editor { background: @surface@; border: 1px solid @border@; border-radius: 8px; }
+QLabel#evidence_summary { color: @text_secondary@; font-size: 11px; }
 QLabel#nav_section {
     color: @nav_section@;
     font-size: 11px;
@@ -197,14 +251,14 @@ QPushButton#subtle {
 }
 QPushButton#subtle:hover { border-color: @primary@; color: @primary@; }
 QPushButton#topbar_button {
-    background: @nav_alt@;
-    border: 1px solid @nav_alt@;
-    color: @nav_text@;
+    background: @surface@;
+    border: 1px solid @border@;
+    color: @text_secondary@;
     border-radius: 6px;
     padding: 4px 10px;
     font-size: 12px;
 }
-QPushButton#topbar_button:hover { color: @nav_text_strong@; border-color: @nav_section@; }
+QPushButton#topbar_button:hover { color: @primary@; border-color: @primary@; }
 QPushButton#topbar_primary {
     background: @primary@;
     border: 1px solid @primary@;

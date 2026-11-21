@@ -140,9 +140,9 @@ SPACING: dict[str, int] = {"xs": 4, "sm": 8, "md": 12, "lg": 16, "xl": 20, "xxl"
 RADIUS: dict[str, int] = {"xs": 4, "sm": 6, "md": 8, "lg": 10, "pill": 999}
 
 # 窗口默认尺寸
-WINDOW_SIZE = (1400, 900)
-SIDEBAR_WIDTH = 224
-TOPBAR_HEIGHT = 56
+WINDOW_SIZE = (1680, 1000)
+SIDEBAR_WIDTH = 58
+TOPBAR_HEIGHT = 54
 STATUS_HEIGHT = 26
 CONTENT_MARGIN = 20
 

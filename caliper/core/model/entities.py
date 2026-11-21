@@ -241,6 +241,14 @@ class ItemResult(BaseModel):
     result_text: str = ""
     points: list[PointResult] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+    # Rules output is retained separately so a reviewer can restore it after an edit.
+    auto_verdict: Verdict | None = None
+    auto_result_text: str | None = None
+    auto_note: str | None = None
+    manual_override: bool = False
+    override_reason: str = ""
+    reviewed: bool = False
+    reviewed_at: str = ""
 
     @property
     def verdict_text(self) -> str:

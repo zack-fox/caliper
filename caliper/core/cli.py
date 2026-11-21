@@ -42,7 +42,12 @@ from core.render.result_record import (
 )
 from core.rules.dsl import RuleError
 from core.rules.engine import RulesError
-from core.store.corrections import CorrectionError, CorrectionStore, apply_notes
+from core.store.corrections import (
+    CorrectionError,
+    CorrectionStore,
+    apply_notes,
+    apply_record_overrides,
+)
 from core.store.project import ProjectStoreError, load_project
 
 
@@ -173,6 +178,7 @@ def _run(args, render: bool = True) -> tuple[ProjectConfig, RunResult, Pack, Pat
     try:
         store = _correction_store(args.project)
         apply_notes(result, store, project.level)
+        apply_record_overrides(result, store, project.level)
         store.close()
     except CorrectionError as exc:
         raise CliError(str(exc)) from exc

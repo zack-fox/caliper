@@ -20,10 +20,10 @@ from app.screens.export import ExportScreen
 from app.screens.issues import IssuesScreen
 from app.screens.results import ResultsScreen
 from app.screens.rules import RulesScreen
-from app.shell.ai_drawer import AiDrawer
 from app.shell.navigation import NAV_STEPS
 from app.shell.sidebar import Sidebar
 from app.shell.topbar import TopBar
+from app.shell.workflow_bar import WorkflowBar
 from app.theme.theme import ThemeManager
 from app.theme.tokens import APP_NAME, APP_SUBTITLE, APP_VERSION, WINDOW_SIZE
 from app.workers import RunWorker
@@ -43,7 +43,7 @@ class AppShell(QMainWindow):
         self.worker: RunWorker | None = None
         self.setWindowTitle(f"{APP_NAME} {APP_VERSION} · {APP_SUBTITLE}")
         self.resize(*WINDOW_SIZE)
-        self.setMinimumSize(1180, 760)
+        self.setMinimumSize(1360, 820)
 
         root = QWidget()
         root.setObjectName("root")
@@ -61,6 +61,7 @@ class AppShell(QMainWindow):
         content_layout.setSpacing(0)
 
         self.topbar = TopBar()
+        self.workflowbar = WorkflowBar()
         self.stack = QStackedWidget()
         self.pages: dict[str, QWidget] = {
             "evidence": EvidenceScreen(self.controller),
@@ -74,9 +75,9 @@ class AppShell(QMainWindow):
             self.stack.addWidget(self.pages[step.key])
 
         content_layout.addWidget(self.topbar)
+        content_layout.addWidget(self.workflowbar)
         content_layout.addWidget(self.stack, 1)
         root_layout.addWidget(content, 1)
-        root_layout.addWidget(AiDrawer())
         self.setCentralWidget(root)
 
         self._build_statusbar()
@@ -85,7 +86,7 @@ class AppShell(QMainWindow):
 
     # ---- 构建 ----
     def _build_statusbar(self) -> None:
-        self.status_label = QLabel("就绪：先导入设备证据，再开始核查")
+        self.status_label = QLabel("就绪：导入现场材料，生成并核对测评记录")
         self.status_label.setObjectName("status_text")
         version = QLabel(f"{APP_NAME.lower()} {APP_VERSION}")
         version.setObjectName("status_text")
@@ -95,6 +96,7 @@ class AppShell(QMainWindow):
 
     def _wire(self) -> None:
         self.sidebar.navigate.connect(self.go)
+        self.workflowbar.navigate.connect(self.go)
         self.topbar.run_requested.connect(self.run)
         self.topbar.load_requested.connect(self.load_project)
         self.topbar.save_requested.connect(self.save_project)
@@ -116,6 +118,7 @@ class AppShell(QMainWindow):
             return
         self.stack.setCurrentIndex(index)
         self.sidebar.set_current(key)
+        self.workflowbar.set_current(key)
         page = self.pages[key]
         if key == "rules":
             page.refresh()  # type: ignore[attr-defined]
@@ -123,7 +126,6 @@ class AppShell(QMainWindow):
     # ---- 刷新 ----
     def refresh_all(self) -> None:
         self._refresh_topbar()
-        self._refresh_pack_info()
         for key in ("evidence", "results", "issues", "export"):
             page = self.pages[key]
             page.refresh()  # type: ignore[attr-defined]
@@ -136,15 +138,6 @@ class AppShell(QMainWindow):
             project.level,
             len(project.assets),
         )
-
-    def _refresh_pack_info(self) -> None:
-        try:
-            pack = self.controller.load_pack()
-            items = pack.items_for_level(self.controller.project.level)
-        except Exception:
-            self.sidebar.set_pack_info("不可用", self.controller.project.level, 0)
-            return
-        self.sidebar.set_pack_info(pack.meta.name, self.controller.project.level, len(items))
 
     # ---- 项目 ----
     def load_project(self) -> None:
@@ -162,7 +155,6 @@ class AppShell(QMainWindow):
         self._refresh_topbar()
 
     def _on_settings_changed(self) -> None:
-        self._refresh_pack_info()
         self.pages["evidence"].refresh()  # type: ignore[attr-defined]
         self.set_status("设置已更新")
 
@@ -172,7 +164,6 @@ class AppShell(QMainWindow):
             return
         self.pages["evidence"].refresh()  # type: ignore[attr-defined]
         self.pages["export"].refresh()  # type: ignore[attr-defined]
-        self._refresh_pack_info()
         self.set_status("设置已更新")
 
     def toggle_theme(self) -> None:
@@ -191,7 +182,7 @@ class AppShell(QMainWindow):
             QMessageBox.warning(self, "项目信息有误", str(exc))
             return
         self.topbar.set_running(True)
-        self.set_status("正在核查…")
+        self.set_status("正在解析材料并生成记录草稿…")
         self.worker = RunWorker(self.controller, self)
         self.worker.succeeded.connect(self._on_run_ok)
         self.worker.failed.connect(self._on_run_failed)
@@ -208,7 +199,7 @@ class AppShell(QMainWindow):
                 label = item.verdict.value
                 counts[label] = counts.get(label, 0) + 1
         summary = "  ".join(f"{key} {value}" for key, value in counts.items())
-        self.set_status(f"核查完成：{summary}")
+        self.set_status(f"记录草稿已生成：{summary}")
         self.go("results")
 
     def _on_run_failed(self, message: str) -> None:

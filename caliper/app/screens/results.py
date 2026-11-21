@@ -1,286 +1,466 @@
-"""② 结果记录：控制项列表 + 详情/证据原文 + 判定与备注。"""
+"""Workbench-style measurement record review and editing screen."""
 
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
-    QComboBox,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QListWidget,
-    QListWidgetItem,
-    QPushButton,
-    QSplitter,
-    QStackedWidget,
-    QTextBrowser,
-    QVBoxLayout,
-    QWidget,
+    QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMessageBox,
+    QPlainTextEdit, QPushButton, QSplitter, QTableWidget, QTableWidgetItem,
+    QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget,
 )
 
 from app.controller import AppController, ControllerError
-from app.widgets import Badge, Card, EmptyState, PageHeader, StatCard, hbox
-from core.model.entities import ItemResult
+from app.widgets import Badge, EmptyState
+from core.contracts.verdict import Verdict, from_text, to_text
+from core.model.entities import Item, ItemResult
 
 VERDICT_TONES = {
-    "符合": "ok",
-    "部分符合": "warn",
-    "不符合": "bad",
-    "不适用": "neutral",
-    "未采集": "info",
+    Verdict.COMPLIANT: "ok", Verdict.PARTIAL: "warn", Verdict.NON_COMPLIANT: "bad",
+    Verdict.NOT_APPLICABLE: "neutral", Verdict.UNCOLLECTED: "info",
+}
+VERDICT_COLORS = {
+    "符合": ("#168447", "#e9f8ef"), "部分符合": ("#b87908", "#fff6df"),
+    "不符合": ("#cf4545", "#fff0f0"), "不适用": ("#687587", "#f1f3f6"),
+    "未采集": ("#3473c8", "#eef5ff"),
 }
 
 
 class ResultsScreen(QWidget):
+    """Project and asset context beside a spreadsheet-like record table."""
+
     def __init__(self, controller: AppController, parent=None) -> None:
         super().__init__(parent)
         self.controller = controller
         self.current_result: ItemResult | None = None
-        self._item_names: dict[int, str] = {}
+        self._items: dict[int, Item] = {}
+        self._visible_results: list[ItemResult] = []
         self.setObjectName("page")
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 16, 20, 16)
-        layout.setSpacing(14)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(18, 14, 18, 14)
+        root.setSpacing(10)
 
-        self.header = PageHeader(
-            "结果记录",
-            "判定由规则产出，人工只做校正并留下理由；证据原文始终可追溯到日志行号。",
-        )
-        self.asset_combo = QComboBox()
-        self.asset_combo.setMinimumWidth(220)
-        self.asset_combo.currentIndexChanged.connect(self._populate_items)
+        heading = QHBoxLayout()
+        title_box = QVBoxLayout()
+        self.heading = QLabel("现场核查记录")
+        self.heading.setObjectName("page_title")
+        self.subheading = QLabel("按设备核对测评结果，编辑记录并留存人工确认")
+        self.subheading.setObjectName("page_sub")
+        title_box.addWidget(self.heading)
+        title_box.addWidget(self.subheading)
+        heading.addLayout(title_box)
+        heading.addStretch(1)
+        self.summary = QLabel("尚未生成记录")
+        self.summary.setObjectName("muted")
+        heading.addWidget(self.summary)
+        root.addLayout(heading)
+
+        domain_row = QHBoxLayout()
+        domain_row.setSpacing(8)
+        self.domain_tab = QPushButton("安全计算环境")
+        self.domain_tab.setObjectName("domain_tab_active")
+        self.domain_tab.setFixedHeight(38)
+        self.domain_tab.setEnabled(False)
+        domain_row.addWidget(self.domain_tab)
+        domain_row.addStretch(1)
+        self.domain_count = QLabel("0 项")
+        self.domain_count.setObjectName("muted")
+        domain_row.addWidget(self.domain_count)
+        root.addLayout(domain_row)
+
+        main = QSplitter(Qt.Horizontal)
+        main.setChildrenCollapsible(False)
+        main.setObjectName("workbench_splitter")
+
+        self.project_panel = QFrame()
+        self.project_panel.setObjectName("context_panel")
+        self.project_panel.setMinimumWidth(205)
+        self.project_panel.setMaximumWidth(275)
+        project_layout = QVBoxLayout(self.project_panel)
+        project_layout.setContentsMargins(14, 15, 14, 14)
+        project_layout.setSpacing(9)
+        project_title = QLabel("项目信息")
+        project_title.setObjectName("section_title")
+        project_layout.addWidget(project_title)
+        self.project_fields: dict[str, QLabel] = {}
+        for key, label in (("code", "项目编号"), ("name", "系统名称"), ("unit", "测评对象"), ("level", "安全等级"), ("date", "核查日期")):
+            caption = QLabel(label)
+            caption.setObjectName("muted")
+            value = QLabel("—")
+            value.setObjectName("project_value")
+            value.setWordWrap(True)
+            project_layout.addWidget(caption)
+            project_layout.addWidget(value)
+            self.project_fields[key] = value
+        project_layout.addStretch(1)
+        self.project_status = QLabel("等待导入现场材料")
+        self.project_status.setObjectName("context_hint")
+        self.project_status.setWordWrap(True)
+        project_layout.addWidget(self.project_status)
+        main.addWidget(self.project_panel)
+
+        self.work_area = QWidget()
+        work_layout = QVBoxLayout(self.work_area)
+        work_layout.setContentsMargins(0, 0, 0, 0)
+        work_layout.setSpacing(8)
+        tools = QHBoxLayout()
         self.search = QLineEdit()
-        self.search.setPlaceholderText("搜索控制点 / 编号")
-        self.search.setMinimumWidth(180)
-        self.search.textChanged.connect(self._populate_items)
-        self.verdict_filter = QComboBox()
-        self.verdict_filter.addItems(["全部结论", "符合", "部分符合", "不符合", "不适用", "未采集"])
-        self.verdict_filter.currentIndexChanged.connect(self._populate_items)
-        for widget in (QLabel("资产"), self.asset_combo, self.search, self.verdict_filter):
-            if isinstance(widget, QLabel):
-                widget.setObjectName("secondary")
-            self.header.add_action(widget)
-        layout.addWidget(self.header)
+        self.search.setPlaceholderText("搜索控制点、控制项或设备")
+        self.search.setClearButtonEnabled(True)
+        self.search.textChanged.connect(self._populate_table)
+        self.filter = QComboBox()
+        self.filter.addItems(["全部状态", "符合", "部分符合", "不符合", "不适用", "未采集"])
+        self.filter.currentIndexChanged.connect(self._populate_table)
+        self.asset_count = QLabel("设备 0")
+        self.asset_count.setObjectName("muted")
+        tools.addWidget(self.search, 1)
+        tools.addWidget(self.filter)
+        tools.addWidget(self.asset_count)
+        work_layout.addLayout(tools)
 
-        self.stat_ok = StatCard("符合", "0")
-        self.stat_partial = StatCard("部分符合", "0")
-        self.stat_bad = StatCard("不符合", "0")
-        self.stat_na = StatCard("不适用 / 未采集", "0")
-        stat_row = QHBoxLayout()
-        stat_row.setSpacing(12)
-        for card in (self.stat_ok, self.stat_partial, self.stat_bad, self.stat_na):
-            stat_row.addWidget(card, 1)
-        layout.addLayout(stat_row)
+        records = QSplitter(Qt.Horizontal)
+        records.setChildrenCollapsible(False)
+        records.setObjectName("records_splitter")
 
-        splitter = QSplitter(Qt.Horizontal)
-        splitter.setChildrenCollapsible(False)
+        tree_panel = QFrame()
+        tree_panel.setObjectName("tree_panel")
+        tree_layout = QVBoxLayout(tree_panel)
+        tree_layout.setContentsMargins(10, 10, 8, 8)
+        tree_layout.setSpacing(8)
+        tree_title = QLabel("设备与资产")
+        tree_title.setObjectName("section_title")
+        tree_layout.addWidget(tree_title)
+        self.asset_tree = QTreeWidget()
+        self.asset_tree.setHeaderHidden(True)
+        self.asset_tree.setIndentation(16)
+        self.asset_tree.currentItemChanged.connect(self._on_asset_selected)
+        tree_layout.addWidget(self.asset_tree, 1)
+        records.addWidget(tree_panel)
 
-        list_card = Card("控制项", "按安全控制点排列")
-        self.item_list = QListWidget()
-        self.item_list.setWordWrap(True)
-        self.item_list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.item_list.currentItemChanged.connect(self._show_item)
-        list_card.add(self.item_list, 1)
-        splitter.addWidget(list_card)
+        table_panel = QWidget()
+        table_layout = QVBoxLayout(table_panel)
+        table_layout.setContentsMargins(0, 0, 0, 0)
+        table_layout.setSpacing(7)
+        table_toolbar = QHBoxLayout()
+        table_label = QLabel("核查记录表")
+        table_label.setObjectName("section_title")
+        table_toolbar.addWidget(table_label)
+        table_toolbar.addStretch(1)
+        self.table_hint = QLabel("选择记录行查看依据并编辑")
+        self.table_hint.setObjectName("muted")
+        table_toolbar.addWidget(self.table_hint)
+        table_layout.addLayout(table_toolbar)
+        self.table = QTableWidget(0, 7)
+        self.table.setHorizontalHeaderLabels(["序号", "通用/扩展", "控制点", "控制项", "结果记录", "符合情况", "备注"])
+        self.table.setObjectName("record_table")
+        self.table.setAlternatingRowColors(False)
+        self.table.setWordWrap(True)
+        self.table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.table.setSelectionMode(QTableWidget.SingleSelection)
+        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table.verticalHeader().setVisible(False)
+        self.table.horizontalHeader().setStretchLastSection(True)
+        self.table.horizontalHeader().setMinimumSectionSize(70)
+        self.table.setColumnWidth(0, 58)
+        self.table.setColumnWidth(1, 92)
+        self.table.setColumnWidth(2, 130)
+        self.table.setColumnWidth(3, 245)
+        self.table.setColumnWidth(4, 360)
+        self.table.setColumnWidth(5, 115)
+        self.table.itemSelectionChanged.connect(self._on_table_selection)
+        table_layout.addWidget(self.table, 1)
 
-        detail_card = Card()
-        self.detail_empty = EmptyState(
-            "尚未运行核查",
-            "请在「证据与资产」页导入设备证据后开始核查，结果会逐项列出。",
-        )
-
-        content = QWidget()
-        content_layout = QVBoxLayout(content)
-        content_layout.setContentsMargins(0, 0, 0, 0)
-        content_layout.setSpacing(8)
-
-        self.title = QLabel("请选择测评项")
-        self.title.setObjectName("section_title")
-        self.title.setWordWrap(True)
-        self.verdict_badge = Badge("未选择", "neutral")
-        self.item_meta = QLabel("")
-        self.item_meta.setObjectName("muted")
-        content_layout.addLayout(hbox(self.title, None, self.verdict_badge))
-        content_layout.addWidget(self.item_meta)
-        self.body = QTextBrowser()
-        self.body.setObjectName("evidence")
-        content_layout.addWidget(self.body, 1)
-
-        note_row = QHBoxLayout()
-        note_row.setSpacing(8)
-        note_caption = QLabel("核查说明")
-        note_caption.setObjectName("secondary")
-        self.note = QLineEdit()
-        self.note.setPlaceholderText("现场说明 / 未采集原因 / 校正理由（必填）")
-        self.save_note = QPushButton("保存说明")
-        self.save_note.clicked.connect(self._save_note)
-        note_row.addWidget(note_caption)
-        note_row.addWidget(self.note, 1)
-        note_row.addWidget(self.save_note)
-        content_layout.addLayout(note_row)
-
-        self.detail_stack = QStackedWidget()
-        self.detail_stack.addWidget(self.detail_empty)
-        self.detail_stack.addWidget(content)
-        self.detail_content = content
-        detail_card.add(self.detail_stack, 1)
-        splitter.addWidget(detail_card)
-
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 3)
-        splitter.setSizes([320, 900])
-        layout.addWidget(splitter, 1)
-
+        self.editor = QFrame()
+        self.editor.setObjectName("record_editor")
+        editor_layout = QVBoxLayout(self.editor)
+        editor_layout.setContentsMargins(12, 10, 12, 10)
+        editor_layout.setSpacing(8)
+        editor_head = QHBoxLayout()
+        self.selected_title = QLabel("选择一条记录")
+        self.selected_title.setObjectName("section_title")
+        self.record_badge = Badge("待核对", "neutral")
+        editor_head.addWidget(self.selected_title, 1)
+        editor_head.addWidget(self.record_badge)
+        editor_layout.addLayout(editor_head)
+        self.record_meta = QLabel("")
+        self.record_meta.setObjectName("muted")
+        editor_layout.addWidget(self.record_meta)
+        fields = QGridLayout()
+        fields.setHorizontalSpacing(10)
+        fields.setVerticalSpacing(6)
+        result_label = QLabel("结果记录")
+        result_label.setObjectName("secondary")
+        self.record_text = QPlainTextEdit()
+        self.record_text.setPlaceholderText("记录现场核查过程、发现和支撑事实")
+        self.record_text.setFixedHeight(86)
+        verdict_label = QLabel("符合情况")
+        verdict_label.setObjectName("secondary")
+        self.verdict = QComboBox()
+        self._verdict_values: list[str] = []
+        for value in Verdict:
+            text = to_text(value)
+            self.verdict.addItem(text or "未采集（空）", text)
+            self._verdict_values.append(text)
+        note_label = QLabel("备注")
+        note_label.setObjectName("secondary")
+        self.note_text = QPlainTextEdit()
+        self.note_text.setPlaceholderText("可选")
+        self.note_text.setFixedHeight(52)
+        reason_label = QLabel("修改理由")
+        reason_label.setObjectName("secondary")
+        self.reason = QLineEdit()
+        self.reason.setPlaceholderText("人工修改或补录时说明理由")
+        fields.addWidget(result_label, 0, 0)
+        fields.addWidget(self.record_text, 1, 0, 1, 3)
+        fields.addWidget(verdict_label, 0, 3)
+        fields.addWidget(self.verdict, 1, 3)
+        fields.addWidget(note_label, 2, 0)
+        fields.addWidget(self.note_text, 3, 0, 1, 2)
+        fields.addWidget(reason_label, 2, 2)
+        fields.addWidget(self.reason, 3, 2, 1, 2)
+        fields.setColumnStretch(0, 2)
+        fields.setColumnStretch(1, 1)
+        fields.setColumnStretch(2, 1)
+        fields.setColumnStretch(3, 1)
+        editor_layout.addLayout(fields)
+        edit_actions = QHBoxLayout()
+        self.evidence = QLabel("选择记录后显示判定依据、检查内容和判断标准。")
+        self.evidence.setObjectName("evidence_summary")
+        self.evidence.setWordWrap(True)
+        edit_actions.addWidget(self.evidence, 1)
+        self.reset_button = QPushButton("恢复建议")
+        self.reset_button.setObjectName("subtle")
+        self.reset_button.clicked.connect(self._reset_override)
+        self.save_button = QPushButton("保存并确认")
+        self.save_button.setObjectName("primary")
+        self.save_button.clicked.connect(self._save_record)
+        edit_actions.addWidget(self.reset_button)
+        edit_actions.addWidget(self.save_button)
+        editor_layout.addLayout(edit_actions)
+        table_layout.addWidget(self.editor)
+        self.empty = EmptyState("等待生成记录", "导入现场材料并生成记录草稿后，设备和核查记录会显示在这里。")
+        self.empty.setVisible(False)
+        self.empty.setMinimumHeight(280)
+        records.addWidget(table_panel)
+        records.setStretchFactor(0, 1)
+        records.setStretchFactor(1, 4)
+        records.setSizes([220, 1120])
+        work_layout.addWidget(records, 1)
+        main.addWidget(self.work_area)
+        main.setStretchFactor(0, 0)
+        main.setStretchFactor(1, 1)
+        main.setSizes([235, 1290])
+        root.addWidget(main, 1)
         self.refresh()
 
-    # ---- 刷新 ----
     def refresh(self) -> None:
-        self._item_names = self._load_item_names()
-        self.asset_combo.blockSignals(True)
-        self.asset_combo.clear()
-        if self.controller.run_result is not None:
-            for run in self.controller.run_result.asset_runs:
-                self.asset_combo.addItem(run.asset.device_name)
-        self.asset_combo.blockSignals(False)
-        self._populate_items()
-
-    def _load_item_names(self) -> dict[int, str]:
-        """序号 → 控制项名称，避免列表里连续多行同名控制点。"""
+        self._items = {}
         try:
-            pack = self.controller.load_pack()
-            items = pack.items_for_level(self.controller.project.level)
+            pack = self.controller.pack or self.controller.load_pack()
+            self._items = {item.seq: item for item in pack.items_for_level(self.controller.project.level)}
         except Exception:
-            return {}
-        return {item.seq: item.control_item for item in items}
+            pass
+        project = self.controller.project
+        self.project_fields["code"].setText(project.project_code or "未编号")
+        self.project_fields["name"].setText(project.system_name or "未命名系统")
+        self.project_fields["unit"].setText(next((a.test_object for a in project.assets if a.test_object), "—"))
+        self.project_fields["level"].setText({2: "第二级", 3: "第三级"}.get(project.level, f"第{project.level}级"))
+        self.project_fields["date"].setText(str(project.check_date))
+        result = self.controller.run_result
+        self.asset_tree.blockSignals(True)
+        previous = self._current_asset_name()
+        self.asset_tree.clear()
+        if result:
+            groups: dict[str, QTreeWidgetItem] = {}
+            for index, run in enumerate(result.asset_runs):
+                group_name = getattr(run.asset.asset_type, "value", str(run.asset.asset_type))
+                group = groups.get(group_name)
+                if group is None:
+                    group = QTreeWidgetItem([group_name])
+                    group.setFlags(group.flags() & ~Qt.ItemIsSelectable)
+                    groups[group_name] = group
+                    self.asset_tree.addTopLevelItem(group)
+                reviewed = sum(1 for item in run.items if item.reviewed)
+                child = QTreeWidgetItem([f"{run.asset.device_name}  ({reviewed}/{len(run.items)})"])
+                child.setData(0, Qt.UserRole, index)
+                child.setToolTip(0, f"{run.asset.device_name} · {run.asset.ip}")
+                group.addChild(child)
+                group.setExpanded(True)
+            self.asset_count.setText(f"设备 {len(result.asset_runs)}")
+            self.domain_count.setText(f"{sum(len(r.items) for r in result.asset_runs)} 项")
+            self.project_status.setText("材料已解析 · 可逐项核对并编辑记录")
+            for idx in range(self.asset_tree.topLevelItemCount()):
+                group = self.asset_tree.topLevelItem(idx)
+                for child_idx in range(group.childCount()):
+                    child = group.child(child_idx)
+                    if child.toolTip(0).startswith(previous) and previous:
+                        self.asset_tree.setCurrentItem(child)
+            if self.asset_tree.currentItem() is None:
+                first_group = self.asset_tree.topLevelItem(0)
+                if first_group and first_group.childCount():
+                    self.asset_tree.setCurrentItem(first_group.child(0))
+        else:
+            self.asset_count.setText("设备 0")
+            self.domain_count.setText("0 项")
+            self.project_status.setText("等待导入现场材料")
+        self.asset_tree.blockSignals(False)
+        self._populate_table()
+
+    def _current_asset_name(self) -> str:
+        current = self.asset_tree.currentItem()
+        if current and current.parent():
+            return current.toolTip(0).split(" · ", 1)[0]
+        return ""
 
     def _current_run(self):
         result = self.controller.run_result
-        if result is None:
+        current = self.asset_tree.currentItem()
+        if result is None or current is None or current.data(0, Qt.UserRole) is None:
             return None
-        index = self.asset_combo.currentIndex()
-        if index < 0 or index >= len(result.asset_runs):
-            return None
-        return result.asset_runs[index]
+        index = int(current.data(0, Qt.UserRole))
+        return result.asset_runs[index] if 0 <= index < len(result.asset_runs) else None
 
-    def _populate_items(self, *_args) -> None:
-        self.item_list.clear()
-        self.body.clear()
-        self.title.setText("请选择测评项")
-        self.item_meta.setText("")
-        self.verdict_badge.set_text("未选择", "neutral")
-        self.note.clear()
+    def _on_asset_selected(self, current, _previous=None) -> None:
+        if current is not None and current.data(0, Qt.UserRole) is not None:
+            self._populate_table()
+
+    def _populate_table(self, *_args) -> None:
+        selected_seq = self.current_result.seq if self.current_result else None
         run = self._current_run()
+        self.table.setRowCount(0)
+        self._visible_results = []
         if run is None:
-            self.detail_empty.set_text(
-                "尚未运行核查",
-                "请在「证据与资产」页导入设备证据后开始核查，结果会逐项列出。",
-            )
-            self.detail_stack.setCurrentWidget(self.detail_empty)
-            for card in (self.stat_ok, self.stat_partial, self.stat_bad, self.stat_na):
-                card.set_value("0")
+            self.editor.setVisible(False)
+            self.table.setVisible(True)
+            self.table.setRowCount(1)
+            self.table.setSpan(0, 0, 1, self.table.columnCount())
+            self.table.setCellWidget(0, 0, self.empty)
+            self.table.setRowHeight(0, 420)
             return
-
+        self.editor.setVisible(True)
+        self.table.setVisible(True)
+        self.empty.setVisible(False)
         keyword = self.search.text().strip().lower()
-        selected = self.verdict_filter.currentText()
-        counts = {"符合": 0, "部分符合": 0, "不符合": 0, "不适用": 0, "未采集": 0}
-        for item in run.items:
-            label = _verdict_label(item)
-            counts[label] = counts.get(label, 0) + 1
-            if selected != "全部结论" and label != selected:
-                continue
-            haystack = f"{item.seq} {item.control_point} {item.item_id}".lower()
+        chosen = self.filter.currentText()
+        for result in run.items:
+            item = self._items.get(result.seq)
+            control_item = item.control_item if item else result.control_point
+            haystack = f"{result.seq} {result.control_point} {control_item} {result.item_id} {run.asset.device_name}".lower()
             if keyword and keyword not in haystack:
                 continue
-            entry = QListWidgetItem(
-                f"{item.seq:>2}  {self._item_names.get(item.seq) or item.control_point}"
-            )
-            entry.setData(Qt.UserRole, item.seq)
-            entry.setToolTip(f"{item.item_id} · {label}")
-            self.item_list.addItem(entry)
-
-        self.stat_ok.set_value(str(counts["符合"]))
-        self.stat_partial.set_value(str(counts["部分符合"]))
-        self.stat_bad.set_value(str(counts["不符合"]))
-        self.stat_na.set_value(str(counts["不适用"] + counts["未采集"]))
-        if self.item_list.count() == 0:
-            self.detail_empty.set_text("没有匹配的测评项", "调整搜索关键词或结论筛选试试。")
-            self.detail_stack.setCurrentWidget(self.detail_empty)
+            if chosen != "全部状态" and chosen != result.verdict.value:
+                continue
+            self._visible_results.append(result)
+        self.table.setRowCount(len(self._visible_results))
+        for row, result in enumerate(self._visible_results):
+            item = self._items.get(result.seq)
+            control_text = item.control_item if item else result.control_point
+            scope = "扩展" if item and item.optional_clause else "通用"
+            values = [str(result.seq), scope, result.control_point, control_text, result.result_text, result.verdict.value, result.note]
+            for col, text in enumerate(values):
+                cell = QTableWidgetItem(text)
+                cell.setData(Qt.UserRole, result.seq)
+                cell.setToolTip(text)
+                cell.setFlags(cell.flags() & ~Qt.ItemIsEditable)
+                if col == 5:
+                    fg, bg = VERDICT_COLORS.get(result.verdict.value, ("#687587", "#f1f3f6"))
+                    cell.setForeground(QColor(fg))
+                    cell.setBackground(QColor(bg))
+                    cell.setText(f"●  {text}" + (" · 已确认" if result.reviewed else " · 待核对"))
+                    cell.setToolTip(f"{fg} · {text} · {'已确认' if result.reviewed else '待核对'}")
+                self.table.setItem(row, col, cell)
+            self.table.setRowHeight(row, 62 if len(result.result_text) < 100 else 86)
+        self.summary.setText(f"{run.asset.device_name}　{len(run.items)} 项 · 显示 {len(self._visible_results)} 项")
+        self.table_hint.setText("已确认项可继续编辑；保存后保留修改历史")
+        if self._visible_results:
+            target = next((i for i, value in enumerate(self._visible_results) if value.seq == selected_seq), 0)
+            self.table.selectRow(target)
         else:
-            self.detail_empty.set_text("选择左侧测评项", "点击任意控制项查看判定结果与证据原文。")
-            self.detail_stack.setCurrentWidget(self.detail_empty)
+            self.current_result = None
+            self.selected_title.setText("没有匹配记录")
 
-    # ---- 详情 ----
-    def _show_item(self, current: QListWidgetItem | None, _previous=None) -> None:
-        run = self._current_run()
-        if run is None or current is None:
+    def _on_table_selection(self) -> None:
+        selected = self.table.selectedItems()
+        if not selected:
             return
-        result = run.item_by_seq(int(current.data(Qt.UserRole)))
+        seq = selected[0].data(Qt.UserRole)
+        result = next((entry for entry in self._visible_results if entry.seq == seq), None)
         if result is None:
             return
         self.current_result = result
-        label = _verdict_label(result)
-        self.title.setText(
-            f"{result.seq}. {self._item_names.get(result.seq) or result.control_point}"
-        )
-        self.item_meta.setText(
-            f"{result.control_point} · {result.item_id} · 重要程度 {result.importance}"
-        )
-        self.verdict_badge.set_text(label, VERDICT_TONES.get(label, "neutral"))
-        self.body.setHtml(self._render_detail(result))
-        self.note.setText(result.note)
-        self.detail_stack.setCurrentWidget(self.detail_content)
+        run = self._current_run()
+        item = self._items.get(result.seq)
+        self.selected_title.setText(f"{result.seq:02d}　{result.control_point} · {item.control_item if item else ''}")
+        self.record_meta.setText(f"{result.item_id}　·　重要程度 {result.importance}　·　{run.asset.device_name if run else ''}　·　{run.os_family if run else ''}")
+        self.verdict.setCurrentIndex(self._verdict_values.index(to_text(result.verdict)))
+        self.record_text.setPlainText(result.result_text)
+        self.note_text.setPlainText(result.note)
+        self.reason.setText(result.override_reason)
+        self.record_badge.set_text("已确认" if result.reviewed else result.verdict.value, "ok" if result.reviewed else VERDICT_TONES[result.verdict])
+        self.reset_button.setEnabled(result.manual_override)
+        self.evidence.setText(self._evidence_summary(result, item))
 
     @staticmethod
-    def _render_detail(result: ItemResult) -> str:
-        pre = '<pre style="white-space:pre-wrap; margin:4px 0">'
-        parts: list[str] = []
-        if result.result_text:
-            parts.append(f"<b>判定记录</b><br>{pre}{_escape(result.result_text)}</pre>")
-        if not result.points:
-            parts.append(f"<p>{_escape(result.note or '没有可展示的实施点')}</p>")
-        for point in result.points:
-            state = "通过" if point.passed else "未通过"
-            colour = "#4ade80" if point.passed else "#f87171"
-            parts.append(
-                f"<p><b>实施点 {point.point}</b> "
-                f"<span style='color:{colour}'>{state}</span>：{_escape(point.reason)}</p>"
-            )
-            parts.append(f"<p style='color:#94a3b8'>证据块：{_escape(point.block_title)}</p>")
-            for anchor in point.anchors:
-                parts.append(
-                    f"{pre}{_escape(anchor.file)}:{anchor.line}\n{_escape(anchor.snippet)}</pre>"
-                )
-        if result.warnings:
-            parts.append("<p style='color:#fbbf24'><b>告警</b></p><ul>")
-            parts.extend(f"<li>{_escape(text)}</li>" for text in result.warnings)
-            parts.append("</ul>")
-        return "".join(parts) or "<p>暂无内容</p>"
+    def _evidence_summary(result: ItemResult, item: Item | None) -> str:
+        details: list[str] = []
+        for point in result.points[:2]:
+            anchor = point.anchors[0] if point.anchors else None
+            location = f"{anchor.file}:{anchor.line}" if anchor else "无原文锚点"
+            details.append(f"实施点 {point.point}：{point.reason}（{location}）")
+        if item:
+            details.extend((f"检查内容：{item.check_content[:110]}", f"判断标准：{item.criteria[:110]}"))
+        return "　|　".join(details) or "当前没有自动判定依据；请依据现场材料人工填写。"
 
-    def _save_note(self) -> None:
-        run = self._current_run()
-        if self.current_result is None or run is None:
+    def _save_record(self) -> None:
+        run, result = self._current_run(), self.current_result
+        if run is None or result is None:
             return
-        text = self.note.text()
+        verdict_text = str(self.verdict.currentData())
+        result_text = self.record_text.toPlainText().strip()
+        note = self.note_text.toPlainText().strip()
+        selected_verdict = from_text(verdict_text)
+        if not result.manual_override and result_text == (result.auto_result_text or "") and note == (result.auto_note or "") and selected_verdict == (result.auto_verdict or Verdict.UNCOLLECTED):
+            try:
+                result.reviewed_at = self.controller.confirm_record(result.item_id, run.asset.device_name)
+            except ControllerError as exc:
+                QMessageBox.warning(self, "未能确认", str(exc))
+                return
+            result.reviewed = True
+        else:
+            try:
+                reviewed_at = self.controller.save_record_override(result.item_id, run.asset.device_name, result_text, selected_verdict.value, note, self.reason.text().strip())
+            except (ControllerError, ValueError) as exc:
+                QMessageBox.warning(self, "未能保存", str(exc))
+                return
+            result.result_text, result.verdict, result.note = result_text, selected_verdict, note
+            result.manual_override = True
+            result.override_reason = self.reason.text().strip()
+            result.reviewed_at = reviewed_at
+            result.reviewed = True
+        self._update_asset_tree_count(run)
+        self._populate_table()
+
+    def _reset_override(self) -> None:
+        run, result = self._current_run(), self.current_result
+        if run is None or result is None or not result.manual_override:
+            return
         try:
-            self.controller.save_note(
-                self.current_result.item_id, run.asset.asset_type.value, text
-            )
+            self.controller.clear_record_override(result.item_id, run.asset.device_name)
         except ControllerError as exc:
-            self.item_meta.setText(f"备注保存失败：{exc}")
+            QMessageBox.warning(self, "无法恢复", str(exc))
             return
-        self.current_result.note = text
-        self.item_meta.setText("核查说明已保存到 corrections.db，导出时自动带入")
+        result.result_text = result.auto_result_text or ""
+        result.verdict = result.auto_verdict or Verdict.UNCOLLECTED
+        result.note = result.auto_note or ""
+        result.manual_override = result.reviewed = False
+        result.override_reason = result.reviewed_at = ""
+        self._update_asset_tree_count(run)
+        self._populate_table()
 
-
-def _verdict_label(item: ItemResult) -> str:
-    return item.verdict.value
-
-
-def _escape(text: str) -> str:
-    return (
-        text.replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace("\n", "<br>")
-    )
+    def _update_asset_tree_count(self, run) -> None:
+        current = self.asset_tree.currentItem()
+        if current is None:
+            return
+        reviewed = sum(1 for item in run.items if item.reviewed)
+        current.setText(0, f"{run.asset.device_name}  ({reviewed}/{len(run.items)})")
