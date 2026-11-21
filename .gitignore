@@ -33,3 +33,12 @@ dist/
 
 # 本地导出结果（含项目与资产信息，禁止入库）
 out/
+
+# 白板评审与协作中间产物（体积大、仅本地审核用）
+.trae/
+.trae-html-share-packages/
+caliper-ui-design.html
+caliper-ui-design.excalidraw
+design/*.html
+design/*.excalidraw
+design/task-theme/

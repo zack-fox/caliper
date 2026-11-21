@@ -20,7 +20,7 @@ core/        contracts model evidence checks items rules judge issues major rend
 packs/       linux_os（items / rules / checks_map / high_risk / texts）
 templates/   四张母版（只读，只填单元格，不改列与样式）
 adapters/    noop（默认空实现）、llm（仅占位说明）
-app/         桌面 UI：screens / theme / app.qss；入口 caliper-gui
+app/         桌面 UI：shell（顶栏/侧导航/状态栏）/ screens / widgets / theme；入口 caliper-gui
 tests/       contracts / golden / negative
 fixtures/    evidence / scripts / samples / golden（均不入库）
 ```
@@ -62,19 +62,35 @@ make lint-rules
 
 # 启动桌面界面
 .venv/bin/caliper-gui
+
+# 离屏自检（不弹窗口，校验外壳与页面装配）
+.venv/bin/python -m app.main --smoke
+
+# 主题模板校验（QSS 颜色必须来自 design tokens）
+make ui-lint
 ```
 
 macOS 上也可直接双击工作区根目录的 `Caliper.app`（内部调用同一个 `.venv/bin/python -m app.main`）。
 
-### 界面主流程
+### 界面结构与主流程
 
-1. 「设备与证据」→「导入设备证据」：可直接选择采集目录或单个日志文件
-   （`.log / .txt / .out / .cmd`）。有 `manifest.json` 时走结构化校验，没有则按原始日志解析；
-   截图、照片计入附件，不参与自动判定。
+左侧为工作流导航，顶栏固定项目上下文与主操作，右侧 AI 抽屉为规划中占位：
+
+| 导航 | 页面 | 职责 |
+| --- | --- | --- |
+| 1 | 证据与资产 | 拖入采集日志/资产表即解析，自动回填资产字段，冲突项人工裁定 |
+| 2 | 结果记录 | 控制项列表 + 详情证据（含日志行号）+ 判定与核查说明 |
+| 3 | 问题与重大 | 不符合/部分符合汇总预览，勾选确认后进入重大安全隐患表 |
+| 4 | 导出与设置 | 四张表独立导出、输出目录与规则包设置、导出日志 |
+| 规则 | 规则库 | 只读浏览控制项、二值项、高风险判例与指导书 |
+
+1. 「证据与资产」页可直接拖入采集目录或单个日志文件（`.log / .txt / .out / .cmd / .json / .xlsx`）。
+   有 `manifest.json` 时走结构化校验，没有则按原始日志解析；截图、照片计入附件，不参与自动判定。
 2. 表格「证据识别」列显示「可核查：N 块」「仅附件：N 张图片」或不可用原因；
    双击任意行可编辑设备与证据。
-3. 「开始核查」跑判定，随后在「结果记录」「问题与重大」查看并保存备注/重大确认。
-4. 「导出」导出四张表；「设置…」里可改证据根目录、输出目录、规则包目录。
+3. 顶栏「开始核查」跑判定，随后在「结果记录」「问题与重大」查看并保存备注/重大确认。
+4. 「导出与设置」页导出四张表，并维护输出目录、证据根目录、规则包目录。
+5. 顶栏「主题」切换浅色 / 深色，偏好写入系统设置，重启后保持。
 
 样例项目在 `fixtures/samples/project.yaml`，样例证据包在 `fixtures/evidence/pkg-A01/`，
 两者都被 `.gitignore` 忽略，需要时从内网开发包复制。结构化证据包带 `manifest.json`

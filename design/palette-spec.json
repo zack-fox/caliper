@@ -1,0 +1,37 @@
+{
+  "id": "caliper-prototype",
+  "brand": {
+    "name": "Caliper 桌面端（用户提供原型）",
+    "checkedAt": "2026-11-21",
+    "sources": [
+      {
+        "kind": "user-provided",
+        "reference": "用户上传 caliper_前端布局原型.html + image.png；原型定义 --pri #1f5eff、--nav #131d2b、--ai #7a3ff0、--ok #12a76a、--warn #d98300、--bad #d94040、--bg #f4f6f9、--surface #ffffff"
+      }
+    ]
+  },
+  "palette": {
+    "primary": "#1f5eff",
+    "onPrimary": "#ffffff",
+    "series": [
+      "#1f5eff",
+      "#7a3ff0"
+    ],
+    "other": "#9aa3af",
+    "emphasisFill": "#eaf0ff",
+    "emphasisText": "#12409e",
+    "background": "#f4f6f9",
+    "text": "#111a27",
+    "mutedText": "#48566b",
+    "connector": "#d6dce6",
+    "semantic": {
+      "darkChrome": "#131d2b",
+      "darkChromeText": "#c3cddd",
+      "darkChromeMuted": "#8fa2bb",
+      "darkChromeBorder": "#2a384b",
+      "success": "#12a76a",
+      "warn": "#d98300",
+      "bad": "#d94040"
+    }
+  }
+}
