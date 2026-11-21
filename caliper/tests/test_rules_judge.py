@@ -178,6 +178,43 @@ def test_missing_block_marks_uncollected() -> None:
     assert result.note.startswith("未采集：")
 
 
+def test_incomplete_point_is_rendered_as_uncollected() -> None:
+    item = _item("mixed_partial", False)
+    rules = RuleSet(
+        rules=[
+            Rule(
+                level=3,
+                item=1,
+                point=1,
+                block="Available",
+                expect={"contains": "ok"},
+                pass_reason="证据符合",
+                fail_reason="证据不符合",
+            ),
+            Rule(
+                level=3,
+                item=1,
+                point=1,
+                block="Missing",
+                expect={"contains": "ok"},
+                pass_reason="补充证据符合",
+                fail_reason="补充证据不符合",
+            ),
+        ]
+    )
+    result = judge_item(
+        item,
+        rules,
+        {"Available": _block("Available", ["ok"])},
+        expected_points={1},
+    )
+    assert result.verdict is Verdict.UNCOLLECTED
+    assert result.points[0].passed is None
+    assert "1) 未采集：" in result.result_text
+    assert "通过" not in result.result_text
+    assert len(result.points[0].rule_refs) == 2
+
+
 def test_uncovered_points_mark_uncollected() -> None:
     item = _item("mixed_partial", False)
     rules = RuleSet(

@@ -40,7 +40,7 @@ def build_result_text(points: list[PointResult]) -> str:
         return ""
     rows = []
     for point in points:
-        label = "通过" if point.passed else "未通过"
+        label = "未采集" if point.passed is None else "通过" if point.passed else "未通过"
         rows.append(f"{point.point}) {label}：{point.reason}{_anchor_text(point)}")
     return "\n".join(rows)
 
@@ -91,25 +91,35 @@ def judge_item(
         reasons: list[str] = []
         anchors: list = []
         rule_refs: list[str] = []
+        point_missing: list[str] = []
         block_title = ""
         for rule in point_rules:
+            rule_refs.append(rule.reference_id(item.item_id))
+            block_title = block_title or rule.block
             block = blocks.get(rule.block)
             if block is None:
-                missing.append(f"检查块「{rule.block}」缺失")
+                reason = f"检查块「{rule.block}」缺失"
+                missing.append(reason)
+                point_missing.append(reason)
                 continue
             if block.status in {CheckStatus.FAILED, CheckStatus.SKIPPED}:
-                missing.append(f"检查块「{rule.block}」未采集")
+                reason = f"检查块「{rule.block}」未采集"
+                missing.append(reason)
+                point_missing.append(reason)
                 continue
             rule_passed, rule_anchors = evaluate(rule.expect, block)
-            rule_refs.append(rule.reference_id(item.item_id))
             passed = passed and rule_passed
             reasons.append(rule.pass_reason if rule_passed else rule.fail_reason)
             anchors.extend(rule_anchors)
-            block_title = block_title or rule.block
+        if point_missing:
+            reasons = [
+                "缺少证据，无法完成实施点判定："
+                + "；".join(dict.fromkeys(point_missing))
+            ]
         points.append(
             PointResult(
                 point=point_no,
-                passed=passed,
+                passed=None if point_missing else passed,
                 reason="；".join(dict.fromkeys(reasons)),
                 block_title=block_title,
                 anchors=anchors[:3],
