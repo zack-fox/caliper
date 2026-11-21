@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
+import sys
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -37,7 +39,24 @@ from core.store.corrections import (
 )
 from core.store.project import ProjectStoreError, load_project, save_project
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+
+def _resource_root() -> Path:
+    """应用只读资源根目录；源码运行与 PyInstaller 包使用同一规则。"""
+    frozen_root = getattr(sys, "_MEIPASS", None)
+    return Path(frozen_root) if frozen_root else Path(__file__).resolve().parents[1]
+
+
+def _user_data_root() -> Path:
+    """可写用户数据目录，避免把项目数据写进只读的 .app 包。"""
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "Caliper"
+    if os.name == "nt":
+        return Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "Caliper"
+    return Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")) / "caliper"
+
+
+REPO_ROOT = _resource_root()
+USER_DATA_ROOT = _user_data_root()
 DEFAULT_PACK_DIR = REPO_ROOT / "packs" / "linux_os"
 
 
@@ -62,9 +81,10 @@ class AppController:
     def __init__(self) -> None:
         self.project = ProjectConfig(
             check_date=date.today(),
-            pack_dir=DEFAULT_PACK_DIR,
-            evidence_root=REPO_ROOT / "fixtures" / "evidence",
-            output_dir=REPO_ROOT / "out",
+            # None means the built-in pack; projects remain portable between machines.
+            pack_dir=None,
+            evidence_root=USER_DATA_ROOT / "evidence",
+            output_dir=USER_DATA_ROOT / "out",
         )
         self.base_dir = REPO_ROOT
         self.pack: Pack | None = None
@@ -194,7 +214,7 @@ class AppController:
             if self.source_path is not None:
                 path = self.source_path.resolve().with_name("corrections.db")
             else:
-                path = REPO_ROOT / "fixtures" / "samples" / "corrections.db"
+                path = USER_DATA_ROOT / "unsaved" / "corrections.db"
             return CorrectionStore(path)
         except (CorrectionError, sqlite3.Error) as exc:
             raise ControllerError(str(exc)) from exc

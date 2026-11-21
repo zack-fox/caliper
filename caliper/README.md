@@ -6,11 +6,11 @@
 
 ## 当前阶段
 
-V1.0.2 测试运行版：以「设备与证据包」为主入口——导入设备证据目录 → 核对识别结果 →
+V2.0.0 持续开发版：以「设备与证据包」为主入口——导入设备证据目录 → 核对识别结果 →
 开始核查 → 结果记录 / 问题汇总 / 重大隐患 / 四表导出。证据支持结构化证据包
 （manifest）与原始日志目录/单个日志文件两种方式，截图照片作为附件；
 设备支持添加、编辑、删除，双击表格行即可修改；证据根目录、输出目录、规则包目录收进「设置…」。
-macOS 双击工作区根目录的 `Caliper.app` 即可打开。大模型、报告合成、验收材料只预留端口。
+macOS 开发工作区根目录的 `Caliper.app` 使用本机 `.venv` 启动；面向使用者的自包含安装包通过 `make package-macos` 构建。大模型、报告合成、验收材料只预留端口。
 规则库是初版（三级 14 项、二级 14 项自动判定），按现场反馈继续迭代。
 
 ## 目录
@@ -60,17 +60,23 @@ make lint-rules
 .venv/bin/python -m core.cli golden --dir fixtures/golden
 .venv/bin/python -m core.cli golden --dir fixtures/golden --update
 
-# 启动桌面界面
+# 启动开发版桌面界面
 .venv/bin/caliper-gui
 
-# 离屏自检（不弹窗口，校验外壳与页面装配）
+# 构建无需接收方安装 Python 的 macOS 应用包（在当前机器架构下构建）
+make package-macos
+# 输出：dist/Caliper.app 与 dist/Caliper-macos-<架构>.zip
+
+# 离屏自检（校验页面装配、默认规则包和四张母版）
 .venv/bin/python -m app.main --smoke
 
 # 主题模板校验（QSS 颜色必须来自 design tokens）
 make ui-lint
 ```
 
-macOS 上也可直接双击工作区根目录的 `Caliper.app`（内部调用同一个 `.venv/bin/python -m app.main`）。
+`make package-macos` 会把桌面运行时、默认规则包和四张 Excel 母版一起装入 `dist/Caliper.app`，并生成 ZIP；接收方无需安装 Python、虚拟环境或开发依赖。默认无项目校正数据、证据目录和导出目录放在用户数据目录，项目打开后则继续把校正数据库保存在项目文件旁。构建产物按当前构建机器架构生成；工作区根目录原有的 `Caliper.app` 是开发启动器，不是交付安装包。
+
+当前打包流程未配置 Apple Developer ID 签名与公证。跨设备正式分发前仍需用组织的开发者证书完成签名和公证；否则 macOS 可能要求用户在首次打开时手动确认。
 
 ### 界面结构与主流程
 

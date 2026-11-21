@@ -3,7 +3,7 @@ PROJECT ?= fixtures/samples/project.yaml
 PKG ?= fixtures/evidence/pkg-A01
 ASSETS ?= fixtures/samples/asset_record.xlsx
 
-.PHONY: setup setup-gui syntax lint contracts test check parse run explain lint-rules export assets ui-lint golden build
+.PHONY: setup setup-gui syntax lint contracts test check parse run explain lint-rules export assets ui-lint golden build package-macos
 
 setup:
 	python3 -m venv .venv
@@ -51,5 +51,11 @@ ui-lint:
 golden:
 	$(PY) -m core.cli golden
 
-build:
-	$(PY) -m PyInstaller --noconfirm --onedir --windowed --name caliper app/main.py
+build: package-macos
+
+# 在当前 macOS 架构构建自包含应用包；交付物不依赖接收方的 Python 或 .venv。
+# PyInstaller 产物随带规则包和 Excel 母版；项目数据保存在用户目录。
+package-macos:
+	$(PY) -m pip install -e ".[gui,build]"
+	$(PY) -m PyInstaller --noconfirm --clean packaging/Caliper.spec
+	ditto -c -k --sequesterRsrc --keepParent dist/Caliper.app dist/Caliper-macos-$$(uname -m).zip

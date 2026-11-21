@@ -28,6 +28,7 @@ venv/
 build/
 dist/
 *.spec
+!caliper/packaging/Caliper.spec
 *.egg-info/
 .DS_Store
 

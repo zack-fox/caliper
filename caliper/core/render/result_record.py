@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import re
+import sys
 from pathlib import Path
 
 import openpyxl
@@ -34,9 +35,10 @@ class RenderError(Exception):
 
 def find_template(pack_dir: Path, filename: str = "result_record.xlsx") -> Path:
     """按 pack 位置与源码位置寻找母版，找不到就报错。"""
+    resource_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[2]))
     candidates = [
         Path(pack_dir).parent.parent / "templates" / filename,
-        Path(__file__).resolve().parents[2] / "templates" / filename,
+        resource_root / "templates" / filename,
         Path.cwd() / "templates" / filename,
     ]
     for candidate in candidates:
