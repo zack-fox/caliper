@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -15,13 +16,144 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMessageBox,
+    QListWidget,
+    QListWidgetItem,
+    QPlainTextEdit,
     QPushButton,
+    QSplitter,
+    QStackedWidget,
     QVBoxLayout,
+    QWidget,
 )
 
 from app.controller import AppController
 from core.contracts.enums import AssetType, Importance
 from core.model.entities import Asset
+
+
+class EvidenceReviewDialog(QDialog):
+    """逐个审阅已登记材料；这里只展示来源内容，不会自行改变判定。"""
+
+    KIND_LABELS = {
+        "image": "截图 / 图片",
+        "spreadsheet": "表格",
+        "configuration": "配置文件",
+        "code": "代码片段",
+        "text": "文本 / 命令日志",
+        "file": "其他附件",
+    }
+
+    def __init__(self, controller: AppController, asset: Asset, parent=None) -> None:
+        super().__init__(parent)
+        self.controller = controller
+        self.asset = asset
+        self.package = controller.evidence_details(asset.evidence_package or "", asset.device_name)
+        self.setWindowTitle(f"材料审阅 · {asset.device_name}")
+        self.resize(1080, 690)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 18, 20, 16)
+        layout.setSpacing(10)
+        intro = QLabel(
+            f"共登记 {len(self.package.evidence_files)} 个文件；只有已解析为检查块的材料参与当前自动判定。"
+        )
+        intro.setObjectName("muted")
+        layout.addWidget(intro)
+
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.file_list = QListWidget()
+        self.file_list.setMinimumWidth(270)
+        splitter.addWidget(self.file_list)
+
+        detail = QWidget()
+        detail_layout = QVBoxLayout(detail)
+        detail_layout.setContentsMargins(8, 0, 0, 0)
+        self.filename = QLabel("选择左侧文件")
+        self.filename.setObjectName("section_title")
+        self.filename.setWordWrap(True)
+        self.metadata = QLabel("")
+        self.metadata.setObjectName("muted")
+        self.metadata.setWordWrap(True)
+        detail_layout.addWidget(self.filename)
+        detail_layout.addWidget(self.metadata)
+
+        self.preview_stack = QStackedWidget()
+        self.text_preview = QPlainTextEdit()
+        self.text_preview.setReadOnly(True)
+        self.text_preview.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        self.image_preview = QLabel("图片无法预览")
+        self.image_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_preview.setMinimumSize(300, 240)
+        self.preview_note = QLabel("")
+        self.preview_note.setObjectName("muted")
+        self.preview_note.setWordWrap(True)
+        self.preview_stack.addWidget(self.text_preview)
+        self.preview_stack.addWidget(self.image_preview)
+        detail_layout.addWidget(self.preview_stack, 1)
+        detail_layout.addWidget(self.preview_note)
+        splitter.addWidget(detail)
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 3)
+        layout.addWidget(splitter, 1)
+
+        close = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        close.rejected.connect(self.reject)
+        close.button(QDialogButtonBox.StandardButton.Close).setText("关闭")
+        layout.addWidget(close)
+
+        for entry in self.package.evidence_files:
+            state = "已解析" if entry.analyzed else "仅登记"
+            label = f"{entry.path}  ·  {state}"
+            item = QListWidgetItem(label)
+            item.setData(Qt.ItemDataRole.UserRole, entry.path)
+            item.setToolTip(f"{self.KIND_LABELS.get(entry.kind, entry.kind)} · {entry.size} B")
+            self.file_list.addItem(item)
+        self.file_list.currentRowChanged.connect(self._show_file)
+        if self.package.evidence_files:
+            self.file_list.setCurrentRow(0)
+        else:
+            self.preview_note.setText("没有可审阅的文件材料。")
+
+    def _show_file(self, row: int) -> None:
+        if row < 0 or row >= len(self.package.evidence_files):
+            return
+        entry = self.package.evidence_files[row]
+        root = self.package.root
+        path = root if root.is_file() else root / entry.path
+        state = "已解析并参与自动判定" if entry.analyzed else "已登记；尚未参与自动判定"
+        self.filename.setText(entry.path)
+        self.metadata.setText(
+            f"类型：{self.KIND_LABELS.get(entry.kind, entry.kind)}　·　大小：{entry.size:,} B　·　状态：{state}\n"
+            f"SHA-256：{entry.sha256}"
+        )
+        self.preview_note.clear()
+        if entry.kind == "image":
+            pixmap = QPixmap(str(path))
+            if pixmap.isNull():
+                self.image_preview.setText("图片文件无法读取")
+            else:
+                self.image_preview.setPixmap(
+                    pixmap.scaled(
+                        self.image_preview.size(),
+                        Qt.AspectRatioMode.KeepAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation,
+                    )
+                )
+            self.preview_stack.setCurrentWidget(self.image_preview)
+        elif entry.kind in {"text", "configuration", "code"}:
+            if entry.size > 2 * 1024 * 1024:
+                self.text_preview.setPlainText("文件超过 2 MB，暂不在审阅窗口内载入全文。")
+            else:
+                self.text_preview.setPlainText(path.read_text(encoding="utf-8-sig", errors="replace"))
+            self.preview_stack.setCurrentWidget(self.text_preview)
+            if not entry.analyzed:
+                self.preview_note.setText("当前版本仅登记并展示该材料；需人工核对，不能据此自动形成测评结论。")
+        else:
+            self.text_preview.setPlainText(
+                f"该文件已登记并完成 SHA-256 校验。当前版本不支持此类型的内容预览。\n\n路径：{path}"
+            )
+            self.preview_stack.setCurrentWidget(self.text_preview)
+            self.preview_note.setText("该附件不会自动参与测评判定。")
 
 
 class AssetDialog(QDialog):

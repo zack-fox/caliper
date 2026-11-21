@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.controller import AppController, ControllerError
-from app.screens.dialogs import AssetDialog
+from app.screens.dialogs import AssetDialog, EvidenceReviewDialog
 from app.widgets import Card, DropZone, PageHeader, StatCard, divider, hbox, vbox
 from core.model.entities import Asset
 
@@ -131,6 +131,8 @@ class EvidenceScreen(QWidget):
         import_button.clicked.connect(lambda: self._add_asset())
         self.edit_button = QPushButton("编辑选中")
         self.edit_button.clicked.connect(self._edit_asset)
+        self.review_button = QPushButton("查看材料")
+        self.review_button.clicked.connect(self._review_evidence)
         self.remove_button = QPushButton("删除设备")
         self.remove_button.setObjectName("danger")
         self.remove_button.clicked.connect(self._remove_asset)
@@ -139,6 +141,7 @@ class EvidenceScreen(QWidget):
         self.run_button.clicked.connect(self.run_requested.emit)
         asset_card.add_action(import_button)
         asset_card.add_action(self.edit_button)
+        asset_card.add_action(self.review_button)
         asset_card.add_action(self.remove_button)
         asset_card.add_action(self.run_button)
 
@@ -298,6 +301,21 @@ class EvidenceScreen(QWidget):
             return
         self.refresh()
         self.assets_changed.emit()
+
+    def _review_evidence(self) -> None:
+        asset = self._current_asset()
+        if asset is None:
+            QMessageBox.information(self, "提示", "请先选择一行设备")
+            return
+        if not asset.evidence_package:
+            QMessageBox.information(self, "提示", f"设备「{asset.device_name}」尚未关联材料")
+            return
+        try:
+            dialog = EvidenceReviewDialog(self.controller, asset, self)
+        except ControllerError as exc:
+            QMessageBox.warning(self, "材料不可用", str(exc))
+            return
+        dialog.exec()
 
     def _remove_asset(self) -> None:
         asset = self._current_asset()
