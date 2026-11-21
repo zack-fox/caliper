@@ -75,6 +75,8 @@ class EvidencePreview:
     level: int = 0
     blocks: int = 0
     images: int = 0
+    files: int = 0
+    analyzed_files: int = 0
 
 
 class AppController:
@@ -169,11 +171,23 @@ class AppController:
             return EvidencePreview(False, str(exc))
         images = len(media_files(root))
         counts = summarize(loaded.blocks)
+        inventory = loaded.evidence_files
+        analyzed_files = sum(entry.analyzed for entry in inventory)
+        inventory_text = "\n".join(
+            f"{entry.path} · {entry.kind} · {entry.size} B · SHA-256 {entry.sha256}"
+            for entry in inventory
+        )
+        if loaded.diagnostics:
+            inventory_text += ("\n" if inventory_text else "") + "\n".join(loaded.diagnostics)
         if not loaded.blocks:
             message = "未识别到检查块"
             if images:
                 message += f"；图片 {images} 张仅作附件"
-            return EvidencePreview(False, message, images=images)
+            if inventory:
+                message += f"；已登记 {len(inventory)} 个材料（未自动用于判定）"
+            if inventory_text:
+                message += f"\n\n材料清单与诊断：\n{inventory_text}"
+            return EvidencePreview(False, message, images=images, files=len(inventory))
         detail = " / ".join(f"{key} {value}" for key, value in sorted(counts.items()))
         manifest = loaded.manifest
         message = (
@@ -182,6 +196,9 @@ class AppController:
         )
         if images:
             message += f"；图片 {images} 张仅作附件"
+        message += f"；材料 {len(inventory)} 个，解析 {analyzed_files} 个"
+        if inventory_text:
+            message += f"\n\n材料清单与诊断：\n{inventory_text}"
         return EvidencePreview(
             True,
             message,
@@ -190,6 +207,8 @@ class AppController:
             level=manifest.level,
             blocks=len(loaded.blocks),
             images=images,
+            files=len(inventory),
+            analyzed_files=analyzed_files,
         )
 
     # ---- 跑批 ----

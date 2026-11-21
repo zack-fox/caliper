@@ -49,6 +49,41 @@ def test_load_single_log_file(tmp_path: Path) -> None:
     assert len(package.blocks) == 3
     assert package.manifest.package_id == log.name
     assert package.manifest.level == 2
+    assert [entry.path for entry in package.evidence_files] == [log.name]
+    assert package.evidence_files[0].analyzed is True
+
+
+def test_nested_same_named_logs_have_unique_source_anchors(tmp_path: Path) -> None:
+    root = tmp_path / "evidence"
+    for folder, host in (("first", "host=first"), ("second", "host=second")):
+        directory = root / folder
+        directory.mkdir(parents=True)
+        (directory / "session.log").write_text(
+            SAMPLE_LOG.replace("hostname: demo", f"hostname: {host}"),
+            encoding="utf-8",
+        )
+    package = load_evidence(root)
+    sources = {block.source for block in package.blocks}
+    assert sources == {"first/session.log", "second/session.log"}
+    assert {entry.path for entry in package.evidence_files} == sources
+    assert all(entry.analyzed for entry in package.evidence_files)
+
+
+def test_unparsed_configuration_and_images_are_registered(tmp_path: Path) -> None:
+    root = tmp_path / "evidence"
+    root.mkdir()
+    (root / "sshd.conf").write_text("PermitRootLogin no\n", encoding="utf-8")
+    (root / "snippet.sh").write_text("sshd -T\n", encoding="utf-8")
+    (root / "screenshot.png").write_bytes(b"\x89PNG\r\n")
+    package = load_evidence(root)
+    entries = {entry.path: entry for entry in package.evidence_files}
+    assert entries["sshd.conf"].kind == "configuration"
+    assert entries["snippet.sh"].kind == "code"
+    assert entries["screenshot.png"].kind == "image"
+    assert len(entries["screenshot.png"].sha256) == 64
+    assert not entries["sshd.conf"].analyzed
+    assert not entries["snippet.sh"].analyzed
+    assert not entries["screenshot.png"].analyzed
 
 
 def test_images_only_directory_is_attachment(tmp_path: Path) -> None:

@@ -39,6 +39,16 @@ class EvidenceAnchor(BaseModel):
     snippet: str
 
 
+class EvidenceFile(BaseModel):
+    """证据包中的原始文件登记；附件也要可定位、可校验，但不自动参与判定。"""
+
+    path: str
+    kind: str
+    size: int
+    sha256: str
+    analyzed: bool = False
+
+
 class CheckBlock(BaseModel):
     session: int
     block_index: int
@@ -111,6 +121,7 @@ class EvidencePackage(BaseModel):
     root: Path
     manifest: PackageManifest
     blocks: list[CheckBlock] = Field(default_factory=list)
+    evidence_files: list[EvidenceFile] = Field(default_factory=list)
     diagnostics: list[str] = Field(default_factory=list)
 
     def block_by_title(self, title: str) -> CheckBlock | None:

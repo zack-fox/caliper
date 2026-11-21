@@ -10,10 +10,20 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from core.evidence.logparse import ParseError, ParseOutcome, parse_log_text
-from core.model.entities import CheckBlock, CheckStatus, EvidencePackage, OutputLine, PackageManifest
+from core.model.entities import (
+    CheckBlock,
+    CheckStatus,
+    EvidenceFile,
+    EvidencePackage,
+    OutputLine,
+    PackageManifest,
+)
 
-TEXT_SUFFIXES = {".log", ".txt", ".out", ".cmd"}
+TEXT_SUFFIXES = {".log", ".txt", ".out", ".cmd", ".json"}
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp", ".heic"}
+SHEET_SUFFIXES = {".xlsx", ".xls", ".csv", ".tsv"}
+CONFIG_SUFFIXES = {".conf", ".cfg", ".ini", ".yaml", ".yml", ".xml", ".toml"}
+CODE_SUFFIXES = {".py", ".sh", ".sql", ".ps1", ".js", ".ts", ".php"}
 
 REQUIRED_MANIFEST_FIELDS = (
     "package_id",
@@ -95,7 +105,7 @@ def _json_blocks(root: Path, warnings: list[str]) -> list[CheckBlock]:
                     commands=list(record.get("cmd", [])),
                     file_refs=list(record.get("file", [])),
                     output=output,
-                    source=path.name,
+                    source=path.relative_to(root).as_posix(),
                 )
             except (KeyError, ValueError) as exc:
                 raise EvidenceError(f"{path}：检查块字段非法：{exc}") from exc
@@ -113,7 +123,9 @@ def _log_blocks(root: Path, warnings: list[str]) -> list[CheckBlock]:
     session = 0
     for path in logs:
         outcome: ParseOutcome = parse_log_text(
-            path.read_text(encoding="utf-8", errors="replace"), path.name, session_start=session
+            path.read_text(encoding="utf-8", errors="replace"),
+            path.relative_to(root).as_posix(),
+            session_start=session,
         )
         blocks.extend(outcome.blocks)
         warnings.extend(outcome.warnings)
@@ -147,9 +159,45 @@ def load_package(root: Path) -> EvidencePackage:
         for block in blocks:
             block.status = CheckStatus.FAILED
 
+    evidence_files = _inventory_files(root, blocks)
+
     return EvidencePackage(
-        root=root, manifest=manifest, blocks=blocks, diagnostics=warnings
+        root=root,
+        manifest=manifest,
+        blocks=blocks,
+        evidence_files=evidence_files,
+        diagnostics=warnings,
     )
+
+
+def _inventory_files(root: Path, blocks: list[CheckBlock]) -> list[EvidenceFile]:
+    """登记所有原始材料，并用相对路径区分目录内的同名文件。"""
+    parsed = {block.source for block in blocks}
+    inventory: list[EvidenceFile] = []
+    paths = [root] if root.is_file() else [item for item in root.rglob("*") if item.is_file()]
+    for path in sorted(paths):
+        if path.name == "manifest.json":
+            continue
+        relative = path.name if root.is_file() else path.relative_to(root).as_posix()
+        suffix = path.suffix.lower()
+        kind = (
+            "image" if suffix in IMAGE_SUFFIXES else
+            "spreadsheet" if suffix in SHEET_SUFFIXES else
+            "configuration" if suffix in CONFIG_SUFFIXES else
+            "code" if suffix in CODE_SUFFIXES else
+            "text" if suffix in TEXT_SUFFIXES else
+            "file"
+        )
+        inventory.append(
+            EvidenceFile(
+                path=relative,
+                kind=kind,
+                size=path.stat().st_size,
+                sha256=sha256_of(path),
+                analyzed=relative in parsed,
+            )
+        )
+    return inventory
 
 
 def summarize(blocks: list[CheckBlock]) -> dict[str, int]:
@@ -204,9 +252,10 @@ def load_evidence(root: Path, host: str = "", level: int = 3) -> EvidencePackage
     session = 0
     for path in text_evidence_files(root):
         try:
+            source = path.name if root.is_file() else path.relative_to(root).as_posix()
             outcome: ParseOutcome = parse_log_text(
                 path.read_text(encoding="utf-8", errors="replace"),
-                path.name,
+                source,
                 session_start=session,
             )
         except ParseError as exc:
@@ -237,4 +286,11 @@ def load_evidence(root: Path, host: str = "", level: int = 3) -> EvidencePackage
         status="collected" if blocks else "empty",
         note="原始证据（无 manifest）",
     )
-    return EvidencePackage(root=root, manifest=manifest, blocks=blocks, diagnostics=warnings)
+    evidence_files = _inventory_files(root, blocks)
+    return EvidencePackage(
+        root=root,
+        manifest=manifest,
+        blocks=blocks,
+        evidence_files=evidence_files,
+        diagnostics=warnings,
+    )
