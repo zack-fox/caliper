@@ -115,7 +115,7 @@ assets:
     importance: "一般"           # 关键 / 重要 / 一般
     guide: "三级-安全通用要求"
     asset_type: "服务器"          # 服务器 / 存储设备
-    evidence_package: "pkg-A01"  # 可留空，表示暂无采集证据
+    evidence_package: "pkg-A01"  # 可留空；相对证据根目录或写绝对路径
 ```
 
 ## 9. 规则文件（packs/<pack>/rules/level3.yaml）

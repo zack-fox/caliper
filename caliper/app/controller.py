@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
 from core.contracts.filenames import RESULT_FILENAME
+from core.evidence.package import EvidenceError, load_package, summarize
 from core.issues.summary import (
     IssueRow,
     TextLibrary,
@@ -35,6 +37,18 @@ DEFAULT_PACK_DIR = REPO_ROOT / "packs" / "linux_os"
 
 class ControllerError(Exception):
     """界面层可直接展示的错误。"""
+
+
+@dataclass(frozen=True)
+class EvidencePreview:
+    """证据包解析预览：界面只读这里，不关心 manifest 细节。"""
+
+    ok: bool
+    message: str
+    host: str = ""
+    os_family: str = ""
+    level: int = 0
+    blocks: int = 0
 
 
 class AppController:
@@ -86,6 +100,54 @@ class AppController:
     def items(self) -> list[Item]:
         pack = self.pack or self.load_pack()
         return pack.items_for_level(self.project.level)
+
+    def guides(self) -> list[str]:
+        """作业指导书清单；规则包装载失败时返回空列表，由界面给默认值。"""
+        try:
+            pack = self.pack or self.load_pack()
+        except ControllerError:
+            return []
+        return list(pack.meta.guides)
+
+    # ---- 证据包 ----
+    def evidence_root_path(self) -> Path:
+        root = self.project.evidence_root
+        return root if root.is_absolute() else self.base_dir / root
+
+    def evidence_path(self, package: str) -> Path:
+        path = Path(package)
+        return path if path.is_absolute() else self.evidence_root_path() / path
+
+    def display_package_path(self, path: Path) -> str:
+        """根目录内的证据包保存相对路径，项目整体迁移后仍可用。"""
+        try:
+            relative = path.resolve().relative_to(self.evidence_root_path().resolve())
+        except ValueError:
+            return str(path.resolve())
+        return relative.as_posix()
+
+    def inspect_evidence(self, package: str | None) -> EvidencePreview:
+        if not package:
+            return EvidencePreview(False, "未关联证据包")
+        root = self.evidence_path(package)
+        if not root.is_dir():
+            return EvidencePreview(False, f"证据包目录不存在：{root}")
+        try:
+            loaded = load_package(root)
+        except (EvidenceError, OSError) as exc:
+            return EvidencePreview(False, str(exc))
+        counts = summarize(loaded.blocks)
+        detail = " / ".join(f"{key} {value}" for key, value in sorted(counts.items()))
+        manifest = loaded.manifest
+        return EvidencePreview(
+            True,
+            f"{manifest.host}（{manifest.os_family}，{manifest.level} 级）"
+            f"· {len(loaded.blocks)} 块：{detail}",
+            host=manifest.host,
+            os_family=manifest.os_family,
+            level=manifest.level,
+            blocks=len(loaded.blocks),
+        )
 
     # ---- 跑批 ----
     def run(self) -> RunResult:
@@ -212,6 +274,21 @@ class AppController:
         if self.project.asset_by_device(asset.device_name):
             raise ControllerError(f"设备名称重复：{asset.device_name}")
         self.project = self.project.model_copy(update={"assets": [*self.project.assets, asset]})
+
+    def update_asset(self, original_device_name: str, asset: Asset) -> None:
+        assets = list(self.project.assets)
+        index = next(
+            (i for i, item in enumerate(assets) if item.device_name == original_device_name),
+            None,
+        )
+        if index is None:
+            raise ControllerError(f"设备不存在：{original_device_name}")
+        if asset.device_name != original_device_name and any(
+            item.device_name == asset.device_name for item in assets
+        ):
+            raise ControllerError(f"设备名称重复：{asset.device_name}")
+        assets[index] = asset
+        self.project = self.project.model_copy(update={"assets": assets})
 
     def remove_asset(self, device_name: str) -> None:
         assets = [asset for asset in self.project.assets if asset.device_name != device_name]
