@@ -5,7 +5,8 @@ from __future__ import annotations
 import pytest
 
 from app.controller import AppController, ControllerError
-from core.model.entities import Asset
+from core.contracts.verdict import Verdict
+from core.model.entities import Asset, AssetRun, ItemResult, RunResult
 
 
 def _asset(name: str = "设备A", ip: str = "192.0.2.10", package: str | None = None) -> Asset:
@@ -47,3 +48,29 @@ def test_inspect_evidence_states() -> None:
     missing = controller.inspect_evidence("不存在的包")
     assert missing.ok is False
     assert "不存在" in missing.message
+
+
+def test_unreviewed_machine_records_cannot_be_exported() -> None:
+    controller = AppController()
+    asset = _asset()
+    result = ItemResult(
+        item_id="L3-001",
+        seq=1,
+        control_point="身份鉴别",
+        importance="一般",
+        verdict=Verdict.COMPLIANT,
+        result_text="自动生成的核查建议",
+    )
+    controller.run_result = RunResult(
+        project=controller.project,
+        asset_runs=[AssetRun(asset=asset, items=[result])],
+    )
+
+    assert controller.pending_review_records() == [(asset.device_name, 1, "L3-001")]
+    for export in (controller.export_result, controller.export_issue, controller.export_major):
+        with pytest.raises(ControllerError, match="待人工核对"):
+            export()
+
+    result.reviewed = True
+    assert controller.pending_review_records() == []
+    controller._require_reviewed_records()

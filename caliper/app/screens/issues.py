@@ -42,7 +42,7 @@ class IssuesScreen(QWidget):
 
         self.header = PageHeader(
             "问题与重大",
-            "所有「不符合 / 部分符合」项按测评项 × 资产类型汇总；勾选后才会进入重大安全隐患表。",
+            "自动归集的不符合 / 部分符合项仅作问题草稿；记录人工复核后，勾选的重大隐患才可导出。",
         )
         refresh_button = QPushButton("刷新")
         refresh_button.setObjectName("subtle")

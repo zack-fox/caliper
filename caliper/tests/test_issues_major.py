@@ -163,3 +163,38 @@ def test_corrections_roundtrip(tmp_path: Path) -> None:
         assert store.notes(3) == {}
     finally:
         store.close()
+
+
+def test_record_changes_clear_stale_major_confirmation(tmp_path: Path) -> None:
+    store = CorrectionStore(tmp_path / "corrections.db")
+    try:
+        store.save_record_override(
+            3,
+            "L3-CES1-01",
+            "服务器A",
+            "原始记录",
+            "部分符合",
+            "",
+            "首次人工校正",
+            asset_type="服务器",
+        )
+        store.set(3, "L3-CES1-01", "服务器", "major", "1")
+        store.save_record_override(
+            3,
+            "L3-CES1-01",
+            "服务器A",
+            "修改后的记录",
+            "不符合",
+            "",
+            "现场复核后调整",
+            asset_type="服务器",
+        )
+        assert store.major_confirmed(3) == set()
+
+        store.set(3, "L3-CES1-01", "服务器", "major", "1")
+        store.clear_record_override(
+            3, "L3-CES1-01", "服务器A", asset_type="服务器"
+        )
+        assert store.major_confirmed(3) == set()
+    finally:
+        store.close()

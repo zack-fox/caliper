@@ -191,6 +191,7 @@ class CorrectionStore:
         verdict: str,
         note: str,
         reason: str,
+        asset_type: str = "",
     ) -> str:
         """Save editable record fields and append a small, local change history."""
         reason = reason.strip()
@@ -259,10 +260,18 @@ class CorrectionStore:
                 now,
             ),
         )
+        if asset_type:
+            # Any changed source record invalidates a previous major-risk decision.
+            self._connection.execute(
+                "DELETE FROM corrections WHERE level=? AND item_id=? AND asset_type=? AND field='major'",
+                (level, item_id, asset_type),
+            )
         self._connection.commit()
         return now
 
-    def clear_record_override(self, level: int, item_id: str, asset_key: str) -> None:
+    def clear_record_override(
+        self, level: int, item_id: str, asset_key: str, asset_type: str = ""
+    ) -> None:
         row = self._connection.execute(
             """
             SELECT result_text, verdict, note FROM record_overrides
@@ -306,6 +315,11 @@ class CorrectionStore:
             "DELETE FROM record_reviews WHERE level=? AND item_id=? AND asset_key=?",
             (level, item_id, asset_key),
         )
+        if asset_type:
+            self._connection.execute(
+                "DELETE FROM corrections WHERE level=? AND item_id=? AND asset_type=? AND field='major'",
+                (level, item_id, asset_type),
+            )
         self._connection.commit()
 
 

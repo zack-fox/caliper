@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 from app.controller import AppController
 from app.widgets import Badge, Card, PageHeader, hbox
 
-EXPORT_HINT = "导出已确认的测评记录表；导出前自动检查表格结构、结论文本和数据行。"
+EXPORT_HINT = "逐项人工确认后方可导出结果表、问题表和重大隐患表；未确认内容只保留为工作草稿。"
 
 
 class ExportScreen(QWidget):
@@ -162,14 +162,27 @@ class ExportScreen(QWidget):
         self.evidence_root.setText(str(project.evidence_root))
         self.pack_dir.setText(str(project.pack_dir or ""))
         has_run = self.controller.run_result is not None
-        self.status_result.set_text("可导出" if has_run else "待核查", "info" if has_run else "neutral")
+        pending = self.controller.pending_review_records() if has_run else []
+        if not has_run:
+            self.status_result.set_text("待核查", "neutral")
+        elif pending:
+            self.status_result.set_text(f"待确认 {len(pending)}", "warn")
+        else:
+            self.status_result.set_text("可导出", "ok")
         rows = len(self.controller.issue_rows()) if has_run else 0
         confirmed = len(self.controller.confirmations()) if has_run else 0
-        self.status_issue.set_text(f"{rows} 行" if has_run else "待核查", "info" if rows else "neutral")
-        self.status_major.set_text(
-            f"{confirmed} 行" if confirmed else "无确认行",
-            "info" if confirmed else "neutral",
-        )
+        if not has_run:
+            self.status_issue.set_text("待核查", "neutral")
+            self.status_major.set_text("待核查", "neutral")
+        elif pending:
+            self.status_issue.set_text(f"待复核 {len(pending)}", "warn")
+            self.status_major.set_text("待记录复核", "warn")
+        else:
+            self.status_issue.set_text(f"{rows} 行可导出", "info" if rows else "neutral")
+            self.status_major.set_text(
+                f"已确认 {confirmed} 行" if confirmed else "无重大确认行",
+                "info" if confirmed else "neutral",
+            )
 
     # ---- 选择 ----
     def _pick_dir(self) -> None:

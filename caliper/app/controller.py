@@ -245,6 +245,7 @@ class AppController:
                 verdict,
                 note,
                 reason,
+                asset_type=self._record_asset_type(asset_key),
             )
         except (CorrectionError, sqlite3.Error) as exc:
             raise ControllerError(str(exc)) from exc
@@ -254,11 +255,29 @@ class AppController:
     def clear_record_override(self, item_id: str, asset_key: str) -> None:
         store = self._store()
         try:
-            store.clear_record_override(self.project.level, item_id, asset_key)
+            store.clear_record_override(
+                self.project.level,
+                item_id,
+                asset_key,
+                asset_type=self._record_asset_type(asset_key),
+            )
         except (CorrectionError, sqlite3.Error) as exc:
             raise ControllerError(str(exc)) from exc
         finally:
             store.close()
+
+    def _record_asset_type(self, asset_key: str) -> str:
+        asset = self.project.asset_by_device(asset_key)
+        if asset is None and self.run_result is not None:
+            asset = next(
+                (
+                    run.asset
+                    for run in self.run_result.asset_runs
+                    if run.asset.device_name == asset_key
+                ),
+                None,
+            )
+        return asset.asset_type.value if asset is not None else ""
 
     def confirm_record(self, item_id: str, asset_key: str) -> str:
         store = self._store()
@@ -308,6 +327,7 @@ class AppController:
         return output if output.is_absolute() else self.base_dir / output
 
     def export_issue(self) -> tuple[Path, list[str]]:
+        self._require_reviewed_records()
         pack = self.pack or self.load_pack()
         rows = self.issue_rows()
         try:
@@ -318,6 +338,7 @@ class AppController:
         return target, verify_issue_workbook(target, len(rows))
 
     def export_major(self) -> tuple[Path, list[str]]:
+        self._require_reviewed_records()
         pack = self.pack or self.load_pack()
         rows = build_major_rows(
             self.issue_rows(), pack.high_risk, self.project.level, self.confirmations()
@@ -332,6 +353,7 @@ class AppController:
     def export_result(self) -> tuple[Path, list[str]]:
         if self.run_result is None:
             raise ControllerError("请先运行判定")
+        self._require_reviewed_records()
         pack = self.pack or self.load_pack()
         try:
             template = find_template(pack.root)
@@ -342,6 +364,30 @@ class AppController:
             raise ControllerError(str(exc)) from exc
         problems = verify_workbook(target, self.project.level, pack.items_for_level(self.project.level))
         return target, problems
+
+    def pending_review_records(self) -> list[tuple[str, int, str]]:
+        """返回仍需人工核对的设备、序号和控制项编号。"""
+        if self.run_result is None:
+            return []
+        return [
+            (run.asset.device_name, item.seq, item.item_id)
+            for run in self.run_result.asset_runs
+            for item in run.items
+            if not item.reviewed
+        ]
+
+    def _require_reviewed_records(self) -> None:
+        pending = self.pending_review_records()
+        if pending:
+            examples = "；".join(
+                f"{device} 第{seq}项（{item_id}）"
+                for device, seq, item_id in pending[:3]
+            )
+            suffix = "" if len(pending) <= 3 else "；…"
+            raise ControllerError(
+                f"还有 {len(pending)} 条记录待人工核对并确认，暂不能导出正式结果。"
+                f"示例：{examples}{suffix}"
+            )
 
     def export_asset(self, source: Path) -> tuple[Path | None, list[str], list[str]]:
         """返回 (输出路径, 错误, 提示)；错误非空时未生成文件。"""
