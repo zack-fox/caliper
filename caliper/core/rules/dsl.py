@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from core.model.entities import CheckBlock, EvidenceAnchor
+from core.model.entities import CheckBlock, CheckStatus, EvidenceAnchor
 
 COMBINATORS = {"all", "any"}
 ATOMS = {
@@ -89,6 +89,8 @@ def _numbers(block: CheckBlock, prefix: str) -> list[float]:
 
 def evaluate(expression: dict, block: CheckBlock) -> tuple[bool, list[EvidenceAnchor]]:
     """返回 (是否满足, 支撑证据)。"""
+    if block.status in {CheckStatus.FAILED, CheckStatus.SKIPPED} or not block.output:
+        return False, []
     key, value = next(iter(expression.items()))
 
     if key == "all":

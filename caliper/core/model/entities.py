@@ -10,7 +10,7 @@ from datetime import date, datetime
 from enum import Enum
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from core.contracts.enums import AssetType, Importance
 from core.contracts.policy import Policy
@@ -60,6 +60,12 @@ class CheckBlock(BaseModel):
     file_refs: list[str] = Field(default_factory=list)
     output: list[OutputLine] = Field(default_factory=list)
     source: str = ""
+
+    @model_validator(mode="after")
+    def _empty_output_is_not_collected(self) -> "CheckBlock":
+        if not self.output and self.status in {CheckStatus.COLLECTED, CheckStatus.EMPTY}:
+            self.status = CheckStatus.FAILED
+        return self
 
     @property
     def key(self) -> tuple[int, int]:

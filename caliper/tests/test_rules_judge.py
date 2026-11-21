@@ -67,6 +67,38 @@ def test_evaluate_operators() -> None:
     )[0] is True
 
 
+def test_negative_expectations_do_not_pass_without_output() -> None:
+    block = _block("Missing command output", [])
+    assert block.status is CheckStatus.FAILED
+    for expression in (
+        {"not_contains": "bad"},
+        {"not_in": ["bad"]},
+        {"ne": "bad"},
+        {"regex_empty": True},
+    ):
+        assert evaluate(expression, block) == (False, [])
+
+
+def test_no_output_cannot_create_a_compliant_result() -> None:
+    item = _item("mixed_partial", False)
+    rules = RuleSet(
+        rules=[
+            Rule(
+                level=3,
+                item=1,
+                point=1,
+                block="A",
+                expect={"not_contains": "bad"},
+                pass_reason="未发现问题",
+                fail_reason="发现问题",
+            )
+        ]
+    )
+    result = judge_item(item, rules, {"A": _block("A", [])}, expected_points={1})
+    assert result.verdict is Verdict.UNCOLLECTED
+    assert "未采集" in result.note
+
+
 def test_evaluate_anchors_are_objects() -> None:
     """eq/in 命中时也必须返回 EvidenceAnchor 列表，不能被当作可迭代字段拆开。"""
     block = _block("Password policy", ["PASS_MAX_DAYS 99999", "PASS_MIN_LEN 8"])
