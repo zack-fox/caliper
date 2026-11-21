@@ -13,7 +13,7 @@ from tempfile import TemporaryDirectory
 
 from core.contracts.filenames import RESULT_FILENAME
 from core.contracts.verdict import to_text
-from core.evidence.package import EvidenceError, load_package, summarize
+from core.evidence.package import EvidenceError, load_evidence, summarize
 from core.golden import GoldenError, check_case, discover_cases, run_case, update_expected
 from core.items.loader import Pack, PackError, load_pack
 from core.judge.runner import RunError, run_project
@@ -117,7 +117,7 @@ def _load(args) -> tuple[ProjectConfig, Path, Pack]:
 
 def _cmd_parse(args) -> int:
     try:
-        package = load_package(args.pkg)
+        package = load_evidence(args.pkg)
     except EvidenceError as exc:
         raise CliError(str(exc)) from exc
 

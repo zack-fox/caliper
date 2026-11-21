@@ -7,7 +7,7 @@ from pathlib import Path
 from core.checks.mapping import ChecksMap, index_blocks
 from core.contracts.policy import Policy
 from core.contracts.verdict import Verdict
-from core.evidence.package import EvidenceError, load_package
+from core.evidence.package import EvidenceError, load_evidence
 from core.items.loader import Pack
 from core.judge.synth import judge_item
 from core.model.entities import Asset, AssetRun, CheckBlock, Item, ItemResult, ProjectConfig, RunResult
@@ -53,7 +53,7 @@ def _judge_package(
     package_root: Path,
     level: int,
 ) -> AssetRun:
-    package = load_package(package_root)
+    package = load_evidence(package_root, host=asset.device_name, level=level)
     blocks: dict[str, CheckBlock] = index_blocks(
         package.blocks, checks, package.manifest.os_family
     )

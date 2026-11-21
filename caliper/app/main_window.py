@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.controller = controller or AppController()
         self.worker: RunWorker | None = None
-        self.setWindowTitle("Caliper v1.0.1 · 等保测评取证助手")
+        self.setWindowTitle("Caliper v1.0.2 · 等保测评取证助手")
         self.resize(1280, 840)
 
         self.tabs = QTabWidget()

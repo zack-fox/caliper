@@ -7,7 +7,7 @@ from datetime import date
 from pathlib import Path
 
 from core.contracts.filenames import RESULT_FILENAME
-from core.evidence.package import EvidenceError, load_package, summarize
+from core.evidence.package import EvidenceError, load_evidence, media_files, summarize
 from core.issues.summary import (
     IssueRow,
     TextLibrary,
@@ -49,6 +49,7 @@ class EvidencePreview:
     os_family: str = ""
     level: int = 0
     blocks: int = 0
+    images: int = 0
 
 
 class AppController:
@@ -126,27 +127,43 @@ class AppController:
             return str(path.resolve())
         return relative.as_posix()
 
-    def inspect_evidence(self, package: str | None) -> EvidencePreview:
+    def inspect_evidence(
+        self, package: str | None, device_name: str = ""
+    ) -> EvidencePreview:
         if not package:
             return EvidencePreview(False, "未关联证据包")
         root = self.evidence_path(package)
-        if not root.is_dir():
-            return EvidencePreview(False, f"证据包目录不存在：{root}")
+        if not root.exists():
+            return EvidencePreview(False, f"证据目录不存在：{root}")
         try:
-            loaded = load_package(root)
+            loaded = load_evidence(
+                root, host=device_name, level=self.project.level
+            )
         except (EvidenceError, OSError) as exc:
             return EvidencePreview(False, str(exc))
+        images = len(media_files(root))
         counts = summarize(loaded.blocks)
+        if not loaded.blocks:
+            message = "未识别到检查块"
+            if images:
+                message += f"；图片 {images} 张仅作附件"
+            return EvidencePreview(False, message, images=images)
         detail = " / ".join(f"{key} {value}" for key, value in sorted(counts.items()))
         manifest = loaded.manifest
+        message = (
+            f"{manifest.host}（{manifest.os_family}，{manifest.level} 级）"
+            f"· {len(loaded.blocks)} 块：{detail}"
+        )
+        if images:
+            message += f"；图片 {images} 张仅作附件"
         return EvidencePreview(
             True,
-            f"{manifest.host}（{manifest.os_family}，{manifest.level} 级）"
-            f"· {len(loaded.blocks)} 块：{detail}",
+            message,
             host=manifest.host,
             os_family=manifest.os_family,
             level=manifest.level,
             blocks=len(loaded.blocks),
+            images=images,
         )
 
     # ---- 跑批 ----

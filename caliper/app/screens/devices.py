@@ -31,10 +31,11 @@ from app.controller import AppController, ControllerError
 from core.contracts.enums import AssetType, Importance
 from core.model.entities import Asset
 
-ASSET_COLUMNS = ("设备名称", "IP 地址", "重要程度", "作业指导书", "资产类型", "证据包", "证据识别")
+ASSET_COLUMNS = ("设备名称", "IP 地址", "重要程度", "作业指导书", "资产类型", "证据目录", "证据识别")
 
 OK_COLOR = "#1f9d55"
 ERROR_COLOR = "#d64545"
+WARN_COLOR = "#c47f17"
 MUTED_COLOR = "#6b7785"
 
 
@@ -90,13 +91,16 @@ class AssetDialog(QDialog):
         package_row = QHBoxLayout()
         package_row.setSpacing(6)
         self.evidence = QLineEdit(asset.evidence_package if asset else "")
-        self.evidence.setPlaceholderText("选择采集输出目录（含 manifest.json），可留空")
+        self.evidence.setPlaceholderText("采集日志 / 命令输出 / 截图所在的目录或单个日志文件")
         pick = QPushButton("选择目录…")
         pick.clicked.connect(self._pick_package)
+        pick_file = QPushButton("选择日志…")
+        pick_file.clicked.connect(self._pick_log)
         clear = QPushButton("清除")
         clear.clicked.connect(self._clear_package)
         package_row.addWidget(self.evidence, 1)
         package_row.addWidget(pick)
+        package_row.addWidget(pick_file)
         package_row.addWidget(clear)
 
         form.addRow("设备名称 *", self.device_name)
@@ -104,7 +108,7 @@ class AssetDialog(QDialog):
         form.addRow("重要程度 *", self.importance)
         form.addRow("作业指导书 *", self.guide)
         form.addRow("资产类型", self.asset_type)
-        form.addRow("证据包目录", package_row)
+        form.addRow("证据目录", package_row)
         layout.addLayout(form)
 
         self.status = QLabel("")
@@ -112,8 +116,9 @@ class AssetDialog(QDialog):
         layout.addWidget(self.status)
 
         hint = QLabel(
-            "证据包是采集脚本输出的目录，需包含 manifest.json，"
-            "以及 raw/*.log 或 checks/*.json。"
+            "可直接选择采集目录或单个日志文件，支持 .log / .txt / .out / .cmd 与截图；"
+            "有 manifest.json 时走结构化校验，没有则按原始日志解析。"
+            "截图、照片只作证据附件，不参与自动判定。"
         )
         hint.setObjectName("muted")
         hint.setWordWrap(True)
@@ -138,7 +143,25 @@ class AssetDialog(QDialog):
             if current
             else str(self.controller.evidence_root_path())
         )
-        path = QFileDialog.getExistingDirectory(self, "选择证据包目录", start)
+        path = QFileDialog.getExistingDirectory(self, "选择证据目录", start)
+        if not path:
+            return
+        self.evidence.setText(self.controller.display_package_path(Path(path)))
+        self._update_status()
+
+    def _pick_log(self) -> None:
+        current = self.evidence.text().strip()
+        start = (
+            str(self.controller.evidence_path(current))
+            if current
+            else str(self.controller.evidence_root_path())
+        )
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "选择日志或命令输出",
+            start,
+            "证据文件 (*.log *.txt *.out *.cmd);;所有文件 (*)",
+        )
         if not path:
             return
         self.evidence.setText(self.controller.display_package_path(Path(path)))
@@ -150,10 +173,16 @@ class AssetDialog(QDialog):
 
     def _update_status(self) -> None:
         preview = self.controller.inspect_evidence(
-            self.evidence.text().strip() or None
+            self.evidence.text().strip() or None,
+            self.device_name.text().strip(),
         )
         self.status.setText(preview.message)
-        self.status.setObjectName("success" if preview.ok else "warning")
+        if preview.ok:
+            self.status.setObjectName("success")
+        elif preview.images:
+            self.status.setObjectName("warning")
+        else:
+            self.status.setObjectName("muted")
         self.status.style().unpolish(self.status)
         self.status.style().polish(self.status)
         if preview.ok and not self.device_name.text().strip():
@@ -220,8 +249,9 @@ class DevicesScreen(QWidget):
         evidence_layout = QVBoxLayout(evidence_box)
         evidence_layout.setSpacing(8)
         hint = QLabel(
-            "主流程：导入设备证据包 → 核对识别结果 → 开始核查。"
-            "证据包目录需包含 manifest.json；双击表格行可编辑设备。"
+            "主流程：导入设备证据 → 核对识别结果 → 开始核查。"
+            "可直接选择日志目录或单个日志文件（.log / .txt / .out / .cmd），"
+            "截图与照片作为证据附件；双击表格行可编辑设备。"
         )
         hint.setObjectName("muted")
         hint.setWordWrap(True)
@@ -306,11 +336,15 @@ class DevicesScreen(QWidget):
                 item.setToolTip(package if column == 5 else value)
                 self.table.setItem(row, column, item)
 
-            preview = self.controller.inspect_evidence(package or None)
+            preview = self.controller.inspect_evidence(
+                package or None, asset.device_name
+            )
             if not package:
-                text, colour = "未关联证据包", MUTED_COLOR
+                text, colour = "未关联证据", MUTED_COLOR
             elif preview.ok:
                 text, colour = f"可核查：{preview.blocks} 块", OK_COLOR
+            elif preview.images:
+                text, colour = f"仅附件：{preview.images} 张图片", WARN_COLOR
             else:
                 text, colour = "不可用", ERROR_COLOR
             status = QTableWidgetItem(text)

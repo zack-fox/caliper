@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "caliper"
-version = "1.0.1"
+version = "1.0.2"
 description = "把等保现场采集日志转换成四张可直接导入融合测评平台（测评能手 2.0）的 xlsx"
 requires-python = ">=3.11"
 dependencies = [

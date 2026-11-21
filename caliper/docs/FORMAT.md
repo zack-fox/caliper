@@ -73,7 +73,11 @@
 - `high_risk.yaml`：16 条，`level_min` 按 `docs/inputs/high_risk_guide.xlsx` 的适用范围修正（HR-14 为四级）。
 - `texts/library.yaml`：321 条文案，仅作默认建议，不参与判定。
 
-## 7. 证据包格式
+## 7. 证据格式
+
+支持两种装载方式，界面按所选目录自动判断：
+
+### 7.1 结构化证据包（可自动判定）
 
 ```
 pkg-<资产编号>/
@@ -85,6 +89,15 @@ pkg-<资产编号>/
 `manifest.json` 必需字段：`package_id / asset_id / collected_at / collector / host / os_family / level / files / status`。
 `os_family` 只允许 `debian`、`rhel`；`level` 只允许 2、3；`files` 为 `{相对路径: sha256}`，装载时逐个校验。
 `status` 非 `ok`/`collected` 时整包按未采集处理。
+
+### 7.2 原始证据目录 / 单个文件（无需 manifest）
+
+- 可直接选择采集日志目录，或单个 `.log / .txt / .out / .cmd` 文件；
+- 文本文件递归扫描，按行状态机识别 `===== RESULTS (collected) =====` 结果段中的检查块；
+- `.png / .jpg / .jpeg / .bmp / .gif / .webp / .heic` 计入证据附件，不参与自动判定；
+- `manifest.json` 存在但校验失败时，自动回退按原始日志解析，并在诊断信息中提示；
+- 未识别到检查块时，所有测评项按未采集处理（备注「未采集：<原因>」）；
+- 没有结果段标记的普通命令输出、访谈记录等，目前只作为附件留存，不参与自动判定。
 
 `checks/*.json` 推荐格式（每个文件一组块）：
 

@@ -1,15 +1,19 @@
-"""证据包装载：manifest 校验、sha256 校验、日志/JSON 解析。"""
+"""证据装载：结构化证据包（manifest）与原始证据目录（日志/截图）两种模式。"""
 
 from __future__ import annotations
 
 import hashlib
 import json
+from datetime import datetime
 from pathlib import Path
 
 from pydantic import ValidationError
 
-from core.evidence.logparse import ParseOutcome, parse_log_text
+from core.evidence.logparse import ParseError, ParseOutcome, parse_log_text
 from core.model.entities import CheckBlock, CheckStatus, EvidencePackage, OutputLine, PackageManifest
+
+TEXT_SUFFIXES = {".log", ".txt", ".out", ".cmd"}
+IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp", ".heic"}
 
 REQUIRED_MANIFEST_FIELDS = (
     "package_id",
@@ -153,3 +157,84 @@ def summarize(blocks: list[CheckBlock]) -> dict[str, int]:
     for block in blocks:
         counts[block.status.value] = counts.get(block.status.value, 0) + 1
     return counts
+
+
+def text_evidence_files(root: Path) -> list[Path]:
+    """可解析的文本证据：单文件本身或目录下递归查找。"""
+    root = Path(root)
+    if root.is_file():
+        return [root] if root.suffix.lower() in TEXT_SUFFIXES else []
+    return sorted(
+        path
+        for path in root.rglob("*")
+        if path.is_file() and path.suffix.lower() in TEXT_SUFFIXES
+    )
+
+
+def media_files(root: Path) -> list[Path]:
+    """截图/照片：只作附件，不参与自动判定。"""
+    root = Path(root)
+    if root.is_file():
+        return [root] if root.suffix.lower() in IMAGE_SUFFIXES else []
+    return sorted(
+        path
+        for path in root.rglob("*")
+        if path.is_file() and path.suffix.lower() in IMAGE_SUFFIXES
+    )
+
+
+def load_evidence(root: Path, host: str = "", level: int = 3) -> EvidencePackage:
+    """装载证据：有 manifest.json 走结构化校验，没有则按原始证据目录解析。
+
+    原始证据可以是单个 .log/.txt 文件，也可以是包含任意日志、命令输出、
+    txt、截图的目录；图片计入诊断信息但不参与自动判定。
+    """
+    root = Path(root)
+    if not root.exists():
+        raise EvidenceError(f"证据目录不存在：{root}")
+    if root.is_dir() and (root / "manifest.json").is_file():
+        try:
+            return load_package(root)
+        except EvidenceError as exc:
+            warnings = [f"manifest 校验失败，改按原始证据解析：{exc}"]
+    else:
+        warnings = []
+
+    blocks: list[CheckBlock] = []
+    session = 0
+    for path in text_evidence_files(root):
+        try:
+            outcome: ParseOutcome = parse_log_text(
+                path.read_text(encoding="utf-8", errors="replace"),
+                path.name,
+                session_start=session,
+            )
+        except ParseError as exc:
+            warnings.append(f"{path.name}：{exc}")
+            continue
+        blocks.extend(outcome.blocks)
+        warnings.extend(outcome.warnings)
+        session = blocks[-1].session if blocks else session
+
+    images = media_files(root)
+    if images:
+        warnings.append(f"图片 {len(images)} 张：仅作证据附件，不参与自动判定")
+    if not text_evidence_files(root):
+        warnings.append("未发现可解析的文本证据（.log / .txt / .out / .cmd）")
+    if not blocks:
+        warnings.append("未识别到检查块，全部测评项将按未采集处理")
+
+    os_family = next((block.os_family for block in blocks if block.os_family), "debian")
+    manifest = PackageManifest(
+        package_id=root.name,
+        asset_id="",
+        collected_at=datetime.now(),
+        collector="manual-evidence",
+        host=host or root.stem,
+        os_family=os_family,
+        level=level,
+        files={},
+        status="collected" if blocks else "empty",
+        note="原始证据（无 manifest）",
+    )
+    return EvidencePackage(root=root, manifest=manifest, blocks=blocks, diagnostics=warnings)
