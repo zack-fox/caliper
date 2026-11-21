@@ -240,6 +240,7 @@ class PointResult(BaseModel):
     reason: str
     block_title: str = ""
     anchors: list[EvidenceAnchor] = Field(default_factory=list)
+    rule_refs: list[str] = Field(default_factory=list)
 
 
 class ItemResult(BaseModel):

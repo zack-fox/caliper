@@ -15,6 +15,7 @@ from app.screens.dialogs import TextDetailsDialog
 from app.widgets import Badge, EmptyState
 from core.contracts.verdict import Verdict, from_text, to_text
 from core.model.entities import Item, ItemResult
+from core.traceability import standard_references
 
 VERDICT_TONES = {
     Verdict.COMPLIANT: "ok", Verdict.PARTIAL: "warn", Verdict.NON_COMPLIANT: "bad",
@@ -448,10 +449,13 @@ class ResultsScreen(QWidget):
     @staticmethod
     def _evidence_summary(result: ItemResult, item: Item | None) -> str:
         details: list[str] = []
+        if item:
+            details.append("标准依据：" + "；".join(standard_references(item)))
         for point in result.points[:2]:
             anchor = point.anchors[0] if point.anchors else None
             location = f"{anchor.file}:{anchor.line}" if anchor else "无原文锚点"
-            details.append(f"实施点 {point.point}：{point.reason}（{location}）")
+            rules = "、".join(point.rule_refs) if point.rule_refs else "无规则编号"
+            details.append(f"实施点 {point.point}：{point.reason}（{location}；规则 {rules}）")
         if item:
             details.extend((f"检查内容：{item.check_content[:110]}", f"判断标准：{item.criteria[:110]}"))
         return "　|　".join(details) or "当前没有自动判定依据；请依据现场材料人工填写。"

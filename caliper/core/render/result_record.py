@@ -19,7 +19,8 @@ from core.contracts.layout import (
     SECTION_TITLE,
 )
 from core.contracts.verdict import Verdict, to_text
-from core.model.entities import AssetRun, Item, ProjectConfig, RunResult
+from core.model.entities import AssetRun, Item, ItemResult, ProjectConfig, RunResult
+from core.traceability import standard_references
 
 SHEET_TEMPLATE_TITLE = "模板"
 SECURITY_LAYER = "安全计算环境"
@@ -102,6 +103,26 @@ def _sorted_items(items: list[Item]) -> list[Item]:
     return sorted(items, key=lambda item: item.seq)
 
 
+def _record_text(item: Item, result: ItemResult) -> str:
+    text = result.result_text
+    rule_refs = list(
+        dict.fromkeys(
+            reference
+            for point in result.points
+            for reference in point.rule_refs
+        )
+    )
+    if not rule_refs:
+        return text
+    trace = (
+        "机器建议依据（供人工复核）："
+        + "；".join(standard_references(item))
+        + "\n规则引用："
+        + "、".join(rule_refs)
+    )
+    return f"{text}\n{trace}" if text else trace
+
+
 def _fill_rows(ws: Worksheet, items: list[Item], run: AssetRun) -> None:
     widths = dict(COLUMN_WIDTHS)
     widths["H"] = ws.column_dimensions["H"].width or _FALLBACK_WIDTH
@@ -118,7 +139,7 @@ def _fill_rows(ws: Worksheet, items: list[Item], run: AssetRun) -> None:
             "A": str(item.seq),
             "B": item.control_point,
             "C": item.control_item,
-            "D": result.result_text or None,
+            "D": _record_text(item, result) or None,
             "E": verdict_text,
             "F": note or None,
             "G": item.importance,

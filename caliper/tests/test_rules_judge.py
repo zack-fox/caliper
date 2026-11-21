@@ -104,6 +104,7 @@ def test_judge_binary_never_partial() -> None:
     result = judge_item(item, rules, blocks, expected_points={1, 2})
     assert result.verdict is Verdict.NON_COMPLIANT
     assert result.verdict is not Verdict.PARTIAL
+    assert result.points[0].rule_refs
 
 
 def test_checks_map_isolates_levels() -> None:

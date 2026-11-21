@@ -13,7 +13,9 @@ from core.items.loader import load_pack
 from core.model.entities import (
     Asset,
     AssetRun,
+    EvidenceAnchor,
     ItemResult,
+    PointResult,
     ProjectConfig,
     RunResult,
 )
@@ -90,3 +92,24 @@ def test_render_level2_has_23_rows(tmp_path: Path) -> None:
     ws = openpyxl.load_workbook(target).worksheets[0]
     assert ws.max_row == 31
     assert ws["A31"].value == "23"
+
+
+def test_export_keeps_standard_and_rule_references(tmp_path: Path) -> None:
+    result, items, _ = _run(3, tmp_path)
+    first = result.asset_runs[0].items[0]
+    first.result_text = "1) 通过：发现唯一 UID（capture.log:8 UID=0: root）"
+    first.points = [
+        PointResult(
+            point=1,
+            passed=True,
+            reason="发现唯一 UID",
+            anchors=[EvidenceAnchor(file="capture.log", line=8, snippet="UID=0: root")],
+            rule_refs=["L3-CES1-01-P01-FA012345"],
+        )
+    ]
+    target = render_result_workbook(result, items, TEMPLATE, tmp_path)
+    ws = openpyxl.load_workbook(target).worksheets[0]
+    exported = ws["D9"].value
+    assert "GB/T 22239—2019 §8.1.4.1 a)" in exported
+    assert "GB/T 28448—2019 L3-CES1-01 c)测评实施 / d)单元判定" in exported
+    assert "L3-CES1-01-P01-FA012345" in exported

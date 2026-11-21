@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from pathlib import Path
 
@@ -17,6 +19,7 @@ class RulesError(Exception):
 
 
 class Rule(BaseModel):
+    rule_id: str = ""
     level: int
     item: int
     point: int
@@ -24,6 +27,20 @@ class Rule(BaseModel):
     expect: dict
     pass_reason: str
     fail_reason: str
+
+    def reference_id(self, item_id: str = "") -> str:
+        """生成内容稳定的规则引用号，规则条件变化时引用号也随之变化。"""
+        if self.rule_id:
+            return self.rule_id
+        identity = json.dumps(
+            {"block": self.block, "expect": self.expect},
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:8].upper()
+        item_key = item_id or f"ITEM{self.item}"
+        return f"L{self.level}-{item_key}-P{self.point:02d}-{digest}"
 
 
 _LEVEL_FILE = re.compile(r"level(\d)")
@@ -42,6 +59,11 @@ class RuleSet(BaseModel):
             raise RulesError(f"{rules_dir}：没有任何规则文件")
 
         records: list[dict] = []
+        item_ids = {
+            (level, item.seq): item.item_id
+            for level, level_items in items.items()
+            for item in level_items
+        }
         for path in files:
             match = _LEVEL_FILE.fullmatch(path.stem)
             if not match:
@@ -54,6 +76,14 @@ class RuleSet(BaseModel):
             for record in data["rules"]:
                 record = dict(record)
                 record["level"] = level
+                if not record.get("rule_id"):
+                    try:
+                        provisional = Rule.model_validate(record)
+                    except ValidationError as exc:
+                        raise RulesError(f"{path}：规则字段非法：{exc}") from exc
+                    record["rule_id"] = provisional.reference_id(
+                        item_ids.get((level, int(record["item"])), "")
+                    )
                 records.append(record)
 
         try:
@@ -66,6 +96,7 @@ class RuleSet(BaseModel):
 
     def validate(self, items: dict[int, list[Item]]) -> None:
         seen: set[tuple[int, int, int, str]] = set()
+        seen_ids: set[str] = set()
         by_level = {
             (level, item.seq): item for level, level_items in items.items() for item in level_items
         }
@@ -79,6 +110,10 @@ class RuleSet(BaseModel):
                     f"检查块「{rule.block}」"
                 )
             seen.add(key)
+            if rule.rule_id:
+                if rule.rule_id in seen_ids:
+                    raise RulesError(f"规则引用号重复：{rule.rule_id}")
+                seen_ids.add(rule.rule_id)
             try:
                 validate_expect(rule.expect)
             except RuleError as exc:

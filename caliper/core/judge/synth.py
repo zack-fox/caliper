@@ -90,6 +90,7 @@ def judge_item(
         passed = True
         reasons: list[str] = []
         anchors: list = []
+        rule_refs: list[str] = []
         block_title = ""
         for rule in point_rules:
             block = blocks.get(rule.block)
@@ -100,6 +101,7 @@ def judge_item(
                 missing.append(f"检查块「{rule.block}」未采集")
                 continue
             rule_passed, rule_anchors = evaluate(rule.expect, block)
+            rule_refs.append(rule.reference_id(item.item_id))
             passed = passed and rule_passed
             reasons.append(rule.pass_reason if rule_passed else rule.fail_reason)
             anchors.extend(rule_anchors)
@@ -111,6 +113,7 @@ def judge_item(
                 reason="；".join(dict.fromkeys(reasons)),
                 block_title=block_title,
                 anchors=anchors[:3],
+                rule_refs=list(dict.fromkeys(rule_refs)),
             )
         )
 
