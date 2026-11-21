@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.controller import AppController, ControllerError
+from app.screens.dialogs import TextDetailsDialog
 from app.widgets import Badge, EmptyState
 from core.contracts.verdict import Verdict, from_text, to_text
 from core.model.entities import Item, ItemResult
@@ -55,6 +56,25 @@ class ResultsScreen(QWidget):
         self.summary.setObjectName("muted")
         heading.addWidget(self.summary)
         root.addLayout(heading)
+
+        self.diagnostic_banner = QFrame()
+        self.diagnostic_banner.setObjectName("context_panel")
+        diagnostic_layout = QHBoxLayout(self.diagnostic_banner)
+        diagnostic_layout.setContentsMargins(12, 7, 10, 7)
+        diagnostic_layout.setSpacing(10)
+        diagnostic_title = QLabel("判定范围提示")
+        diagnostic_title.setObjectName("secondary")
+        self.diagnostic_summary = QLabel("")
+        self.diagnostic_summary.setObjectName("muted")
+        self.diagnostic_summary.setWordWrap(True)
+        self.diagnostic_details = QPushButton("查看明细")
+        self.diagnostic_details.setObjectName("subtle")
+        self.diagnostic_details.clicked.connect(self._show_diagnostics)
+        diagnostic_layout.addWidget(diagnostic_title)
+        diagnostic_layout.addWidget(self.diagnostic_summary, 1)
+        diagnostic_layout.addWidget(self.diagnostic_details)
+        self.diagnostic_banner.hide()
+        root.addWidget(self.diagnostic_banner)
 
         domain_row = QHBoxLayout()
         domain_row.setSpacing(8)
@@ -278,6 +298,20 @@ class ResultsScreen(QWidget):
         previous = self._current_asset_name()
         self.asset_tree.clear()
         if result:
+            diagnostics = [
+                (run.asset.device_name, diagnostic)
+                for run in result.asset_runs
+                for diagnostic in run.diagnostics
+            ]
+            self._diagnostic_entries = diagnostics
+            if diagnostics:
+                self.diagnostic_summary.setText(
+                    f"当前有 {len(diagnostics)} 条提示，涉及材料映射、系统适用性或规则覆盖。"
+                    "自动结论仅适用于已映射且已实现的规则。"
+                )
+                self.diagnostic_banner.show()
+            else:
+                self.diagnostic_banner.hide()
             groups: dict[str, QTreeWidgetItem] = {}
             for index, run in enumerate(result.asset_runs):
                 group_name = getattr(run.asset.asset_type, "value", str(run.asset.asset_type))
@@ -307,11 +341,22 @@ class ResultsScreen(QWidget):
                 if first_group and first_group.childCount():
                     self.asset_tree.setCurrentItem(first_group.child(0))
         else:
+            self._diagnostic_entries = []
+            self.diagnostic_banner.hide()
             self.asset_count.setText("设备 0")
             self.domain_count.setText("0 项")
             self.project_status.setText("等待导入现场材料")
         self.asset_tree.blockSignals(False)
         self._populate_table()
+
+    def _show_diagnostics(self) -> None:
+        if not getattr(self, "_diagnostic_entries", None):
+            return
+        details = "\n".join(
+            f"【{device}】{message}"
+            for device, message in self._diagnostic_entries
+        )
+        TextDetailsDialog("判定范围与规则覆盖提示", details, self).exec()
 
     def _current_asset_name(self) -> str:
         current = self.asset_tree.currentItem()

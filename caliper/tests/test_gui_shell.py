@@ -12,10 +12,12 @@ from PySide6.QtWidgets import QApplication  # noqa: E402
 
 from app.controller import AppController  # noqa: E402
 from app.screens.dialogs import EvidenceReviewDialog  # noqa: E402
+from app.screens.results import ResultsScreen  # noqa: E402
 from app.shell.app_shell import AppShell  # noqa: E402
 from app.shell.navigation import NAV_STEPS  # noqa: E402
 from app.theme.theme import ThemeManager  # noqa: E402
-from core.model.entities import Asset  # noqa: E402
+from core.model.entities import Asset, AssetRun, ItemResult, RunResult  # noqa: E402
+from core.contracts.verdict import Verdict  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -95,3 +97,38 @@ def test_evidence_review_dialog_previews_text_and_images(qapp, tmp_path):
     assert dialog.preview_stack.currentWidget() is dialog.image_preview
     assert dialog.image_preview.pixmap() is not None
     dialog.close()
+
+
+def test_results_screen_surfaces_run_diagnostics(qapp):
+    controller = AppController()
+    asset = Asset(
+        device_name="诊断设备",
+        ip="192.0.2.21",
+        importance="一般",
+        guide="三级-安全通用要求",
+    )
+    item = ItemResult(
+        item_id="L3-CES1-01",
+        seq=1,
+        control_point="身份鉴别",
+        importance="重要",
+        verdict=Verdict.UNCOLLECTED,
+        note="未采集：规则尚未实现",
+    )
+    controller.run_result = RunResult(
+        project=controller.project,
+        asset_runs=[
+            AssetRun(
+                asset=asset,
+                items=[item],
+                diagnostics=["1 个检查块没有映射，未参与自动判定"],
+            )
+        ],
+    )
+    screen = ResultsScreen(controller)
+    assert not screen.diagnostic_banner.isHidden()
+    assert "规则覆盖" in screen.diagnostic_summary.text()
+    assert screen._diagnostic_entries == [
+        ("诊断设备", "1 个检查块没有映射，未参与自动判定")
+    ]
+    screen.close()

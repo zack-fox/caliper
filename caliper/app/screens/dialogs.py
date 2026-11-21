@@ -156,6 +156,26 @@ class EvidenceReviewDialog(QDialog):
             self.preview_note.setText("该附件不会自动参与测评判定。")
 
 
+class TextDetailsDialog(QDialog):
+    """可滚动查看较长的诊断信息。"""
+
+    def __init__(self, title: str, text: str, parent=None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.resize(860, 580)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(18, 16, 18, 14)
+        layout.setSpacing(10)
+        body = QPlainTextEdit()
+        body.setReadOnly(True)
+        body.setPlainText(text)
+        layout.addWidget(body, 1)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.rejected.connect(self.reject)
+        buttons.button(QDialogButtonBox.StandardButton.Close).setText("关闭")
+        layout.addWidget(buttons)
+
+
 class AssetDialog(QDialog):
     """新增 / 编辑设备：可直接选择证据包目录并即时解析。"""
 

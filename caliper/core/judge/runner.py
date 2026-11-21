@@ -72,6 +72,89 @@ def _judge_package(
             item, ruleset, blocks, checks.points_for_item(item.seq, item.level)
         )
         run.items.append(result)
+
+    configured_titles = set(checks.titles())
+    judged_titles = {
+        rule.block
+        for item in items
+        for rule in ruleset.for_item(item.seq, item.level)
+    }
+    unmapped = [block for block in package.blocks if block.title not in configured_titles]
+    if unmapped:
+        details = "; ".join(
+            f"{block.title}（{block.source}）" for block in unmapped
+        )
+        run.diagnostics.append(
+            f"{len(unmapped)} 个检查块没有当前规则包的检查映射，未参与自动判定：{details}"
+        )
+
+    unsupported = [
+        block
+        for block in package.blocks
+        if block.title in configured_titles
+        and block.os_family
+        and checks.allowed_families(block.title)
+        and block.os_family not in checks.allowed_families(block.title)
+    ]
+    if unsupported:
+        details = "; ".join(
+            f"{block.title}（{block.os_family}，{block.source}）" for block in unsupported
+        )
+        run.diagnostics.append(
+            f"{len(unsupported)} 个检查块的系统类型与映射规则不符，未参与自动判定：{details}"
+        )
+
+    collected_only = [
+        block
+        for block in package.blocks
+        if block.title in configured_titles
+        and block.title not in judged_titles
+        and block not in unsupported
+    ]
+    if collected_only:
+        details = "; ".join(
+            f"{block.title}（{block.source}）" for block in collected_only
+        )
+        run.diagnostics.append(
+            f"{len(collected_only)} 个检查块虽有采集映射，但当前等级没有对应自动判定规则：{details}"
+        )
+
+    unimplemented = [
+        result.seq
+        for result in run.items
+        if result.note.startswith("未采集：规则尚未实现")
+    ]
+    if unimplemented:
+        run.diagnostics.append(
+            f"{len(unimplemented)} 个自动测评项尚未配置判定规则："
+            + "、".join(map(str, unimplemented))
+        )
+    uncovered = [
+        result.seq
+        for result in run.items
+        if "规则未覆盖实施点" in result.note
+    ]
+    if uncovered:
+        run.diagnostics.append(
+            f"{len(uncovered)} 个自动测评项的规则未覆盖全部实施点："
+            + "、".join(map(str, uncovered))
+        )
+
+    by_title: dict[str, list[CheckBlock]] = {}
+    for block in package.blocks:
+        by_title.setdefault(block.title, []).append(block)
+    duplicates = []
+    for title, candidates in by_title.items():
+        selected = blocks.get(title)
+        if selected is not None and len(candidates) > 1:
+            ignored = [block.source for block in candidates if block is not selected]
+            if ignored:
+                duplicates.append(f"{title}：采用 {selected.source}，忽略 {', '.join(ignored)}")
+    if duplicates:
+        run.diagnostics.append(
+            "存在同名检查块；为避免重复证据被重复计分，当前只采用首个匹配块："
+            + "; ".join(duplicates)
+        )
     return run
 
 

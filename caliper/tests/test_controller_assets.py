@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+from datetime import date
+from pathlib import Path
+
 import pytest
 
 from app.controller import AppController, ControllerError
 from core.contracts.verdict import Verdict
-from core.model.entities import Asset, AssetRun, ItemResult, RunResult
+from core.items.loader import load_pack
+from core.judge.runner import run_project
+from core.model.entities import Asset, AssetRun, ItemResult, ProjectConfig, RunResult
 
 
 def _asset(name: str = "设备A", ip: str = "192.0.2.10", package: str | None = None) -> Asset:
@@ -74,3 +79,28 @@ def test_unreviewed_machine_records_cannot_be_exported() -> None:
     result.reviewed = True
     assert controller.pending_review_records() == []
     controller._require_reviewed_records()
+
+
+def test_run_reports_unmapped_evidence_and_missing_rules(tmp_path) -> None:
+    log = tmp_path / "host.log"
+    log.write_text(
+        "# ===== Ubuntu baseline check =====\n"
+        "===== RESULTS (collected) =====\n"
+        "===== 99. EXTRA =====\n"
+        "[01] Vendor service status\n"
+        "  service vendor-agent active\n"
+        "===== END OF REPORT =====\n",
+        encoding="utf-8",
+    )
+    asset = _asset(package=str(log))
+    project = ProjectConfig(
+        level=3,
+        check_date=date.today(),
+        evidence_root=tmp_path,
+        assets=[asset],
+    )
+    pack = load_pack(Path("packs/linux_os"))
+    result = run_project(project, pack, base_dir=tmp_path)
+    diagnostics = result.asset_runs[0].diagnostics
+    assert any("Vendor service status" in message and "未参与自动判定" in message for message in diagnostics)
+    assert any("尚未配置判定规则" in message for message in diagnostics)
