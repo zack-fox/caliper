@@ -79,6 +79,12 @@ def _judge_package(
         for item in items
         for rule in ruleset.for_item(item.seq, item.level)
     }
+    judge_mapped_titles = {
+        check.title
+        for check in checks.checks
+        if check.kind == "judge"
+        and any(binding.level == level for binding in check.binds)
+    }
     unmapped = [block for block in package.blocks if block.title not in configured_titles]
     if unmapped:
         details = "; ".join(
@@ -107,7 +113,7 @@ def _judge_package(
     collected_only = [
         block
         for block in package.blocks
-        if block.title in configured_titles
+        if block.title in judge_mapped_titles
         and block.title not in judged_titles
         and block not in unsupported
     ]

@@ -89,6 +89,8 @@ def test_run_reports_unmapped_evidence_and_missing_rules(tmp_path) -> None:
         "===== 99. EXTRA =====\n"
         "[01] Vendor service status\n"
         "  service vendor-agent active\n"
+        "[02] Host / OS / kernel / time\n"
+        "  hostname: demo\n"
         "===== END OF REPORT =====\n",
         encoding="utf-8",
     )
@@ -104,3 +106,4 @@ def test_run_reports_unmapped_evidence_and_missing_rules(tmp_path) -> None:
     diagnostics = result.asset_runs[0].diagnostics
     assert any("Vendor service status" in message and "未参与自动判定" in message for message in diagnostics)
     assert any("尚未配置判定规则" in message for message in diagnostics)
+    assert not any("Host / OS / kernel / time" in message for message in diagnostics)
