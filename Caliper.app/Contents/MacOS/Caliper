@@ -1,0 +1,15 @@
+#!/bin/bash
+# Caliper 桌面启动器：双击 Caliper.app 即可打开图形界面。
+# 依赖项目自带的 .venv（make setup && make setup-gui）。
+
+BUNDLE_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
+PROJECT="$BUNDLE_DIR/caliper"
+PY="$PROJECT/.venv/bin/python"
+
+if [ ! -x "$PY" ]; then
+    /usr/bin/osascript -e 'display dialog "未找到运行环境 .venv。\n\n请在终端进入 caliper 目录后执行：\nmake setup\nmake setup-gui\n\n然后重新双击打开。" buttons {"好"} default button "好" with title "Caliper 无法启动"' >/dev/null 2>&1
+    exit 1
+fi
+
+cd "$PROJECT" || exit 1
+exec "$PY" -m app.main "$@"

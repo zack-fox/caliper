@@ -1,0 +1,119 @@
+QWidget {
+    background: #f5f6f8;
+    color: #1f2933;
+    font-family: "PingFang SC";
+    font-size: 13px;
+}
+
+QTabWidget::pane {
+    border: 1px solid #d9dee7;
+    background: #ffffff;
+    top: -1px;
+}
+
+QTabBar::tab {
+    background: #f5f6f8;
+    color: #6b7785;
+    padding: 8px 18px;
+    border: 1px solid transparent;
+    border-bottom: 2px solid transparent;
+}
+
+QTabBar::tab:selected {
+    background: #ffffff;
+    color: #2f6fdf;
+    border-bottom: 2px solid #2f6fdf;
+}
+
+QGroupBox {
+    background: #ffffff;
+    border: 1px solid #d9dee7;
+    border-radius: 6px;
+    margin-top: 12px;
+    padding: 10px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 4px;
+    color: #1f2933;
+    font-weight: bold;
+}
+
+QLineEdit, QComboBox, QDateEdit, QTextEdit, QTextBrowser, QTableWidget, QListWidget {
+    background: #ffffff;
+    border: 1px solid #d9dee7;
+    border-radius: 4px;
+    padding: 4px 6px;
+    selection-background-color: #e8f0fe;
+    selection-color: #1f2933;
+}
+
+QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QTextEdit:focus {
+    border: 1px solid #2f6fdf;
+}
+
+QPushButton {
+    background: #ffffff;
+    border: 1px solid #d9dee7;
+    border-radius: 4px;
+    padding: 6px 14px;
+}
+
+QPushButton:hover {
+    border-color: #2f6fdf;
+    color: #2f6fdf;
+}
+
+QPushButton#primary {
+    background: #2f6fdf;
+    border-color: #2f6fdf;
+    color: #ffffff;
+}
+
+QPushButton#primary:hover {
+    background: #2559b8;
+    border-color: #2559b8;
+}
+
+QPushButton#danger {
+    color: #d64545;
+    border-color: #d64545;
+}
+
+QHeaderView::section {
+    background: #f5f6f8;
+    color: #6b7785;
+    border: none;
+    border-bottom: 1px solid #d9dee7;
+    padding: 6px;
+}
+
+QStatusBar {
+    background: #ffffff;
+    color: #6b7785;
+    border-top: 1px solid #d9dee7;
+}
+
+QLabel#muted {
+    color: #6b7785;
+}
+
+QLabel#title {
+    color: #1f2933;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+QLabel#success {
+    color: #1f9d55;
+}
+
+QLabel#warning {
+    color: #c47f17;
+}
+
+QLabel#danger {
+    color: #d64545;
+}

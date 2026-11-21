@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "caliper"
+version = "0.1.0"
+description = "把等保现场采集日志转换成四张可直接导入融合测评平台（测评能手 2.0）的 xlsx"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.6",
+    "PyYAML>=6.0",
+    "openpyxl>=3.1",
+]
+
+[project.optional-dependencies]
+gui = ["PySide6-Essentials>=6.10"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+caliper = "core.cli:main"
+caliper-gui = "app.main:main"
+
+[tool.setuptools.packages.find]
+include = ["core*", "app*", "adapters*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,0 +1,35 @@
+# 开发包与过程文档：一律不进仓库
+测评助手_Trae开发包/
+
+# 现场案例、截图与本地数据库（含真实项目信息）
+案例模版/
+.screenshots/
+*.db
+
+# 现场采集证据与日志
+**/fixtures/evidence/
+**/fixtures/golden/**/raw/
+*.log
+
+# 样例与产出数据（含真实资产信息，禁止入库）
+**/fixtures/samples/
+**/docs/inputs/
+*.xlsx
+# 只放行空白母版
+!**/templates/*.xlsx
+
+# 本地环境
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+*.spec
+*.egg-info/
+.DS_Store
+
+# 本地导出结果（含项目与资产信息，禁止入库）
+out/

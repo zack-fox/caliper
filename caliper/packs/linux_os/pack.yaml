@@ -1,0 +1,16 @@
+# linux_os pack：Ubuntu/Debian、CentOS/RHEL 的采集解析与规则库
+name: linux_os
+version: 0.1.0
+levels: [2, 3]
+os_family: [debian, rhel]
+asset_types: [服务器, 存储设备]
+# 资产记录表「作业指导书」列的注册列表
+guides: [二级-安全通用要求, 三级-安全通用要求]
+# 下列文件按 docs/CONTRACTS.md 在 P0 阶段生成并核对，缺失键必须报错而不是兜底
+items:
+  level_3: items_L3.yaml
+  level_2: items_L2.yaml
+rules_dir: rules
+checks_map: checks_map.yaml
+high_risk: high_risk.yaml
+texts: texts/library.yaml

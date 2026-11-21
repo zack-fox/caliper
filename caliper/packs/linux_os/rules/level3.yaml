@@ -1,0 +1,235 @@
+# 三级初版规则（安全计算环境）
+#
+# 规则只读证据块文本，不碰资产名。每条规则 = 一个实施点在一个检查块上的判定。
+# 同一实施点可以有多条规则（AND），用于组合多个检查块。
+# 条件 DSL 见 core/rules/dsl.py：all/any + eq/ne/in/not_in/contains/not_contains/
+# exists/not_exists/regex_empty/gt/lt，嵌套最多两层。
+#
+# 初版规则以样例采集脚本的输出文案为基准，后续按现场反馈迭代。
+
+rules:
+  # ---- 身份鉴别 ----
+  - item: 1
+    point: 1
+    block: Duplicate UID / UID=0 accounts
+    expect: {contains: "no duplicate uid"}
+    pass_reason: 未发现重复 UID
+    fail_reason: 存在重复 UID，身份标识不唯一
+
+  - item: 1
+    point: 2
+    block: Duplicate UID / UID=0 accounts
+    expect: {eq: "UID=0: root"}
+    pass_reason: UID=0 账户仅 root
+    fail_reason: 除 root 外还存在 UID=0 账户
+
+  - item: 1
+    point: 3
+    block: Empty / expired password
+    expect: {contains: "no empty-password account"}
+    pass_reason: 未发现空口令账户
+    fail_reason: 存在空口令账户
+
+  - item: 1
+    point: 4
+    block: Password complexity
+    expect: {contains: "minlen="}
+    pass_reason: 已配置口令复杂度策略
+    fail_reason: 未配置口令复杂度策略
+
+  - item: 1
+    point: 4
+    block: Password policy (login.defs)
+    expect: {lt: {prefix: "PASS_MAX_DAYS", value: 91}}
+    pass_reason: 口令最大有效期不超过 90 天
+    fail_reason: 口令最大有效期超过 90 天或未限制
+
+  - item: 2
+    point: 1
+    block: Login failure lockout (faillock)
+    expect: {contains: "pam_faillock"}
+    pass_reason: 已启用登录失败处理模块
+    fail_reason: 未启用登录失败处理模块
+
+  - item: 2
+    point: 2
+    block: Login failure lockout (faillock)
+    expect:
+      all:
+        - {contains: "deny="}
+        - {contains: "unlock_time="}
+    pass_reason: 已配置失败次数与锁定时间
+    fail_reason: 未配置失败次数或锁定时间
+
+  - item: 2
+    point: 3
+    block: Session timeout TMOUT
+    expect: {contains: "TMOUT="}
+    pass_reason: 已配置登录连接超时退出
+    fail_reason: 未配置登录连接超时退出
+
+  - item: 3
+    point: 1
+    block: SSH host key algorithm
+    expect: {contains: "SHA256:"}
+    pass_reason: 远程管理使用 SSH 加密通道
+    fail_reason: 未发现 SSH 主机密钥，远程管理加密情况无法确认
+
+  # ---- 访问控制 ----
+  - item: 5
+    point: 1
+    block: Key file permissions
+    expect:
+      all:
+        - {contains: "644 root:root /etc/passwd"}
+        - {contains: "640 root:shadow /etc/shadow"}
+    pass_reason: 账户与鉴别信息文件权限符合要求
+    fail_reason: 账户或鉴别信息文件权限不符合要求
+
+  - item: 10
+    point: 1
+    block: World-writable / tmp perms
+    expect: {contains: "none"}
+    pass_reason: 未发现全局可写关键文件
+    fail_reason: 存在全局可写文件，访问控制粒度不足
+
+  - item: 10
+    point: 1
+    block: umask
+    expect: {not_contains: "0002"}
+    pass_reason: 默认 umask 未放开其他用户写权限
+    fail_reason: 默认 umask 允许其他用户写，访问控制粒度不足
+
+  # ---- 安全审计 ----
+  - item: 12
+    point: 1
+    block: auditd status and rules
+    expect:
+      all:
+        - {contains: "service active"}
+        - {not_contains: "no rule loaded"}
+    pass_reason: 审计服务已启用且已加载审计规则
+    fail_reason: 审计服务未启用或未加载审计规则
+
+  - item: 12
+    point: 3
+    block: Log forwarding
+    expect: {not_contains: "none"}
+    pass_reason: 审计记录已转发至集中日志
+    fail_reason: 未配置日志转发
+
+  - item: 13
+    point: 1
+    block: Recent login records
+    expect: {contains: "wtmp begins"}
+    pass_reason: 登录审计记录可读取
+    fail_reason: 未读取到登录审计记录
+
+  - item: 14
+    point: 1
+    block: Log retention
+    expect: {gt: {prefix: "rotate", value: 26}}
+    pass_reason: 日志轮转保留数量满足半年留存
+    fail_reason: 日志轮转保留数量不足半年
+
+  - item: 14
+    point: 1
+    block: Log dir permissions
+    expect: {contains: "/var/log"}
+    pass_reason: 日志目录权限可核查
+    fail_reason: 日志目录权限无法核查
+
+  - item: 14
+    point: 2
+    block: Log archives on disk
+    expect: {contains: "compressed"}
+    pass_reason: 历史日志已压缩归档
+    fail_reason: 历史日志未压缩归档
+
+  # ---- 入侵防范 ----
+  - item: 17
+    point: 1
+    block: Listening ports / processes
+    expect:
+      all:
+        - {not_contains: ":21 "}
+        - {not_contains: ":23 "}
+        - {not_contains: ":3389"}
+        - {not_contains: ":445 "}
+    pass_reason: 未监听常见高危端口
+    fail_reason: 存在高危端口监听
+
+  - item: 17
+    point: 2
+    block: Backup job / NFS
+    expect: {not_contains: "mount at"}
+    pass_reason: 未发现默认共享挂载
+    fail_reason: 存在默认共享挂载
+
+  - item: 18
+    point: 1
+    block: Remote login source restriction
+    expect:
+      any:
+        - {contains: "AllowUsers"}
+        - {contains: "AllowGroups"}
+        - {contains: "hosts.deny"}
+    pass_reason: 已限制远程登录来源
+    fail_reason: 未限制远程登录来源
+
+  - item: 20
+    point: 1
+    block: Patches / reboot
+    expect: {contains: "security 0"}
+    pass_reason: 无待安装安全补丁
+    fail_reason: 存在待安装安全补丁
+
+  - item: 20
+    point: 2
+    block: Patches / reboot
+    expect: {not_contains: "reboot required"}
+    pass_reason: 无待重启生效的补丁
+    fail_reason: 补丁安装后未重启，漏洞可能仍未修复
+
+  # ---- 恶意代码防范 ----
+  - item: 22
+    point: 1
+    block: Security agent (EDR / AV / IDS)
+    expect: {not_contains: "no security agent process"}
+    pass_reason: 已部署主机安全防护进程
+    fail_reason: 未发现主机安全防护进程
+
+  - item: 22
+    point: 2
+    block: New malware / fileless
+    expect: {not_contains: "-> /home/"}
+    pass_reason: 未发现用户目录下的可疑可执行进程
+    fail_reason: 存在用户目录下运行的可疑可执行进程
+
+  - item: 22
+    point: 3
+    block: Backdoor / proxy / C2 process
+    expect: {contains: "none found"}
+    pass_reason: 未发现后门或代理进程
+    fail_reason: 发现疑似后门或代理进程
+
+  # ---- 数据保密性 ----
+  # item 27 的口径是 manual（需访谈确认加密范围），初版不自动判定，留给人工。
+
+  # ---- 剩余信息保护 ----
+  - item: 31
+    point: 1
+    block: History setting (HISTSIZE)
+    expect: {not_contains: "no HISTSIZE"}
+    pass_reason: 已配置命令历史清理
+    fail_reason: 未配置命令历史清理，鉴别信息可能残留
+
+  - item: 32
+    point: 1
+    block: History setting (HISTSIZE)
+    expect:
+      all:
+        - {not_contains: "no HISTSIZE"}
+        - {not_contains: "HISTSIZE=0"}
+    pass_reason: 已限制敏感数据残留
+    fail_reason: 未限制敏感数据残留
