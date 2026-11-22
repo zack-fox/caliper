@@ -26,6 +26,8 @@ lint:
 library-lint:
 	$(PY) -m core.cli lint-library --pack packs/linux_os
 	$(PY) -m core.cli lint-library --pack packs/network_devices
+	$(PY) -m core.cli lint-library --pack packs/database
+	$(PY) -m core.cli lint-library --pack packs/os_devices
 
 contracts:
 	$(PY) -m core.contracts.check --templates templates --pack packs/linux_os

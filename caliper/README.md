@@ -11,16 +11,18 @@ V2.0.0 持续开发版：以「设备与证据包」为主入口——导入设�
 （manifest）与原始日志目录/单个日志文件两种方式，截图照片作为附件；
 设备支持添加、编辑、删除，双击表格行即可修改；证据根目录、输出目录、规则包目录收进「设置…」。
 macOS 开发工作区根目录的 `Caliper.app` 使用本机 `.venv` 启动；面向使用者的自包含安装包通过 `make package-macos` 构建。大模型、报告合成、验收材料只预留端口。
-规则库是初版（三级 18 项、二级 13 项自动判定），按现场反馈继续迭代。
+规则库按设备域拆分：服务器/存储设备（`packs/os_devices`）、数据库（`packs/database`）、
+网络与安全设备（`packs/network_devices`）；三套规则包共用同一套装载与判定引擎，只是采集适配器和规则包不同。
+`packs/linux_os` 保留为 Linux/Ubuntu 基线来源。
 
-六库现状：`capture`、`record`、`judge`、`remediation`、`high_risk`、`major` 均为 active；
+六库现状：每个设备规则包内的 `capture`、`record`、`judge`、`remediation`、`high_risk`、`major` 均为 active；
 `record` 以 5 条规则给出符合情况文案。公司格式记录表是主产物，平台四表为附带导出。
 
 ## 目录
 
 ```
 core/        contracts model evidence checks items records rules judge issues major render store ports cli
-packs/       linux_os（library.yaml 六库清单 / items / rules / checks_map / high_risk / texts）
+packs/       linux_os / os_devices / database / network_devices（六库清单 / items / adapters）
 templates/   四张母版（只读，只填单元格，不改列与样式）
 adapters/    noop（默认空实现）、llm（仅占位说明）
 app/         桌面 UI：shell（顶栏/侧导航/状态栏）/ screens / widgets / theme；入口 caliper-gui
@@ -30,7 +32,7 @@ docs/        格式规范、规则库编写指南、验收标准与 PROJECT-PLAN
 ```
 
 设计与开发路线以 `docs/PROJECT-PLAN.md` 为准：四步闭环（取证 → 记录表 → 判定 → 风险），
-六套规则库统一由 `packs/linux_os/library.yaml` 登记，`make library-lint` 校验清单与装载。
+六套规则库由各设备规则包的 `library.yaml` 登记，`make library-lint` 逐个校验清单与装载。
 证据格式（含采集脚本输出与公司记录表版式）见 `docs/FORMAT.md`，规则编写见 `docs/RULES.md`，
 第一版验收命令与可观察结果见 `docs/ACCEPTANCE.md`。
 
@@ -120,7 +122,7 @@ Windows 上执行上面的 PyInstaller 命令会跳过 `.app` 打包，直接产
 | 项目 | 6 | 导出交付 | 四张交付物卡片、统一门禁、运行设置与导出日志 |
 | 工具 | — | 规则库 | 六库只读浏览：控制项、检查映射、判定规则、高风险判例、重大隐患规则、文案库 |
 
-1. 「材料与资产」页需先选定资产类型（服务器 / 存储设备 / 数据库），再拖入采集目录、上传文件、粘贴文字或上传整改文件。
+1. 「材料与资产」页需先选定资产类型（服务器 / 存储设备 / 数据库 / 网络设备 / 安全设备），再拖入采集目录、上传文件、粘贴文字或上传整改文件。
    有 `manifest.json` 时走结构化校验，没有则按原始日志解析；截图、照片计入附件，不参与自动判定。
    上传只做证据识别与版本字段建议，不自动改判资产类型。
 2. 表格「证据识别」列显示「可核查：N 块」「仅附件：N 张图片」或不可用原因；
@@ -136,9 +138,13 @@ manifest，界面会自动按原始日志解析。
 
 ## 范围
 
-- 等级：二级、三级；安全类：安全通用要求 → 安全计算环境。
-- 资产：服务器 / 存储设备；系统：Ubuntu/Debian、CentOS/RHEL。
-- 当前不实现：大模型、图片 OCR/内容识别（图片只作证据附件）、管理制度核查、资产拓扑、网络设备 pack；数据库与中间件只覆盖 MySQL 采集与初版规则。
+- 等级：二级、三级、四级；安全类：安全通用要求 → 安全计算环境。
+- 资产与设备域：服务器 / 存储设备（Linux、Ubuntu 自动化；Windows、AIX、Solaris、ESXi 及通用模板人工核查）、
+  数据库（MySQL、Oracle 自动化；SQL Server 与通用模板人工核查）、网络与安全设备
+  （H3C、HUAWEI、Cisco、中兴 ZTE 自动化；防火墙、WAF、IDS/IPS、VPN、堡垒机、负载均衡、网闸人工核查模板）。
+- 各厂商/平台只使用本指导书的采集命令与判定规则；无厂商资料时整包走人工核查，不套用其他厂商命令。
+- 当前不实现：大模型、图片 OCR/内容识别（图片只作证据附件）、管理制度核查、资产拓扑；
+  中间件尚无独立设备规则域，相关测评项按人工核查处理。
 
 ## V1.0 边界
 
