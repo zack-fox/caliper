@@ -1,8 +1,8 @@
-"""③ 问题与重大：不符合/部分符合汇总，人工确认重大安全隐患。"""
+"""③ 问题与整改：不符合/部分符合汇总，重大隐患入口跳转风险页确认。"""
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.controller import AppController, ControllerError, MajorReview
-from app.widgets import Badge, Card, EmptyState, PageHeader, StatCard
+from app.widgets import Badge, Card, EmptyState, FilterChip, PageHeader, StatCard
 
 PREVIEW_COLUMNS = (
     "问题编号",
@@ -31,8 +31,20 @@ PREVIEW_COLUMNS = (
     "确认状态",
 )
 
+REMEDIATION_COLUMNS = (
+    "问题编号",
+    "资产类型",
+    "安全控制点",
+    "问题概述",
+    "危害分析",
+    "整改建议",
+    "整改状态",
+)
+
 
 class IssuesScreen(QWidget):
+    navigate = Signal(str)
+
     def __init__(self, controller: AppController, parent=None) -> None:
         super().__init__(parent)
         self.controller = controller
@@ -44,9 +56,13 @@ class IssuesScreen(QWidget):
         layout.setSpacing(14)
 
         self.header = PageHeader(
-            "问题与重大",
+            "问题与整改",
             "自动归集的不符合 / 部分符合项仅作问题草稿；记录人工复核后，勾选的重大隐患才可导出。",
         )
+        risk_button = QPushButton("前往风险页")
+        risk_button.setObjectName("subtle")
+        risk_button.clicked.connect(lambda: self.navigate.emit("risk"))
+        self.header.add_action(risk_button)
         refresh_button = QPushButton("刷新")
         refresh_button.setObjectName("subtle")
         refresh_button.clicked.connect(self.refresh)
@@ -63,7 +79,20 @@ class IssuesScreen(QWidget):
             stat_row.addWidget(card, 1)
         layout.addLayout(stat_row)
 
-        card = Card("安全问题汇总", "预览列；导出为 25 列冻结顺序")
+        view_row = QHBoxLayout()
+        view_row.setSpacing(6)
+        self._view = "issues"
+        self.issue_view_chip = FilterChip("问题清单", "issues")
+        self.remediation_view_chip = FilterChip("整改建议", "remediation")
+        self.issue_view_chip.setChecked(True)
+        self.issue_view_chip.clicked.connect(lambda _c=False: self._switch_view("issues"))
+        self.remediation_view_chip.clicked.connect(lambda _c=False: self._switch_view("remediation"))
+        view_row.addWidget(self.issue_view_chip)
+        view_row.addWidget(self.remediation_view_chip)
+        view_row.addStretch(1)
+        layout.addLayout(view_row)
+
+        card = Card("安全问题汇总", "问题清单为 25 列冻结顺序预览；整改建议聚焦危害与整改动作")
         self.table = QTableWidget(0, len(PREVIEW_COLUMNS))
         self.table.setHorizontalHeaderLabels(PREVIEW_COLUMNS)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
@@ -87,12 +116,28 @@ class IssuesScreen(QWidget):
         ):
             self.table.setColumnWidth(column, width)
 
+        self.remediation_table = QTableWidget(0, len(REMEDIATION_COLUMNS))
+        self.remediation_table.setHorizontalHeaderLabels(REMEDIATION_COLUMNS)
+        self.remediation_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.remediation_table.setAlternatingRowColors(True)
+        self.remediation_table.setWordWrap(True)
+        self.remediation_table.setShowGrid(False)
+        self.remediation_table.verticalHeader().setVisible(False)
+        remediation_header = self.remediation_table.horizontalHeader()
+        remediation_header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        remediation_header.setSectionResizeMode(QHeaderView.Interactive)
+        remediation_header.setSectionResizeMode(3, QHeaderView.Stretch)
+        remediation_header.setSectionResizeMode(5, QHeaderView.Stretch)
+        for column, width in ((0, 62), (1, 74), (2, 84), (6, 90)):
+            self.remediation_table.setColumnWidth(column, width)
+
         self.empty = EmptyState(
             "尚未运行核查",
             "先在「证据与资产」页导入设备证据并开始核查，问题清单会自动生成。",
         )
         self.stack = QStackedWidget()
         self.stack.addWidget(self.table)
+        self.stack.addWidget(self.remediation_table)
         self.stack.addWidget(self.empty)
         card.add(self.stack, 1)
 
@@ -106,6 +151,7 @@ class IssuesScreen(QWidget):
     def refresh(self) -> None:
         self._loading = True
         self.table.setRowCount(0)
+        self.remediation_table.setRowCount(0)
         rows = self.controller.issue_rows()
         if self.controller.run_result is None:
             self.stack.setCurrentWidget(self.empty)
@@ -114,7 +160,7 @@ class IssuesScreen(QWidget):
             self._loading = False
             return
 
-        self.stack.setCurrentWidget(self.table)
+        self._apply_view()
         reviews = self._reviews()
         assets: set[str] = set()
         for issue in rows:
@@ -142,7 +188,24 @@ class IssuesScreen(QWidget):
                 row, len(PREVIEW_COLUMNS) - 1, self._review_cell(issue, review)
             )
 
+            remediation_row = self.remediation_table.rowCount()
+            self.remediation_table.insertRow(remediation_row)
+            remediation_values = (
+                issue.issue_no,
+                issue.asset_type,
+                issue.values["安全控制点"],
+                issue.values["问题概述"],
+                issue.values.get("危害分析", ""),
+                issue.values.get("整改建议", ""),
+                issue.values.get("整改状态", ""),
+            )
+            for column, value in enumerate(remediation_values):
+                self.remediation_table.setItem(
+                    remediation_row, column, QTableWidgetItem(value)
+                )
+
         self.table.resizeRowsToContents()
+        self.remediation_table.resizeRowsToContents()
         confirmed = sum(1 for review in reviews.values() if review.confirmed)
         pending = sum(1 for review in reviews.values() if not review.confirmed)
         self._set_stats(len(rows), confirmed, len(assets), pending)
@@ -158,6 +221,24 @@ class IssuesScreen(QWidget):
         except ControllerError as exc:
             self.count.setText(f"重大隐患规则上下文不可用：{exc}")
             return {}
+
+    def _switch_view(self, key: str) -> None:
+        self._view = key
+        self.issue_view_chip.blockSignals(True)
+        self.remediation_view_chip.blockSignals(True)
+        self.issue_view_chip.setChecked(key == "issues")
+        self.remediation_view_chip.setChecked(key == "remediation")
+        self.issue_view_chip.blockSignals(False)
+        self.remediation_view_chip.blockSignals(False)
+        self._apply_view()
+
+    def _apply_view(self) -> None:
+        if self.controller.run_result is None:
+            self.stack.setCurrentWidget(self.empty)
+            return
+        self.stack.setCurrentWidget(
+            self.remediation_table if self._view == "remediation" else self.table
+        )
 
     def _risk_text(self, review: MajorReview | None) -> str:
         if review is None:

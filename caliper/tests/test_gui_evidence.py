@@ -143,9 +143,9 @@ def test_readiness_uses_real_evidence_counts(qapp, tmp_path):
     assert "待处理设备（未关联证据）" in screen.readiness_pending.text()
     assert "可核查：" in screen.table.item(0, EVIDENCE_COLUMN).text()
     assert screen.table.cellWidget(0, EVIDENCE_COLUMN) is not None
-    assert screen.table.item(0, 5).text() == "1"
+    assert screen.table.item(0, 1).text() == "已关联设备"
     assert screen.table.item(1, EVIDENCE_COLUMN).text() == "未关联证据"
-    assert screen.table.item(1, 5).text() == "—"
+    assert screen.table.item(1, 1).text() == "待处理设备"
     screen.close()
 
 

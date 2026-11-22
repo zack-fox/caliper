@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QHeaderView,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QMessageBox,
@@ -29,21 +30,37 @@ from PySide6.QtWidgets import (
 from app.controller import AppController, ControllerError
 from app.screens.dialogs import AssetDialog, EvidenceReviewDialog
 from app.widgets import Badge, Card, DropZone, EmptyState, PageHeader, Toolbar, scrollable
+from core.contracts.columns import ASSET_COLUMNS as ASSET_CORE_COLUMNS
+from core.contracts.enums import AssetType
 from core.model.entities import Asset
 
-ASSET_COLUMNS = (
-    "设备名称",
-    "IP 地址",
-    "重要程度",
-    "等级 / 指南",
-    "证据包",
-    "材料数",
-    "证据识别",
-    "操作",
-)
+# 界面资产表：序号 + 18 列资产记录（冻结顺序）+ 证据识别 + 操作。列契约不得改动。
+ASSET_COLUMNS = ("序号",) + ASSET_CORE_COLUMNS + ("证据识别", "操作")
 
-EVIDENCE_COLUMN = 6
-ACTION_COLUMN = 7
+EVIDENCE_COLUMN = len(ASSET_COLUMNS) - 2
+ACTION_COLUMN = len(ASSET_COLUMNS) - 1
+
+# 18 列资产记录在 Asset 模型上的字段映射（相对 18 列的索引，0 为设备名称）。
+ASSET_FIELD_ORDER = (
+    "device_name",
+    "is_virtual",
+    "business_system",
+    "os_version",
+    "db_version",
+    "middleware_version",
+    "ip",
+    "count",
+    "hot_standby",
+    "zone",
+    "importance",
+    "guide",
+    "test_object",
+    "note",
+    "scan_object_type",
+    "row_color",
+    "scan_address",
+    "is_test_env",
+)
 
 # 左列宽度：在 1280 窗口下仍给右侧表格留出可读空间。
 LEFT_MIN_WIDTH = 360
@@ -166,18 +183,38 @@ class EvidenceScreen(QWidget):
         project_card.body.addLayout(project_actions)
         column.addWidget(project_card)
 
-        import_card = Card("材料导入", "拖入采集目录或单个日志")
+        import_card = Card("证据提交", "先选定资产类型，再拖入 / 上传 / 粘贴证据内容")
+        type_row = QHBoxLayout()
+        type_row.setSpacing(8)
+        type_caption = self._caption("资产类型")
+        self.asset_type_selector = QComboBox()
+        self.asset_type_selector.addItems([item.value for item in AssetType])
+        self.asset_type_selector.setToolTip(
+            "上传前必须先选定资产类型；系统据此套用对应测评项清单，"
+            "上传材料只做证据识别，不自动改判类型。"
+        )
+        type_row.addWidget(type_caption)
+        type_row.addWidget(self.asset_type_selector, 1)
+        import_card.body.addLayout(type_row)
+
         self.dropzone = DropZone()
-        self.dropzone.title.setText("拖入采集目录或单个日志文件")
+        self.dropzone.title.setText("把测评证据拖到这里")
         self.dropzone.title.setWordWrap(True)
+        self.dropzone.hint.setText(
+            "支持拖拽目录/日志/资产表；也可点击下方按钮上传文件、上传整改文件或粘贴文字"
+        )
         self.dropzone.hint.setWordWrap(True)
         self.dropzone.hint.setMinimumWidth(0)
         pick_dir = QPushButton("选择采集目录…")
         pick_dir.clicked.connect(lambda: self._add_asset(pick_directory=True))
-        pick_log = QPushButton("选择日志文件…")
-        pick_log.clicked.connect(lambda: self._add_asset(pick_log=True))
-        self.dropzone.add_action(pick_dir)
-        self.dropzone.add_action(pick_log)
+        pick_file = QPushButton("上传文件…")
+        pick_file.clicked.connect(lambda: self._add_asset(pick_log=True))
+        paste_text = QPushButton("粘贴文字…")
+        paste_text.clicked.connect(self._paste_text)
+        remediation = QPushButton("上传整改文件…")
+        remediation.clicked.connect(self._upload_remediation)
+        for button in (pick_dir, pick_file, paste_text, remediation):
+            self.dropzone.add_action(button)
         self.dropzone.path_dropped.connect(self._on_dropped)
         import_card.add(self.dropzone)
         column.addWidget(import_card)
@@ -240,8 +277,11 @@ class EvidenceScreen(QWidget):
         self.table.setMinimumWidth(0)
         header = self.table.horizontalHeader()
         header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        header.setMinimumSectionSize(60)
-        widths = (130, 110, 76, 120, 110, 66, 150, 204)
+        header.setMinimumSectionSize(48)
+        widths = (
+            48, 140, 72, 160, 140, 130, 110, 120, 64, 72, 90, 72, 150, 90,
+            110, 90, 70, 120, 90, 150, 200,
+        )
         for column, width in enumerate(widths):
             header.setSectionResizeMode(column, QHeaderView.Interactive)
             self.table.setColumnWidth(column, width)
@@ -416,6 +456,12 @@ class EvidenceScreen(QWidget):
             self.readiness_pending.setText("")
         self.table_hint.setText("双击行可编辑；操作列可查看材料、编辑或删除设备。")
 
+    def _asset_field_value(self, asset: Asset, field: str) -> str:
+        value = getattr(asset, field)
+        if field == "importance":
+            return value.value
+        return "" if value is None else str(value)
+
     def _apply_filter(self, *_args) -> None:
         needle = self.search.text().strip().lower()
         visible = [
@@ -424,24 +470,19 @@ class EvidenceScreen(QWidget):
             if not needle
             or needle in row[0].device_name.lower()
             or needle in (row[0].ip or "").lower()
+            or needle in (row[0].business_system or "").lower()
         ]
         self.table.setRowCount(0)
         self._visible_assets = []
         for asset, package, text, tone, tooltip, material_count in visible:
             row = self.table.rowCount()
             self.table.insertRow(row)
-            values = (
-                asset.device_name,
-                asset.ip,
-                asset.importance.value,
-                asset.guide,
-                Path(package).name if package else "",
-                material_count,
-            )
-            for column, value in enumerate(values):
+            self.table.setItem(row, 0, QTableWidgetItem(str(row + 1)))
+            for offset, field in enumerate(ASSET_FIELD_ORDER, start=1):
+                value = self._asset_field_value(asset, field)
                 item = QTableWidgetItem(value)
-                item.setToolTip(package if column == 4 else value)
-                self.table.setItem(row, column, item)
+                item.setToolTip(value)
+                self.table.setItem(row, offset, item)
 
             status = QTableWidgetItem(text)
             status.setToolTip(tooltip)
@@ -482,6 +523,30 @@ class EvidenceScreen(QWidget):
         relative = self.controller.display_package_path(Path(path))
         self._add_asset(initial_evidence=relative)
 
+    def _paste_text(self) -> None:
+        text, ok = QInputDialog.getMultiLineText(
+            self, "粘贴证据文字", "把现场采集的命令输出 / 日志片段粘贴到这里：", ""
+        )
+        if not ok or not text.strip():
+            return
+        root = self.controller.evidence_root_path()
+        root.mkdir(parents=True, exist_ok=True)
+        target = root / "pasted-evidence.txt"
+        target.write_text(text, encoding="utf-8")
+        self._add_asset(initial_evidence=self.controller.display_package_path(target))
+
+    def _upload_remediation(self) -> None:
+        start = str(self.controller.evidence_root_path())
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "选择整改文件",
+            start,
+            "整改/证据文件 (*.txt *.md *.log *.out *.json *.csv *.xlsx);;所有文件 (*)",
+        )
+        if not path:
+            return
+        self._add_asset(initial_evidence=self.controller.display_package_path(Path(path)))
+
     def _add_asset(
         self,
         initial_evidence: str = "",
@@ -504,7 +569,12 @@ class EvidenceScreen(QWidget):
                 return
             initial_evidence = self.controller.display_package_path(Path(path))
 
-        dialog = AssetDialog(self.controller, parent=self, initial_evidence=initial_evidence)
+        dialog = AssetDialog(
+            self.controller,
+            parent=self,
+            initial_evidence=initial_evidence,
+            default_asset_type=self.asset_type_selector.currentText(),
+        )
         if dialog.exec() != QDialog.Accepted or dialog.asset is None:
             return
         try:

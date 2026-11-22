@@ -1,4 +1,8 @@
-"""⑤ 规则库：只读浏览控制项、判例与采集映射。"""
+"""⑥ 规则库：六库页签 + 搜索 + 左表右详情。
+
+六库对应规则包内的六类数据资产：控制项、检查映射、判定规则、
+高风险判例、重大隐患规则、文案库。每库显示条数、版本与路径。
+"""
 
 from __future__ import annotations
 
@@ -7,149 +11,267 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
-    QPushButton,
+    QLineEdit,
+    QSplitter,
+    QStackedWidget,
+    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTextBrowser,
     QVBoxLayout,
     QWidget,
 )
 
-from app.controller import AppController, ControllerError
-from app.widgets import Card, Chip, EmptyState, PageHeader, StatCard, hbox
+from app.controller import AppController
+from app.widgets import PageHeader
 
-ITEM_COLUMNS = ("序号", "编号", "安全控制点", "检查内容", "重要程度", "二值")
+LIBRARIES = (
+    ("items", "控制项"),
+    ("checks", "检查映射"),
+    ("rules", "判定规则"),
+    ("high_risk", "高风险判例"),
+    ("major", "重大隐患规则"),
+    ("texts", "文案库"),
+)
 
 
 class RulesScreen(QWidget):
     def __init__(self, controller: AppController, parent=None) -> None:
         super().__init__(parent)
         self.controller = controller
+        self._pack = None
+        self._rows: dict[str, list[tuple[str, str, str]]] = {}
         self.setObjectName("page")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 16, 20, 16)
         layout.setSpacing(14)
 
-        self.header = PageHeader(
-            "规则库",
-            "规则包可整体替换：换一个 pack 目录即可换一套规则，框架与流程不变。",
-        )
-        reload_button = QPushButton("重新加载")
-        reload_button.setObjectName("subtle")
-        reload_button.clicked.connect(self.refresh)
-        self.header.add_action(reload_button)
+        self.header = PageHeader("规则库", "规则包内的控制项、映射、判定规则与判例，只读展示")
         layout.addWidget(self.header)
 
-        self.stat_items = StatCard("控制项", "0", "当前等级")
-        self.stat_binary = StatCard("二值项", "0", "禁部分符合")
-        self.stat_cases = StatCard("高风险判例", "0")
-        self.stat_guides = StatCard("作业指导书", "0")
-        stat_row = QHBoxLayout()
-        stat_row.setSpacing(12)
-        for card in (self.stat_items, self.stat_binary, self.stat_cases, self.stat_guides):
-            stat_row.addWidget(card, 1)
-        layout.addLayout(stat_row)
+        self.pack_line = QLabel("尚未加载规则包")
+        self.pack_line.setObjectName("muted")
+        self.pack_line.setWordWrap(True)
+        layout.addWidget(self.pack_line)
 
-        info_card = Card("规则包信息")
-        self.pack_name = QLabel("—")
-        self.pack_name.setObjectName("section_title")
-        self.pack_meta = QLabel("—")
-        self.pack_meta.setObjectName("mono")
-        self.guides_row = QHBoxLayout()
-        self.guides_row.setSpacing(6)
-        self.guides_row.setAlignment(QHBoxLayout().alignment())
-        info_card.add(self.pack_name)
-        info_card.add(self.pack_meta)
-        info_card.body.addLayout(self.guides_row)
-        layout.addWidget(info_card)
-
-        self.items_card = Card("控制项清单", "按当前项目等级过滤")
-        self.table = QTableWidget(0, len(ITEM_COLUMNS))
-        self.table.setHorizontalHeaderLabels(ITEM_COLUMNS)
-        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.table.setAlternatingRowColors(True)
-        self.table.setShowGrid(False)
-        self.table.verticalHeader().setVisible(False)
-        header = self.table.horizontalHeader()
-        header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.Stretch)
-        self.items_card.add(self.table, 1)
-        layout.addWidget(self.items_card, 1)
-
-        self.empty = EmptyState("规则包不可用", "检查「导出与设置」里的规则包目录后重新加载。")
-        self.empty.setVisible(False)
-        layout.addWidget(self.empty)
-
-        self.cases_card = Card("高风险判例", "公安部指引 16 条，命中后进入重大候选")
-        self.cases_label = QLabel("—")
-        self.cases_label.setObjectName("secondary")
-        self.cases_label.setWordWrap(True)
-        self.cases_card.add(self.cases_label)
-        layout.addWidget(self.cases_card)
+        self.tabs = QTabWidget()
+        self.tabs.currentChanged.connect(self._on_tab_changed)
+        for key, label in LIBRARIES:
+            self.tabs.addTab(self._build_page(key), label)
+        layout.addWidget(self.tabs, 1)
 
         self.refresh()
 
-    # ---- 刷新 ----
+    # ------------------------------------------------------------------ 页面
+    def _build_page(self, key: str) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(8)
+
+        info_row = QHBoxLayout()
+        info_row.setSpacing(8)
+        search = QLineEdit()
+        search.setPlaceholderText("搜索当前库")
+        search.setClearButtonEnabled(True)
+        search.textChanged.connect(lambda _t, k=key: self._apply_filter(k))
+        info = QLabel("")
+        info.setObjectName("muted")
+        info_row.addWidget(search, 1)
+        info_row.addWidget(info)
+        layout.addLayout(info_row)
+
+        splitter = QSplitter(Qt.Horizontal)
+        table = QTableWidget(0, 2)
+        table.setHorizontalHeaderLabels(("标识", "摘要"))
+        table.setEditTriggers(QTableWidget.NoEditTriggers)
+        table.setAlternatingRowColors(True)
+        table.setShowGrid(False)
+        table.setWordWrap(False)
+        table.verticalHeader().setVisible(False)
+        table.setSelectionBehavior(QTableWidget.SelectRows)
+        table.setSelectionMode(QTableWidget.SingleSelection)
+        header = table.horizontalHeader()
+        header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        header.setSectionResizeMode(0, QHeaderView.Interactive)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        table.setColumnWidth(0, 200)
+        table.itemSelectionChanged.connect(lambda k=key: self._show_detail(k))
+
+        detail = QTextBrowser()
+        detail.setObjectName("evidence")
+        detail.setOpenExternalLinks(False)
+
+        splitter.addWidget(table)
+        splitter.addWidget(detail)
+        splitter.setSizes([480, 420])
+        layout.addWidget(splitter, 1)
+
+        setattr(self, f"_{key}_search", search)
+        setattr(self, f"_{key}_info", info)
+        setattr(self, f"_{key}_table", table)
+        setattr(self, f"_{key}_detail", detail)
+        setattr(self, f"_{key}_visible", [])
+        return page
+
+    # ------------------------------------------------------------------ 数据
+    def _load_pack(self):
+        if self._pack is not None:
+            return self._pack
+        self._pack = self.controller.pack or self.controller.load_pack()
+        return self._pack
+
     def refresh(self) -> None:
+        self._rows = {}
         try:
-            pack = self.controller.load_pack()
-            items = pack.items_for_level(self.controller.project.level)
-        except ControllerError as exc:
-            self.empty.set_text("规则包不可用", str(exc))
-            self.empty.setVisible(True)
-            self.items_card.setVisible(False)
-            self.cases_card.setVisible(False)
-            self.pack_name.setText("—")
-            self.pack_meta.setText("—")
+            pack = self._load_pack()
+        except Exception as exc:  # noqa: BLE001
+            self.pack_line.setText(f"规则包加载失败：{exc}")
             return
-
-        self.empty.setVisible(False)
-        self.items_card.setVisible(True)
-        self.cases_card.setVisible(True)
-
-        self.pack_name.setText(f"{pack.meta.name} · {pack.meta.version}")
-        self.pack_meta.setText(
-            f"等级 {', '.join(str(level) for level in pack.meta.levels)} 级"
-            f" · 系统 {', '.join(pack.meta.os_family)}"
-            f" · 资产类型 {', '.join(pack.meta.asset_types)}"
+        self._pack = pack
+        self.pack_line.setText(
+            f"{pack.meta.name} v{pack.meta.version}　·　"
+            f"等级 {pack.meta.levels}　·　OS {pack.meta.os_family}　·　"
+            f"资产类型 {pack.meta.asset_types}"
         )
-        while self.guides_row.count():
-            widget = self.guides_row.takeAt(0).widget()
-            if widget is not None:
-                widget.deleteLater()
-        for guide in pack.meta.guides:
-            self.guides_row.addWidget(Chip(guide))
-        self.guides_row.addStretch(1)
+        self._rows["items"] = self._items_rows(pack)
+        self._rows["checks"] = self._checks_rows(pack)
+        self._rows["rules"] = self._rules_rows(pack)
+        self._rows["high_risk"] = self._high_risk_rows(pack)
+        self._rows["major"] = self._major_rows(pack)
+        self._rows["texts"] = self._texts_rows(pack)
+        self._on_tab_changed(self.tabs.currentIndex())
 
-        self.table.setRowCount(0)
-        binary = 0
+    # ---- 各库行提取：返回 (标识, 摘要, 详情)
+    def _items_rows(self, pack) -> list[tuple[str, str, str]]:
+        try:
+            items = pack.items_for_level(self.controller.project.level)
+        except Exception:  # noqa: BLE001
+            items = []
+        rows = []
         for item in items:
-            row = self.table.rowCount()
-            self.table.insertRow(row)
-            if item.binary:
-                binary += 1
-            values = (
-                str(item.seq),
-                item.item_id,
-                item.control_point,
-                item.check_content,
-                item.importance,
-                "是" if item.binary else "否",
+            detail = (
+                f"{item.item_id}　{item.control_point}\n"
+                f"重要性：{item.importance}\n"
+                f"判定：{item.binary}\n"
+                f"核查内容：{item.check_content or '—'}\n"
+                f"判断标准：{item.criteria or '—'}"
             )
-            for column, value in enumerate(values):
-                cell = QTableWidgetItem(value)
-                cell.setToolTip(value)
-                self.table.setItem(row, column, cell)
+            rows.append((str(item.seq), item.control_point, detail))
+        return rows
 
-        self.stat_items.set_value(str(len(items)), f"{self.controller.project.level} 级")
-        self.stat_binary.set_value(str(binary))
-        self.stat_cases.set_value(str(len(pack.high_risk)))
-        self.stat_guides.set_value(str(len(pack.meta.guides)))
+    def _checks_rows(self, pack) -> list[tuple[str, str, str]]:
+        rows = []
+        for check in pack.checks.checks:
+            detail = (
+                f"标题：{check.title}\n"
+                f"采集段：{check.section or '—'}（块 {check.block_index}）\n"
+                f"类型：{check.kind}\n"
+                f"系统族：{check.os_family or '—'}\n"
+                f"归一化：{check.normalize or '—'}\n"
+                f"绑定实施点：{len(check.binds)} 个"
+            )
+            rows.append((f"块 {check.block_index}", check.title, detail))
+        return rows
 
-        lines = [
-            f"{case.get('hr_id', '—')}  {case.get('问题简述', '')}"
-            for case in pack.high_risk[:6]
+    def _rules_rows(self, pack) -> list[tuple[str, str, str]]:
+        rows = []
+        for rule in pack.rules.rules:
+            detail = (
+                f"规则：{rule.rule_id or '（自动生成）'}\n"
+                f"等级/项/实施点：L{rule.level}-{rule.item}-P{rule.point}\n"
+                f"采集块：{rule.block}\n"
+                f"判定：{rule.expect}"
+            )
+            rows.append((rule.rule_id or f"L{rule.level}-{rule.item}", f"P{rule.point} {rule.block}", detail))
+        return rows
+
+    def _high_risk_rows(self, pack) -> list[tuple[str, str, str]]:
+        rows = []
+        for entry in pack.high_risk:
+            hr_id = entry.get("hr_id", "—")
+            summary = entry.get("问题概述") or entry.get("问题") or ""
+            detail = "\n".join(f"{k}：{v}" for k, v in entry.items())
+            rows.append((hr_id, summary, detail))
+        return rows
+
+    def _major_rows(self, pack) -> list[tuple[str, str, str]]:
+        rows = []
+        if pack.major is None:
+            return rows
+        for rule in pack.major.rules:
+            scores = "　".join(f"{name} {entry.score}" for name, entry in rule.scores.items())
+            detail = (
+                f"规则：{rule.id}\n"
+                f"关联高风险判例：{', '.join(rule.hr_ids)}\n"
+                f"三维得分：{scores}\n"
+                f"库版本：{pack.major.version}　阈值：{pack.major.threshold}"
+            )
+            rows.append((rule.id, f"关联 {len(rule.hr_ids)} 条判例", detail))
+        return rows
+
+    def _texts_rows(self, pack) -> list[tuple[str, str, str]]:
+        rows = []
+        for entry in pack.texts:
+            control = entry.get("control_item") or entry.get("控制项") or "—"
+            summary = entry.get("问题") or entry.get("问题概述") or ""
+            detail = "\n".join(f"{k}：{v}" for k, v in entry.items())
+            rows.append((control, summary, detail))
+        return rows
+
+    # ---- 展示
+    def _on_tab_changed(self, index: int) -> None:
+        if index < 0:
+            return
+        key = LIBRARIES[index][0]
+        self._apply_filter(key)
+
+    def _apply_filter(self, key: str) -> None:
+        search = getattr(self, f"_{key}_search")
+        info = getattr(self, f"_{key}_info")
+        table = getattr(self, f"_{key}_table")
+        needle = search.text().strip().lower()
+        rows = self._rows.get(key, [])
+        visible = [
+            row for row in rows
+            if not needle or needle in row[0].lower() or needle in row[1].lower()
         ]
-        self.cases_label.setText("　·　".join(lines) if lines else "暂无判例")
+        table.setRowCount(0)
+        setattr(self, f"_{key}_visible", visible)
+        for primary, secondary, _detail in visible:
+            row = table.rowCount()
+            table.insertRow(row)
+            table.setItem(row, 0, QTableWidgetItem(primary))
+            table.setItem(row, 1, QTableWidgetItem(secondary))
+        version, path = self._library_meta(key)
+        info.setText(f"共 {len(visible)}/{len(rows)} 条　·　v{version}　·　{path}")
+        self._show_detail(key)
+
+    def _library_meta(self, key: str) -> tuple[str, str]:
+        pack = self._pack
+        if pack is None:
+            return "—", "—"
+        if key == "major" and pack.major is not None:
+            return pack.major.version, pack.meta.major
+        version = pack.meta.version
+        paths = {
+            "items": pack.meta.items.get(str(self.controller.project.level), "—")
+            if isinstance(pack.meta.items, dict)
+            else str(pack.meta.items),
+            "checks": pack.meta.checks_map,
+            "rules": pack.meta.rules_dir,
+            "high_risk": pack.meta.high_risk,
+            "texts": pack.meta.texts,
+        }
+        return version, paths.get(key, "—")
+
+    def _show_detail(self, key: str) -> None:
+        detail = getattr(self, f"_{key}_detail")
+        table = getattr(self, f"_{key}_table")
+        rows = getattr(self, f"_{key}_visible")
+        row = table.currentRow()
+        if row < 0 or row >= len(rows):
+            detail.setPlainText("选择左侧一行查看详情")
+            return
+        detail.setPlainText(rows[row][2])

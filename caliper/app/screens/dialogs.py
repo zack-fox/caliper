@@ -327,6 +327,7 @@ class AssetDialog(QDialog):
         asset: Asset | None = None,
         parent=None,
         initial_evidence: str = "",
+        default_asset_type: str = "",
     ) -> None:
         super().__init__(parent)
         self.controller = controller
@@ -367,6 +368,10 @@ class AssetDialog(QDialog):
         self.asset_type.addItems([item.value for item in AssetType])
         if asset is not None:
             self.asset_type.setCurrentText(asset.asset_type.value)
+        elif default_asset_type:
+            index = self.asset_type.findText(default_asset_type)
+            if index >= 0:
+                self.asset_type.setCurrentIndex(index)
 
         package_row = QHBoxLayout()
         package_row.setSpacing(6)

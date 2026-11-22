@@ -13,7 +13,7 @@ from PySide6.QtWidgets import QApplication, QPushButton  # noqa: E402
 from app.controller import AppController, ControllerError  # noqa: E402
 from app.screens.dialogs import RecordPreviewDialog  # noqa: E402
 from app.screens.issues import PREVIEW_COLUMNS, IssuesScreen  # noqa: E402
-from app.screens.results import RESULT_COLUMNS, ResultsScreen  # noqa: E402
+from app.screens.results import ResultsScreen  # noqa: E402
 from app.widgets import ComplianceBadge  # noqa: E402
 from core.contracts.enums import AssetType, Importance  # noqa: E402
 from core.contracts.verdict import Verdict  # noqa: E402
@@ -205,23 +205,40 @@ def _controller_with_domains(tmp_path):
     return controller
 
 
-def test_results_table_columns_and_density(qapp, tmp_path):
+def test_results_record_navigation_and_editor(qapp, tmp_path):
     controller = _controller_with_domains(tmp_path)
     screen = ResultsScreen(controller)
 
-    assert screen.table.columnCount() == 8
-    headers = [
-        screen.table.horizontalHeaderItem(column).text()
-        for column in range(screen.table.columnCount())
-    ]
-    assert tuple(headers) == RESULT_COLUMNS == (
-        "序号", "通用/扩展", "控制点", "控制项", "结果记录", "符合情况", "备注", "附件",
-    )
-    assert screen.table.rowHeight(0) == 34
-    assert not screen.table.showGrid()
-    assert isinstance(screen.table.cellWidget(0, 5).findChild(ComplianceBadge), ComplianceBadge)
-    assert screen.table.item(0, 1).text() == "通用"
-    assert screen.table.item(0, 7).text() == "2 个"
+    # 默认选中第一台设备（服务器），记录目录列出 4 条并自动选中首条。
+    assert screen.record_list.count() == 4
+    assert screen.record_stack.currentWidget() is screen.record_list
+    assert screen.record_list.currentRow() == 0
+
+    # 中间阅读区加载核查内容 / 判定标准；右侧编辑器加载结果记录。
+    assert screen.current_result is not None
+    assert screen.reading_stack.currentIndex() == 1
+    assert screen.check_content_label.text()
+    assert screen.criteria_label.text()
+
+    # 结果判定为下拉框，五值且当前项为「不符合」。
+    assert screen.verdict.count() == 5
+    assert screen.verdict.itemText(0) == "符合"
+    assert screen.verdict.currentText() == "不符合"
+
+    # 结果记录是 hero 编辑区，已预填自动判定文本。
+    assert screen.record_text.toPlainText() == "服务器记录 0"
+
+    # 证据原文只读区（首条带两条锚点）。
+    assert "capture.log:42" in screen.evidence_browser.toPlainText()
+    assert "audit.log:7" in screen.evidence_browser.toPlainText()
+    screen.close()
+
+
+def test_results_record_list_has_compliance_badge(qapp, tmp_path):
+    controller = _controller_with_domains(tmp_path)
+    screen = ResultsScreen(controller)
+    host = screen.record_list.itemWidget(screen.record_list.item(0))
+    assert isinstance(host.findChild(ComplianceBadge), ComplianceBadge)
     screen.close()
 
 
@@ -229,24 +246,24 @@ def test_compliance_filter_and_no_match_state(qapp, tmp_path):
     controller = _controller_with_domains(tmp_path)
     screen = ResultsScreen(controller)
 
+    assert screen.record_list.count() == 4
     screen.filter_chips["non_compliant"].click()
-    assert screen.table.rowCount() == 2
+    assert screen.record_list.count() == 2
     screen.filter_chips["all"].click()
-    assert screen.table.rowCount() == 4
+    assert screen.record_list.count() == 4
 
     screen.search.setText("不存在的控制项")
-    assert screen.table_stack.currentWidget() is screen.table_stack.widget(1)
-    assert screen.filtered_empty.title_label.text() == "当前筛选无结果"
-    assert not screen.restore_filter_button.isHidden()
+    assert screen.record_stack.currentWidget() is screen.record_empty
+    assert screen.record_empty.title_label.text() == "当前筛选无结果"
 
-    screen.restore_filter_button.click()
+    screen.restore_all_filters()
     assert screen.search.text() == ""
     assert screen._filter_key == "all"
-    assert screen.table.rowCount() == 4
+    assert screen.record_list.count() == 4
     screen.close()
 
 
-def test_domain_tabs_filter_tree_and_table(qapp, tmp_path):
+def test_domain_tabs_filter_tree_and_records(qapp, tmp_path):
     controller = _controller_with_domains(tmp_path)
     screen = ResultsScreen(controller)
 
@@ -257,7 +274,7 @@ def test_domain_tabs_filter_tree_and_table(qapp, tmp_path):
     screen.domain_tabs.setCurrentIndex(2)
     assert screen.domain_tabs.current_key() == "database"
     assert screen._current_run().asset.device_name == "业务数据库"
-    assert screen.table.rowCount() == 4
+    assert screen.record_list.count() == 4
     assert screen.current_result is None
     visible_names = [
         screen.asset_tree.topLevelItem(0).child(index).toolTip(0)
@@ -267,29 +284,21 @@ def test_domain_tabs_filter_tree_and_table(qapp, tmp_path):
     screen.close()
 
 
-def test_inspector_views_and_collapse(qapp, tmp_path):
+def test_editor_verdict_change_and_result_record(qapp, tmp_path):
     controller = _controller_with_domains(tmp_path)
     screen = ResultsScreen(controller)
 
-    screen.table.selectRow(0)
-    assert screen.inspector.current_key() == "detail"
-    assert screen.current_result is not None
-    assert not screen.detail_form.isHidden()
+    # 手动改判定 + 结果记录后，恢复建议按钮可用（走人工校正留痕）。
+    index = screen.verdict.findData("部分符合")
+    screen.verdict.setCurrentIndex(index)
+    screen.record_text.setPlainText("人工补录的结果记录")
 
-    screen.inspector_tabs.setCurrentIndex(1)
-    assert screen.inspector.current_key() == "remediation"
-    screen.inspector_tabs.setCurrentIndex(2)
-    assert screen.inspector.current_key() == "evidence"
-    assert screen.anchor_tree.topLevelItemCount() == 2
+    screen.record_list.setCurrentRow(1)
+    assert screen.record_text.toPlainText() == "服务器记录 1"
 
-    screen.inspector.closed.emit()
-    assert screen.inspector.isHidden()
-    assert not screen.table.isHidden()
-    assert screen.inspector_toggle.isChecked() is False
-
-    screen.table.cellClicked.emit(0, 7)
-    assert screen.inspector.current_key() == "evidence"
-    assert not screen.inspector.isHidden()
+    screen.record_list.setCurrentRow(0)
+    assert screen.current_result.seq == screen._visible_results[0].seq
+    assert screen.record_badge.text() in {"待核对", "已确认"}
     screen.close()
 
 

@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.controller import AppController
-from app.widgets import Badge, Card, PageHeader, hbox
+from app.widgets import Badge, Card, PageHeader, hbox, scrollable
 
 EXPORT_HINT = "逐项人工确认后方可导出结果表、问题表和重大隐患表；未确认内容只保留为工作草稿。"
 
@@ -58,7 +58,7 @@ class ExportScreen(QWidget):
 
         asset_card = self._export_card(
             "资产记录表",
-            "读取人工维护的 18 列原表，只补空白字段并做自检。",
+            "读取 18 列原表，只补空白字段并做自检。",
             "导出资产记录表",
             self._export_asset,
             self.status_asset,
@@ -66,21 +66,21 @@ class ExportScreen(QWidget):
         asset_card.body.addLayout(hbox(self.asset_source, pick_asset))
         result_card = self._export_card(
             "结果记录表",
-            "使用已确认并可编辑的记录内容，按设备 × 指导书生成工作表。",
+            "按已确认记录生成设备 × 指导书工作表。",
             "导出结果记录表",
             self._export,
             self.status_result,
         )
         issue_card = self._export_card(
             "安全问题汇总",
-            "取不符合 / 部分符合项，导出 25 列冻结顺序。",
+            "取不符合 / 部分符合项，导出 25 列。",
             "导出问题汇总",
             self._export_issue,
             self.status_issue,
         )
         major_card = self._export_card(
             "重大安全隐患",
-            "只收已确认「符合重大判定原则」的行，19 列。",
+            "只收已确认重大判定行，19 列。",
             "导出重大隐患表",
             self._export_major,
             self.status_major,
@@ -89,7 +89,15 @@ class ExportScreen(QWidget):
             cards.addWidget(card, index // 2, index % 2)
         cards.setColumnStretch(0, 1)
         cards.setColumnStretch(1, 1)
-        layout.addLayout(cards)
+        self.result_card = result_card
+        self.issue_card = issue_card
+        self.major_card = major_card
+        self._cards_host = QWidget()
+        cards_layout = QVBoxLayout(self._cards_host)
+        cards_layout.setContentsMargins(0, 0, 0, 0)
+        cards_layout.setSpacing(14)
+        cards_layout.addLayout(cards)
+        layout.addWidget(scrollable(self._cards_host), 1)
 
         # ---- 设置 ----
         settings_card = Card("运行设置", "相对路径按项目文件所在目录解析")
@@ -109,7 +117,7 @@ class ExportScreen(QWidget):
         save_settings.setObjectName("primary")
         save_settings.clicked.connect(self._save_settings)
         settings_card.add_action(save_settings)
-        layout.addWidget(settings_card)
+        cards_layout.addWidget(settings_card)
 
         # ---- 日志 ----
         log_card = Card("导出日志", "每次导出都会记录路径与自检结果")
@@ -121,21 +129,22 @@ class ExportScreen(QWidget):
         clear.setObjectName("subtle")
         clear.clicked.connect(self.log.clear)
         log_card.add_action(clear)
-        layout.addWidget(log_card, 1)
+        log_card.setMinimumHeight(150)
+        log_card.setMaximumHeight(170)
+        layout.addWidget(log_card)
 
         self.refresh()
 
     # ---- 构建 ----
     def _export_card(self, title: str, desc: str, button_text: str, handler, badge: Badge) -> Card:
         card = Card(title)
-        badge_row = QHBoxLayout()
-        badge_row.addWidget(badge)
-        badge_row.addStretch(1)
-        card.body.addLayout(badge_row)
+        card.add_action(badge)
         hint = QLabel(desc)
         hint.setObjectName("muted")
-        hint.setWordWrap(True)
+        hint.setWordWrap(False)
         card.add(hint)
+        card.hint_label = hint
+        card.hint_desc = desc
         button = QPushButton(button_text)
         button.clicked.connect(handler)
         card.add_action(button)
@@ -203,6 +212,31 @@ class ExportScreen(QWidget):
                 self.status_major.set_text(f"已确认 {confirmed} 行", "info")
             else:
                 self.status_major.set_text("无重大确认行", "neutral")
+        self._update_block_reason(stale, waiting, pending, has_run)
+
+    def _update_block_reason(
+        self, stale: int, waiting: int, pending: list, has_run: bool
+    ) -> None:
+        """把门禁阻断原因直接写在交付物卡片上，而不是只留在导出日志里。"""
+        for card in (self.result_card, self.issue_card, self.major_card):
+            card.hint_label.setText(card.hint_desc)
+        if not has_run:
+            return
+        if pending:
+            self.result_card.hint_label.setText(
+                f"阻断：{len(pending)} 条记录待人工确认，确认后可导出结果记录表。"
+            )
+            self.issue_card.hint_label.setText(
+                f"阻断：{len(pending)} 条记录待人工确认，确认后可导出问题汇总。"
+            )
+        if stale:
+            self.major_card.hint_label.setText(
+                f"阻断：{stale} 行确认已失效（规则版本或判定依据变化），需重新确认。"
+            )
+        elif waiting:
+            self.major_card.hint_label.setText(
+                f"阻断：{waiting} 行重大隐患候选未确认，确认后可导出。"
+            )
 
     # ---- 选择 ----
     def _pick_dir(self) -> None:

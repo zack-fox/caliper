@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout
+from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QVBoxLayout
 
 from app.theme.theme import restyle
 
@@ -41,14 +41,18 @@ class DropZone(QFrame):
         layout.addWidget(self.title)
         layout.addWidget(self.hint)
 
-        self.actions = QHBoxLayout()
-        self.actions.setSpacing(8)
+        self.actions = QGridLayout()
+        self.actions.setHorizontalSpacing(8)
+        self.actions.setVerticalSpacing(6)
         self.actions.setAlignment(Qt.AlignCenter)
+        self._action_count = 0
         layout.addSpacing(4)
         layout.addLayout(self.actions)
 
     def add_action(self, widget) -> None:
-        self.actions.addWidget(widget)
+        row, column = divmod(self._action_count, 2)
+        self.actions.addWidget(widget, row, column)
+        self._action_count += 1
 
     def set_hint(self, text: str) -> None:
         self.hint.setText(text)

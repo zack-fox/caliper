@@ -245,8 +245,10 @@ QT_QPA_PLATFORM=offscreen .venv/bin/python -m app.main --smoke
 
 - GUI 测试全部通过：结果页有「记录表预览」「生成记录表」按钮；预览 9 列、行序与
   `build_sheet` 完全一致；生成的文件落在输出目录；
-- smoke 输出 `[smoke] pages=5 keys=evidence results issues export rules`、
-  `templates=4`，退出码 0。
+- smoke 输出 `[smoke] pages=7 keys=overview evidence results issues risk export rules`、
+  `templates=4`，退出码 0；
+- 侧栏为「项目」（项目概述 / 材料与资产 / 现场核查 / 问题与整改 / 风险与结论 / 导出交付）
+  与「工具」（规则库）两组；窗口最小 1280×800，宽度小于 1360px 时侧栏自动折叠且内容不横向溢出。
 
 ## 14. 全链路回归与全量检查
 

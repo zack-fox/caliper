@@ -109,6 +109,8 @@ class AppShell(QMainWindow):
         self.sidebar.navigate.connect(self.go)
         self.stepbar.navigate.connect(self.go)
         self.pages["overview"].navigate.connect(self.go)  # type: ignore[attr-defined]
+        self.pages["issues"].navigate.connect(self.go)  # type: ignore[attr-defined]
+        self.pages["risk"].navigate.connect(self.go)  # type: ignore[attr-defined]
         self.topbar.run_requested.connect(self.run)
         self.topbar.load_requested.connect(self.load_project)
         self.topbar.save_requested.connect(self.save_project)

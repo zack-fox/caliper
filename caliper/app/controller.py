@@ -439,6 +439,13 @@ class AppController:
             store.close()
         return reviews
 
+    def major_rule_version(self) -> str:
+        """当前高风险判例 + 重大隐患规则的短版本号，用于界面核对。"""
+        pack = self.pack or self.load_pack()
+        return compute_rule_version(
+            [pack.root / pack.meta.high_risk, pack.root / pack.meta.major]
+        )
+
     def ensure_major_confirmations(self) -> None:
         """导出前的重大确认门禁；直接复用 core 校验，不在此处放宽条件。"""
         if self.run_result is None:
