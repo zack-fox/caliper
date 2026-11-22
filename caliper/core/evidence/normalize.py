@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 _NORMALIZERS = {
     "os",
     "duplicate_uid",
+    "os_default_accounts",
     "accounts",
     "empty_password",
     "password_complexity",
@@ -171,6 +172,35 @@ def _normalize_duplicate_uid(block: CheckBlock) -> list[DerivedFact]:
         only_root = set(names) == {"root"}
         _add(facts, _fact(block, f"fact:uid0.only_root={str(only_root).lower()}", anchors))
     return facts
+
+
+_DEFAULT_ACCOUNTS = {
+    "adm",
+    "lp",
+    "sync",
+    "shutdown",
+    "halt",
+    "news",
+    "uucp",
+    "operator",
+    "games",
+    "gopher",
+    "ftp",
+}
+
+
+def _normalize_os_default_accounts(block: CheckBlock) -> list[DerivedFact]:
+    """检查 /etc/passwd 中是否仍保留常见系统默认账户。"""
+    present: list[OutputLine] = []
+    for line in block.output:
+        match = re.match(r"^\s*([A-Za-z0-9_.-]+)\s*:\s*\d+", line.text)
+        if match and match.group(1).lower() in _DEFAULT_ACCOUNTS:
+            present.append(line)
+    if present:
+        return [fact] if (fact := _fact(block, "fact:os.default_accounts.none=false", present)) else []
+    if block.output or block.status is CheckStatus.EMPTY:
+        return [fact] if (fact := _fact(block, "fact:os.default_accounts.none=true")) else []
+    return []
 
 
 def _normalize_accounts(block: CheckBlock) -> list[DerivedFact]:
@@ -2093,6 +2123,8 @@ def _dispatch(normalize: str, block: CheckBlock) -> list[DerivedFact]:
         return _normalize_os(block)
     if normalize == "duplicate_uid":
         return _normalize_duplicate_uid(block)
+    if normalize == "os_default_accounts":
+        return _normalize_os_default_accounts(block)
     if normalize == "accounts":
         return _normalize_accounts(block)
     if normalize == "empty_password":
@@ -2162,6 +2194,7 @@ def _sufficient(normalize: str, facts: list[DerivedFact]) -> bool:
     texts = {fact.text for fact in facts}
     requirements = {
         "duplicate_uid": ({"fact:duplicate_uid.none=true", "fact:duplicate_uid.none=false"}, {"fact:uid0.only_root=true", "fact:uid0.only_root=false"}),
+        "os_default_accounts": ({"fact:os.default_accounts.none=true", "fact:os.default_accounts.none=false"},),
         "empty_password": ({"fact:empty_password.none=true", "fact:empty_password.none=false"},),
         "accounts": ({"fact:account.expired.none=true", "fact:account.expired.none=false"},),
         "faillock": ({"fact:faillock.module=true", "fact:faillock.module=false"}, {"fact:faillock.policy=true", "fact:faillock.policy=false"}),

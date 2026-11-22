@@ -54,6 +54,7 @@ lint-rules:
 	$(PY) -m core.cli lint-rules --pack packs/linux_os
 	$(PY) -m core.cli lint-rules --pack packs/network_devices
 	$(PY) -m core.cli lint-rules --pack packs/database
+	$(PY) -m core.cli lint-rules --pack packs/os_devices
 
 export:
 	$(PY) -m core.cli export --project $(PROJECT) --table $(TABLE)

@@ -385,6 +385,7 @@ def _lint_target(
     items: dict[int, list],
     high_risk: list[dict],
     major,
+    manual_points_by_level: dict | None = None,
 ) -> list[str]:
     problems: list[str] = []
     titles = set(checks.titles())
@@ -413,6 +414,12 @@ def _lint_target(
             if not rule_points:
                 continue
             expected = checks.points_for_item(item.seq, level)
+            manual = {point.point for point in item.manual_points}
+            manual.update(
+                point.point
+                for point in (manual_points_by_level or {}).get(level, {}).get(item.seq, [])
+            )
+            expected -= manual
             if expected and rule_points != expected:
                 problems.append(
                     f"{item.item_id}：规则实施点 {sorted(rule_points)} 与 checks_map {sorted(expected)} 不一致"
@@ -454,6 +461,7 @@ def _lint_pack(pack: Pack) -> list[str]:
                 pack.items,
                 adapter.high_risk,
                 adapter.major,
+                adapter.meta.manual_points_by_level,
             )
         )
     return problems

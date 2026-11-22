@@ -1,0 +1,51 @@
+# ===== Linux baseline check (family=server, level=3) =====
+===== RESULTS (collected) =====
+===== 2. IDENTIFICATION =====
+[01] Duplicate UID / UID=0 accounts
+  cmd: cut -d: -f3 /etc/passwd | sort | uniq -d; awk -F: '$3==0{print $1}' /etc/passwd
+  file: /etc/passwd
+  no duplicate uid
+  UID=0: root
+[02] Empty / expired password
+  cmd: awk -F: '$2==""{print $1" empty-password"}{print $1" last-change="$3" max="$5" expire="$8}' /etc/shadow
+  file: /etc/shadow
+  no empty-password account
+[03] Password complexity
+  cmd: grep -RhE 'pam_(pwquality|cracklib)' /etc/pam.d 2>/dev/null; cat /etc/security/pwquality.conf 2>/dev/null
+  file: /etc/security/pwquality.conf
+  password requisite pam_pwquality.so try_first_pass
+  minlen=10
+  dcredit=-1
+  ucredit=-1
+  lcredit=-1
+[04] Password policy (login.defs)
+  cmd: grep -E '^(PASS_|ENCRYPT_METHOD|UMASK)' /etc/login.defs
+  file: /etc/login.defs
+  PASS_MAX_DAYS 90
+  PASS_MIN_DAYS 1
+  PASS_WARN_AGE 7
+[05] Remote login source restriction
+  cmd: grep -hE '^(AllowUsers|AllowGroups|DenyUsers|DenyGroups)' /etc/ssh/sshd_config 2>/dev/null
+  file: /etc/ssh/sshd_config
+  AllowUsers 占位账号
+[09] Password hash algorithm
+  cmd: awk -F: '$2!~/^[!*]/{print $1, substr($2,1,3)}' /etc/shadow; grep -h 'pam_unix.so' /etc/pam.d/system-auth /etc/pam.d/password-auth 2>/dev/null
+  file: /etc/shadow
+  app $6$
+  password sufficient pam_unix.so sha512 shadow
+===== 3. ACCESS CONTROL =====
+[06] Default accounts
+  cmd: awk -F: '$3 < 1000 {print $1 ":" $3 ":" $7}' /etc/passwd
+  file: /etc/passwd
+  root:0:/bin/bash
+  app:1000:/bin/bash
+[07] Separation of duty (three roles)
+  cmd: grep -RhE '^(sudo|%sudo|%wheel)' /etc/sudoers /etc/sudoers.d 2>/dev/null
+  file: /etc/sudoers
+  sudo user
+  audit reader
+[08] sudo authorization / NOPASSWD
+  cmd: grep -RhE 'NOPASSWD|%sudo|%wheel' /etc/sudoers /etc/sudoers.d 2>/dev/null
+  file: /etc/sudoers
+  %sudo ALL=(ALL) ALL
+===== END OF REPORT =====

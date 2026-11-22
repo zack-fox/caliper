@@ -1,0 +1,50 @@
+name: Linux
+vendor: Linux
+aliases:
+- linux
+- centos
+- rhel
+- red hat
+- redhat
+- rocky
+- almalinux
+- suse
+- sles
+- kylin
+- 麒麟
+- 统信
+- uos
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 服务器
+- 存储设备
+checks_map: checks_map.yaml
+rules_dir: rules
+capture: capture.yaml
+high_risk: high_risk.yaml
+texts: texts/library.yaml
+remediation: remediation.yaml
+manual_points_by_level:
+  3:
+    6:
+    - point: 2
+      reason: 默认账户口令是否已修改，需结合 /etc/shadow 或访谈确认。
+    8:
+    - point: 3
+      reason: 管理用户权限是否为最小权限，需结合授权清单和访谈确认。
+    9:
+    - point: 3
+      reason: 越权访问需通过实际测试验证。
+  4:
+    6:
+    - point: 2
+      reason: 默认账户口令是否已修改，需结合 /etc/shadow 或访谈确认。
+    8:
+    - point: 3
+      reason: 管理用户权限是否为最小权限，需结合授权清单和访谈确认。
+    9:
+    - point: 3
+      reason: 越权访问需通过实际测试验证。

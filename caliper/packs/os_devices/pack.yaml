@@ -1,0 +1,30 @@
+name: os_devices
+version: 0.1.0
+levels:
+- 2
+- 3
+- 4
+os_family:
+- debian
+- rhel
+- unknown
+asset_types:
+- 服务器
+- 存储设备
+guides:
+- 二级-安全通用要求
+- 三级-安全通用要求
+- 四级-安全通用要求
+items:
+  level_2: items_L2.yaml
+  level_3: items_L3.yaml
+  level_4: items_L4.yaml
+adapters:
+  linux: adapters/linux
+  ubuntu: adapters/ubuntu
+  windows: adapters/windows
+  aix: adapters/aix
+  solaris: adapters/solaris
+  esxi: adapters/esxi
+  generic: adapters/generic
+default_adapter: generic

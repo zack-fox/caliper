@@ -1,0 +1,898 @@
+checks:
+- os_family:
+  - debian
+  - rhel
+  section: 1. SYSTEM
+  title: Host / OS / kernel / time
+  block_index: 1
+  kind: context
+  session:
+  - kind: shell
+    pattern: ^(?:(?:cat|more)\s+/etc/(?:os-release|centos-release|redhat-release)\b|hostnamectl\b|uname\s+-a\b)
+  normalize: os
+  binds: []
+- os_family:
+  - debian
+  - rhel
+  section: 1. SYSTEM
+  title: Network
+  block_index: 2
+  kind: context
+  binds: []
+- os_family:
+  - debian
+  - rhel
+  section: 2. IDENTIFICATION
+  title: Duplicate UID / UID=0 accounts
+  block_index: 3
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:cut\s+-d:\s+-f3\s+/etc/passwd\b.*\buniq\s+-d\b|awk\s+-F:\s+.*\$3\s*==\s*0.*\/etc\/passwd\b)
+    empty: success
+  normalize: duplicate_uid
+  binds:
+  - item: 1
+    points:
+    - 1
+    - 2
+  - level: 4
+    item: 1
+    points:
+    - 1
+    - 2
+  - level: 2
+    item: 1
+    points:
+    - 2
+- os_family:
+  - debian
+  - rhel
+  section: 2. IDENTIFICATION
+  title: Accounts and last password change
+  block_index: 4
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:chage\s+-l\b|awk\s+-F:\s+.*\/etc\/passwd\b.*\bchage\s+-l\b|awk\s+-F:\s+.*\bexpire=.*\/etc\/shadow\b)
+  normalize: accounts
+  binds:
+  - item: 1
+    points:
+    - 4
+  - level: 4
+    item: 1
+    points:
+    - 4
+  - item: 7
+    points:
+    - 1
+  - level: 4
+    item: 7
+    points:
+    - 1
+  - level: 2
+    item: 4
+    points:
+    - 2
+- os_family:
+  - debian
+  - rhel
+  section: 2. IDENTIFICATION
+  title: Empty / expired password
+  block_index: 5
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^awk\s+-F:\s+.*\$2\s*==.*\/etc\/shadow\b
+    empty: success
+  - kind: shell
+    pattern: ^(?:cat|more|less)\s+\/etc\/shadow\b
+  normalize: empty_password
+  binds:
+  - item: 1
+    points:
+    - 3
+  - level: 4
+    item: 1
+    points:
+    - 3
+  - level: 2
+    item: 1
+    points:
+    - 3
+- os_family:
+  - debian
+  - rhel
+  section: 2. IDENTIFICATION
+  title: Password hash algorithm
+  block_index: 6
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:grep\b.*\bpam_unix\b.*\/etc\/pam\.d\b|(?:cat|more|less)\s+\/etc\/pam\.d\/(?:system-auth|password-auth|common-auth|common-password)\b)
+  binds:
+  - level: 2
+    item: 1
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 2. IDENTIFICATION
+  title: Password policy (login.defs)
+  block_index: 7
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:grep\b.*\bPASS_(?:MAX|MIN|WARN)_DAYS\b.*\/etc\/login\.defs\b|(?:cat|more)\s+\/etc\/login\.defs\b)
+  binds:
+  - item: 1
+    points:
+    - 4
+  - level: 4
+    item: 1
+    points:
+    - 4
+  - level: 2
+    item: 1
+    points:
+    - 4
+- os_family:
+  - debian
+  - rhel
+  section: 2. IDENTIFICATION
+  title: Password complexity
+  block_index: 8
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:grep\b.*pam_(?:pwquality|cracklib).*\/etc\/pam\.d\b|(?:cat|more|less)\s+\/etc\/(?:security\/pwquality\.conf|pam\.d\/(?:system-auth|password-auth|common-auth|common-password))\b)
+    empty: success
+  normalize: password_complexity
+  binds:
+  - item: 1
+    points:
+    - 4
+  - level: 4
+    item: 1
+    points:
+    - 4
+  - level: 2
+    item: 1
+    points:
+    - 4
+- os_family:
+  - debian
+  - rhel
+  section: 2. IDENTIFICATION
+  title: Login failure lockout (faillock)
+  block_index: 9
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:grep\b.*pam_(?:faillock|tally\d*).*\/etc\/pam\.d\b|(?:cat|more|less)\s+\/etc\/(?:security\/faillock\.conf|pam\.d\/(?:system-auth|password-auth|common-auth|common-password))\b)
+    empty: success
+  normalize: faillock
+  binds:
+  - item: 2
+    points:
+    - 1
+    - 2
+  - level: 4
+    item: 2
+    points:
+    - 1
+    - 2
+  - level: 2
+    item: 2
+    points:
+    - 1
+    - 2
+- os_family:
+  - debian
+  - rhel
+  section: 2. IDENTIFICATION
+  title: Session timeout TMOUT
+  block_index: 10
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:grep\b.*\bTMOUT\b.*(?:\/etc\/profile\b|\/etc\/profile\.d\b)|(?:cat|more|less)\s+\/etc\/profile(?:\.d\/\S+)?\b(?:[^|]*\|\s*grep\b[^|]*\bTMOUT\b)?\s*$)
+    empty: success
+  normalize: tmout
+  binds:
+  - item: 2
+    points:
+    - 3
+  - level: 4
+    item: 2
+    points:
+    - 3
+  - level: 2
+    item: 2
+    points:
+    - 3
+- os_family:
+  - debian
+  - rhel
+  section: 2. IDENTIFICATION
+  title: SSH host key algorithm
+  block_index: 11
+  kind: judge
+  binds:
+  - item: 3
+    points:
+    - 1
+  - level: 4
+    item: 3
+    points:
+    - 1
+  - level: 2
+    item: 3
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 2. IDENTIFICATION
+  title: SSH effective config
+  block_index: 12
+  kind: judge
+  binds:
+  - item: 3
+    points:
+    - 1
+  - level: 4
+    item: 3
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 2. IDENTIFICATION
+  title: Remote login source restriction
+  block_index: 13
+  kind: judge
+  binds:
+  - item: 18
+    points:
+    - 1
+  - level: 4
+    item: 18
+    points:
+    - 1
+  - level: 2
+    item: 13
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 3. ACCESS CONTROL
+  title: Key file permissions
+  block_index: 14
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:stat\s+(?:-c\s+)?.*\/etc\/(?:passwd|shadow|group|gshadow)\b|ls\s+-l\s+\/etc\/(?:passwd|shadow)\b)
+  normalize: key_file_permissions
+  binds:
+  - item: 5
+    points:
+    - 1
+  - level: 4
+    item: 5
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 3. ACCESS CONTROL
+  title: Privileged groups
+  block_index: 15
+  kind: judge
+  binds:
+  - item: 8
+    points:
+    - 1
+    - 2
+  - level: 4
+    item: 8
+    points:
+    - 1
+    - 2
+  - level: 2
+    item: 4
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 3. ACCESS CONTROL
+  title: sudo authorization / NOPASSWD
+  block_index: 16
+  kind: judge
+  binds:
+  - item: 8
+    points:
+    - 3
+  - level: 4
+    item: 8
+    points:
+    - 3
+  - level: 2
+    item: 7
+    points:
+    - 3
+- os_family:
+  - debian
+  - rhel
+  section: 3. ACCESS CONTROL
+  title: Separation of duty (three roles)
+  block_index: 17
+  kind: judge
+  binds:
+  - item: 8
+    points:
+    - 1
+    - 2
+  - level: 4
+    item: 8
+    points:
+    - 1
+    - 2
+  - level: 2
+    item: 7
+    points:
+    - 1
+    - 2
+- os_family:
+  - debian
+  - rhel
+  section: 3. ACCESS CONTROL
+  title: umask
+  block_index: 18
+  kind: judge
+  binds:
+  - item: 10
+    points:
+    - 1
+  - level: 4
+    item: 10
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 3. ACCESS CONTROL
+  title: World-writable / tmp perms
+  block_index: 19
+  kind: judge
+  binds:
+  - item: 10
+    points:
+    - 1
+  - level: 4
+    item: 10
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 4. AUDIT
+  title: auditd status and rules
+  block_index: 20
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:systemctl\s+(?:is-active|status)\s+auditd\b|service\s+auditd\s+status\b)
+  - kind: shell
+    pattern: ^auditctl\s+-l\b
+    empty: success
+  normalize: auditd
+  binds:
+  - item: 12
+    points:
+    - 1
+    - 3
+  - level: 4
+    item: 12
+    points:
+    - 1
+    - 3
+  - level: 2
+    item: 8
+    points:
+    - 2
+    - 3
+  - level: 2
+    item: 9
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 4. AUDIT
+  title: Log service
+  block_index: 21
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^systemctl\s+(?:is-active|status)\s+(?:rsyslog|systemd-journald)\b
+  normalize: log_service
+  binds:
+  - item: 12
+    points:
+    - 1
+  - level: 4
+    item: 12
+    points:
+    - 1
+  - level: 2
+    item: 8
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 4. AUDIT
+  title: Log retention
+  block_index: 22
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:grep\b.*(?:rotate|maxage|daily|weekly|monthly|MaxRetentionSec).*(?:\/etc\/logrotate|\/etc\/systemd\/journald\.conf)|(?:cat|more)\s+(?:\/etc\/logrotate\.conf|\/etc\/systemd\/journald\.conf)\b)
+  normalize: log_retention
+  binds:
+  - item: 14
+    points:
+    - 1
+    - 2
+  - level: 4
+    item: 14
+    points:
+    - 1
+    - 2
+  - level: 2
+    item: 10
+    points:
+    - 2
+- os_family:
+  - debian
+  - rhel
+  section: 4. AUDIT
+  title: Log archives on disk
+  block_index: 23
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^find\s+\/var\/log\b.*(?:gz|zst|xz)
+    empty: success
+  - kind: shell
+    pattern: ^ls\s+-l\s+\/var\/log\b
+  normalize: log_archives
+  binds:
+  - item: 14
+    points:
+    - 2
+  - level: 4
+    item: 14
+    points:
+    - 2
+  - level: 2
+    item: 10
+    points:
+    - 2
+- os_family:
+  - debian
+  - rhel
+  section: 4. AUDIT
+  title: Log forwarding
+  block_index: 24
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:grep\b.*(?:\/etc\/rsyslog\.conf|\/etc\/rsyslog\.d)\b|(?:cat|more)\s+\/etc\/rsyslog\.conf\b)
+    empty: success
+  normalize: log_forwarding
+  binds:
+  - item: 12
+    points:
+    - 3
+  - level: 4
+    item: 12
+    points:
+    - 3
+- os_family:
+  - debian
+  - rhel
+  section: 4. AUDIT
+  title: Log dir permissions
+  block_index: 25
+  kind: judge
+  binds:
+  - item: 14
+    points:
+    - 1
+  - level: 4
+    item: 14
+    points:
+    - 1
+  - level: 2
+    item: 10
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 4. AUDIT
+  title: Recent login records
+  block_index: 26
+  kind: judge
+  binds:
+  - item: 13
+    points:
+    - 1
+  - level: 4
+    item: 13
+    points:
+    - 1
+  - level: 2
+    item: 9
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 5. INTRUSION PREVENTION
+  title: Listening ports / processes
+  block_index: 27
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:ss|netstat)\s+-[a-z]*[ln][a-z]*
+  binds:
+  - item: 17
+    points:
+    - 1
+    - 2
+  - level: 4
+    item: 17
+    points:
+    - 1
+    - 2
+  - level: 2
+    item: 12
+    points:
+    - 2
+- os_family:
+  - debian
+  - rhel
+  section: 5. INTRUSION PREVENTION
+  title: Running services
+  block_index: 28
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:systemctl\s+list-units\b.*--type=service|ps\s+(?:-efH?|aux)\b)
+  binds:
+  - item: 16
+    points:
+    - 1
+    - 2
+  - level: 4
+    item: 16
+    points:
+    - 1
+    - 2
+  - item: 17
+    points:
+    - 1
+  - level: 4
+    item: 17
+    points:
+    - 1
+  - level: 2
+    item: 11
+    points:
+    - 1
+    - 2
+  - level: 2
+    item: 12
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 5. INTRUSION PREVENTION
+  title: Patches / reboot
+  block_index: 29
+  kind: judge
+  binds:
+  - item: 20
+    points:
+    - 1
+    - 2
+  - level: 4
+    item: 20
+    points:
+    - 1
+    - 2
+  - level: 2
+    item: 15
+    points:
+    - 1
+    - 2
+- os_family:
+  - debian
+  - rhel
+  section: 6. MALWARE / BACKDOOR
+  title: Security agent (EDR / AV / IDS)
+  block_index: 30
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:pgrep\s+-af\b.*(?:aegis|yunjing|sangfor|falcon|clamd|osquery|wazuh|suricata|snort)|ps\s+(?:-efH?|aux)\b)
+    empty: success
+  - kind: shell
+    pattern: ^(?:dpkg\s+-l\b|rpm\s+-qa\b).*(?:aegis|edr|antivirus|clam|osquery|wazuh|suricata|snort)
+    empty: success
+  normalize: security_agent
+  binds:
+  - item: 22
+    points:
+    - 1
+    - 3
+  - level: 4
+    item: 22
+    points:
+    - 1
+    - 3
+  - level: 2
+    item: 16
+    points:
+    - 1
+    - 2
+- os_family:
+  - debian
+  - rhel
+  section: 6. MALWARE / BACKDOOR
+  title: Backdoor / proxy / C2 process
+  block_index: 31
+  kind: judge
+  binds:
+  - item: 21
+    points:
+    - 1
+  - level: 4
+    item: 21
+    points:
+    - 1
+  - item: 22
+    points:
+    - 2
+    - 3
+  - level: 4
+    item: 22
+    points:
+    - 2
+    - 3
+- os_family:
+  - debian
+  - rhel
+  section: 6. MALWARE / BACKDOOR
+  title: New malware / fileless
+  block_index: 32
+  kind: judge
+  binds:
+  - item: 22
+    points:
+    - 2
+    - 3
+  - level: 4
+    item: 22
+    points:
+    - 2
+    - 3
+- os_family:
+  - debian
+  - rhel
+  section: 6. MALWARE / BACKDOOR
+  title: Cron / timer (persistence)
+  block_index: 33
+  kind: judge
+  binds:
+  - item: 21
+    points:
+    - 1
+  - level: 4
+    item: 21
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 7. DATA / BACKUP
+  title: Disk encryption
+  block_index: 34
+  kind: judge
+  binds:
+  - item: 27
+    points:
+    - 1
+    - 2
+  - level: 4
+    item: 28
+    points:
+    - 1
+    - 2
+- os_family:
+  - debian
+  - rhel
+  section: 7. DATA / BACKUP
+  title: Swap
+  block_index: 35
+  kind: judge
+  binds:
+  - item: 27
+    points:
+    - 2
+  - level: 4
+    item: 28
+    points:
+    - 2
+- os_family:
+  - debian
+  - rhel
+  section: 7. DATA / BACKUP
+  title: History setting (HISTSIZE)
+  block_index: 36
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^grep\b.*\bHISTSIZE\s*=.*(?:\/etc\/profile\b|\/etc\/profile\.d\b|\/etc\/bash(?:\.bashrc|rc)\b)
+  binds:
+  - item: 31
+    points:
+    - 1
+  - level: 4
+    item: 33
+    points:
+    - 1
+  - item: 32
+    points:
+    - 1
+  - level: 4
+    item: 34
+    points:
+    - 1
+  - level: 2
+    item: 21
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 7. DATA / BACKUP
+  title: Backup job / NFS
+  block_index: 37
+  kind: judge
+  binds:
+  - item: 28
+    points:
+    - 1
+    - 2
+    - 3
+  - level: 4
+    item: 29
+    points:
+    - 1
+    - 2
+    - 3
+- os_family:
+  - debian
+  - rhel
+  section: 7. DATA / BACKUP
+  title: SSH key permissions
+  block_index: 38
+  kind: judge
+  binds:
+  - item: 5
+    points:
+    - 1
+  - level: 4
+    item: 5
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 7. DATA / BACKUP
+  title: Trust files / home dirs
+  block_index: 39
+  kind: judge
+  binds:
+  - item: 10
+    points:
+    - 1
+  - level: 4
+    item: 10
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 8. CENTRAL MANAGEMENT
+  title: Time sync
+  block_index: 40
+  kind: judge
+  binds:
+  - item: 13
+    points:
+    - 1
+  - level: 4
+    item: 13
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 8. CENTRAL MANAGEMENT
+  title: Monitor / mgmt agent (all)
+  block_index: 41
+  kind: context
+  binds: []
+- os_family:
+  - debian
+  - rhel
+  section: 2. IDENTIFICATION
+  title: Login source restriction
+  block_index: 42
+  kind: judge
+  binds:
+  - item: 18
+    points:
+    - 1
+  - level: 4
+    item: 18
+    points:
+    - 1
+- os_family:
+  - debian
+  - rhel
+  section: 3. ACCESS CONTROL
+  title: SELinux status
+  block_index: 43
+  kind: judge
+  session:
+  - kind: shell
+    pattern: ^(?:getenforce\b|sestatus\b|ls\s+-[a-z]*Z[a-z]*\s+\/etc\/(?:passwd|shadow)\b|ps\s+-[a-z]*Z[a-z]*\b)
+  normalize: selinux
+  binds:
+  - item: 11
+    points:
+    - 1
+  - level: 4
+    item: 11
+    points:
+    - 1
+- section: 3. ACCESS CONTROL
+  title: Default accounts
+  command: 'awk -F: ''$3 < 1000 {print $1 ":" $3 ":" $7}'' /etc/passwd'
+  file: /etc/passwd
+  expect: 默认账户已重命名或删除。
+  os_family:
+  - debian
+  - rhel
+  normalize: os_default_accounts
+  block_index: 44
+  binds:
+  - level: 3
+    item: 6
+    points:
+    - 1
+  - level: 4
+    item: 6
+    points:
+    - 1

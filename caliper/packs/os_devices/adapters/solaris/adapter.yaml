@@ -1,0 +1,14 @@
+name: Solaris
+vendor: Solaris
+aliases:
+- solaris
+- oracle solaris
+- sunos
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 服务器
+- 存储设备
+manual_all: true

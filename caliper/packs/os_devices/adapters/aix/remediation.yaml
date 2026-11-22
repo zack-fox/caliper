@@ -1,0 +1,1435 @@
+version: 0.1.0
+status: active
+rules:
+- id: REM-AIX-2-01
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 1
+  priority: 高
+  problem: '1、未对登录操作系统的用户进行身份鉴别
+
+    2、身份标识不具有唯一性
+
+    3、管理员现用口令不满足口令复杂度要求
+
+    4、操作系统未提供口令复杂度校验功能/口令复杂度校验功能参数设置不合理、未要求定期更换口令'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议操作系统实现身份鉴别功能，采用用户名和口令的方式对用户进行身份鉴别
+
+    2、建议修改/etc/passwd文件，修改UID相同的用户
+
+    3、建议修改管理用户现用口令，口令长度8位以上，包含大写字母、小写字母、数字以及特殊符号
+
+    4、建议修改配置文件/etc/security/user，合理配置参数实现口令复杂校验功能及口令更换周期限制'
+  clause: GB/T 22239-2019 2级 L2-CES1-01 身份鉴别
+- id: REM-AIX-2-02
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 2
+  priority: 低
+  problem: '1、未提供登录失败处理、超时自动退出功能
+
+    2、未提供登录失败吃力功能/登录失败处理功能设置不合理
+
+    3、未提供超时自动退出功能/超时自动退出功能设置不合理'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议修改配置文件/etc/security/login.cfg或/etc/security/user实现登录失败处理功能
+
+    2、建议修改配置文件/etc/profile，合理配置TimeOUT参数实现超时自动退出功能'
+  clause: GB/T 22239-2019 2级 L2-CES1-02 身份鉴别
+- id: REM-AIX-2-03
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 3
+  priority: 低
+  problem: '1、未采用加密措施进行远程管理
+
+    2、未关闭telnet、FTP等口令明文传输的服务'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: 建议远程连接管理时，采取相应措施防止鉴别信息被窃听，如使用SSL协议等
+  clause: GB/T 22239-2019 2级 L2-CES1-03 身份鉴别
+- id: REM-AIX-2-04
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 4
+  priority: 低
+  problem: '1、未对需要登录使用设备的人员单独设立账户并分配权限；
+
+    2、未对匿名账户XXX进行禁用或限制'
+  cause: 越权访问、权限滥用
+  action: '1、建议为需要登录使用服务器的人员单独设立账户并分配权限；
+
+    2、建议对匿名账户进行禁用'
+  clause: GB/T 22239-2019 2级 L2-CES1-04 访问控制
+- id: REM-AIX-2-05
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 5
+  priority: 中
+  problem: '1、未重命名系统默认账户。
+
+    2、未修改默认账户口令。'
+  cause: 越权访问、权限滥用
+  action: 建议重命名root等系统默认账户的用户名，或修改其默认口令为强口令
+  clause: GB/T 22239-2019 2级 L2-CES1-05 访问控制
+- id: REM-AIX-2-06
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 6
+  priority: 高
+  problem: '1、操作系统存在多余账户
+
+    2、操作系统存在过期账户
+
+    3、操作系统存在多人共用一个账户的情况'
+  cause: 越权访问、权限滥用
+  action: 建议删除操作系统中多余的、过期的账户，为需要使用操作系统的人员创建各自的账户
+  clause: GB/T 22239-2019 2级 L2-CES1-06 访问控制
+- id: REM-AIX-2-07
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 7
+  priority: 低
+  problem: 未实现管理用户权限分离
+  cause: 越权访问、权限滥用
+  action: 建议授予不同用户为完成各自承担的任务所需的最小权限，将系统管理员和业务操作员权限分离，并设置独立的安全审计员账户、安全管理员账户
+  clause: GB/T 22239-2019 2级 L2-CES1-07 访问控制
+- id: REM-AIX-2-08
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 8
+  priority: 低
+  problem: '1、服务器未启用审计服务auditd；
+
+    2、服务器未启用日志服务rsyslog；'
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: 建议启动auditd、rsyslog服务，对重要的用户行为和重要安全事件进行审计
+  clause: GB/T 22239-2019 2级 L2-CES1-08 安全审计
+- id: REM-AIX-2-09
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 9
+  priority: 低
+  problem: 服务器中日志记录仅包括XX，不够完善
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: 建议将服务器日志记录内容进行完善，至少包含：日期和时间、用户、事件类型、事件是否成功等重要信息
+  clause: GB/T 22239-2019 2级 L2-CES1-09 安全审计
+- id: REM-AIX-2-10
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 10
+  priority: 高
+  problem: '1、未合理配置日志文件权限
+
+    2、审计记录未定期备份。'
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: '建议合理设置日志文件权限，仅root用户、审计管理员可以对日志进行读写操作。
+
+    建议对审计记录定期备份，备份时长超过6个月。'
+  clause: GB/T 22239-2019 2级 L2-CES1-10 安全审计
+- id: REM-AIX-2-11
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 11
+  priority: 高
+  problem: 操作系统未最小化安装，存在多余的组件或服务。
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: 建议卸载多余的组件、服务
+  clause: GB/T 22239-2019 2级 L2-CES1-11 入侵防范
+- id: REM-AIX-2-12
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 12
+  priority: 高
+  problem: '1、服务器中未关闭与业务无关的系统服务XXX；
+
+    2、未关闭服务器X磁盘默认共享功能；
+
+    3、服务器中启用了多余端口'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议关闭服务器中与业务无关的系统服务XXX；
+
+    2、建议关闭系统中X磁盘默认共享功能；
+
+    3、建议关闭服务器中多余端口'
+  clause: GB/T 22239-2019 2级 L2-CES1-12 入侵防范
+- id: REM-AIX-2-13
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 13
+  priority: 低
+  problem: 未限制终端接入地址。
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: 建议设置严格的访问控制规则，如对IP地址段的限制
+  clause: GB/T 22239-2019 2级 L2-CES1-13 入侵防范
+- id: REM-AIX-2-14
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 14
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 2级 L2-CES1-14 入侵防范
+- id: REM-AIX-2-15
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 15
+  priority: 高
+  problem: 未定期进行漏洞扫描，无法对可能存在的漏洞进行评估后再进行补丁修复。
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: 建议定期对服务器进行漏洞扫描，并根据漏洞扫描报告进行漏洞修复
+  clause: GB/T 22239-2019 2级 L2-CES1-15 入侵防范
+- id: REM-AIX-2-16
+  title: 恶意代码防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 16
+  priority: 高
+  problem: '1、未安装防病毒软件
+
+    2、防病毒软件病毒库长时间未更新'
+  cause: 病毒木马感染、勒索软件
+  action: 建议安装主机防病毒软件，并定期更新防病毒软件特征库
+  clause: GB/T 22239-2019 2级 L2-CES1-16 恶意代码防范
+- id: REM-AIX-2-17
+  title: 可信验证要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 17
+  priority: 低
+  problem: '1、未基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证；
+
+    2、部署了可信验证检测的设备，但检测到可信性受到破坏时无法进行报警。'
+  cause: 系统被篡改无法发现、后门植入
+  action: '1、建议基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警；
+
+    2、建议对可信验证设备的配置进行检查和调整，使其发现可信性受到破坏后及时向管理员进行报警。'
+  clause: GB/T 22239-2019 2级 L2-CES1-17 可信验证
+- id: REM-AIX-2-18
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 18
+  priority: 低
+  problem: 服务器远程管理时采用Telnet/Ftp明文传输方式，无法保证鉴别数据传输过程中的完整性
+  cause: 传输或存储数据被篡改
+  action: 建议远程连接管理时，采取相应措施防止鉴别信息被篡改，如使用SSL协议等
+  clause: GB/T 22239-2019 2级 L2-CES1-18 数据完整性
+- id: REM-AIX-2-19
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 19
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 2级 L2-CES1-19 数据备份恢复
+- id: REM-AIX-2-20
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 20
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 2级 L2-CES1-20 数据备份恢复
+- id: REM-AIX-2-21
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 21
+  priority: 低
+  problem: /
+  cause: 残留信息泄露
+  action: /
+  clause: GB/T 22239-2019 2级 L2-CES1-21 剩余信息保护
+- id: REM-AIX-2-22
+  title: 个人信息保护要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 22
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: —
+  action: —
+  clause: GB/T 22239-2019 2级 L2-CES1-22 个人信息保护
+- id: REM-AIX-2-23
+  title: 个人信息保护要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 23
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: —
+  action: —
+  clause: GB/T 22239-2019 2级 L2-CES1-23 个人信息保护
+- id: REM-AIX-3-01
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 1
+  priority: 高
+  problem: '1、未对登录操作系统的用户进行身份鉴别
+
+    2、身份标识不具有唯一性
+
+    3、管理员现用口令不满足口令复杂度要求
+
+    4、操作系统未提供口令复杂度校验功能/口令复杂度校验功能参数设置不合理、未要求定期更换口令'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议操作系统实现身份鉴别功能，采用用户名和口令的方式对用户进行身份鉴别
+
+    2、建议修改/etc/passwd文件，修改UID相同的用户
+
+    3、建议修改管理用户现用口令，口令长度8位以上，包含大写字母、小写字母、数字以及特殊符号
+
+    4、建议修改配置文件/etc/security/user，合理配置参数实现口令复杂校验功能及口令更换周期限制'
+  clause: GB/T 22239-2019 3级 L3-CES1-01 身份鉴别
+- id: REM-AIX-3-02
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 2
+  priority: 低
+  problem: '1、未提供登录失败处理、超时自动退出功能
+
+    2、未提供登录失败吃力功能/登录失败处理功能设置不合理
+
+    3、未提供超时自动退出功能/超时自动退出功能设置不合理'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议修改配置文件/etc/security/login.cfg或/etc/security/user实现登录失败处理功能
+
+    2、建议修改配置文件/etc/profile，合理配置TimeOUT参数实现超时自动退出功能'
+  clause: GB/T 22239-2019 3级 L3-CES1-02 身份鉴别
+- id: REM-AIX-3-03
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 3
+  priority: 高
+  problem: '1、未采用加密措施进行远程管理
+
+    2、未关闭telnet、FTP等口令明文传输的服务'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: 建议远程连接管理时，采取相应措施防止鉴别信息被窃听，如使用SSL协议等
+  clause: GB/T 22239-2019 3级 L3-CES1-03 身份鉴别
+- id: REM-AIX-3-04
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 4
+  priority: 高
+  problem: 操作系统未采用两种或两种以上组合的鉴别技术。
+  cause: 身份冒用、口令猜测与暴力破解
+  action: 建议除账户口令外再采用另一种身份验证方式，如：UKey、CA证书等。
+  clause: GB/T 22239-2019 3级 L3-CES1-04 身份鉴别
+- id: REM-AIX-3-05
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 5
+  priority: 高
+  problem: '1、未对需要登录使用设备的人员单独设立账户并分配权限；
+
+    2、未对匿名账户XXX进行禁用或限制'
+  cause: 越权访问、权限滥用
+  action: '1、建议为需要登录使用服务器的人员单独设立账户并分配权限；
+
+    2、建议对匿名账户进行禁用'
+  clause: GB/T 22239-2019 3级 L3-CES1-05 访问控制
+- id: REM-AIX-3-06
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 6
+  priority: 中
+  problem: '1、未重命名系统默认账户。
+
+    2、未修改默认账户口令。'
+  cause: 越权访问、权限滥用
+  action: 建议重命名root等系统默认账户的用户名，或修改其默认口令为强口令
+  clause: GB/T 22239-2019 3级 L3-CES1-06 访问控制
+- id: REM-AIX-3-07
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 7
+  priority: 高
+  problem: '1、操作系统存在多余账户
+
+    2、操作系统存在过期账户
+
+    3、操作系统存在多人共用一个账户的情况'
+  cause: 越权访问、权限滥用
+  action: 建议删除操作系统中多余的、过期的账户，为需要使用操作系统的人员创建各自的账户
+  clause: GB/T 22239-2019 3级 L3-CES1-07 访问控制
+- id: REM-AIX-3-08
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 8
+  priority: 高
+  problem: 未实现管理用户权限分离
+  cause: 越权访问、权限滥用
+  action: 建议授予不同用户为完成各自承担的任务所需的最小权限，将系统管理员和业务操作员权限分离，并设置独立的安全审计员账户、安全管理员账户
+  clause: GB/T 22239-2019 3级 L3-CES1-08 访问控制
+- id: REM-AIX-3-09
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 9
+  priority: 高
+  problem: 操作系统中XXX文件权限设置不合理
+  cause: 越权访问、权限滥用
+  action: 建议合理设置重要文件的权限，重要文件权限应不大于644
+  clause: GB/T 22239-2019 3级 L3-CES1-09 访问控制
+- id: REM-AIX-3-10
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 10
+  priority: 高
+  problem: 操作系统中访问控制要求设置不合理
+  cause: 越权访问、权限滥用
+  action: 建议合理设置重要文件的权限，重要文件权限应不大于644
+  clause: GB/T 22239-2019 3级 L3-CES1-10 访问控制
+- id: REM-AIX-3-11
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 11
+  priority: 高
+  problem: 未提供设置敏感标记功能。
+  cause: 越权访问、权限滥用
+  action: 建议对系统重要资源增加敏感标记的功能，并控制用户对已标记的敏感信息的操作
+  clause: GB/T 22239-2019 3级 L3-CES1-11 访问控制
+- id: REM-AIX-3-12
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 12
+  priority: 低
+  problem: '1、服务器未启用审计服务auditd；
+
+    2、服务器未启用日志服务rsyslog；'
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: 建议启动auditd、rsyslog服务，对重要的用户行为和重要安全事件进行审计
+  clause: GB/T 22239-2019 3级 L3-CES1-12 安全审计
+- id: REM-AIX-3-13
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 13
+  priority: 低
+  problem: 服务器中日志记录仅包括XX，不够完善
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: 建议将服务器日志记录内容进行完善，至少包含：日期和时间、用户、事件类型、事件是否成功等重要信息
+  clause: GB/T 22239-2019 3级 L3-CES1-13 安全审计
+- id: REM-AIX-3-14
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 14
+  priority: 高
+  problem: '1、未合理配置日志文件权限
+
+    2、审计记录未定期备份。'
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: '建议合理设置日志文件权限，仅root用户、审计管理员可以对日志进行读写操作。
+
+    建议对审计记录定期备份，备份时长超过6个月。'
+  clause: GB/T 22239-2019 3级 L3-CES1-14 安全审计
+- id: REM-AIX-3-15
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 15
+  priority: 低
+  problem: 日志审计进程可被单独中断。
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: 建议安装第三方审计进程保护软件，避免审计进程受到未预期的中断。
+  clause: GB/T 22239-2019 3级 L3-CES1-15 安全审计
+- id: REM-AIX-3-16
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 16
+  priority: 高
+  problem: 操作系统未最小化安装，存在多余的组件或服务。
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: 建议卸载多余的组件、服务
+  clause: GB/T 22239-2019 3级 L3-CES1-17 入侵防范
+- id: REM-AIX-3-17
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 17
+  priority: 高
+  problem: '1、服务器中未关闭与业务无关的系统服务XXX；
+
+    2、未关闭服务器X磁盘默认共享功能；
+
+    3、服务器中启用了多余端口'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议关闭服务器中与业务无关的系统服务XXX；
+
+    2、建议关闭系统中X磁盘默认共享功能；
+
+    3、建议关闭服务器中多余端口'
+  clause: GB/T 22239-2019 3级 L3-CES1-18 入侵防范
+- id: REM-AIX-3-18
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 18
+  priority: 低
+  problem: 未限制终端接入地址。
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: 建议设置严格的访问控制规则，如对IP地址段的限制
+  clause: GB/T 22239-2019 3级 L3-CES1-19 入侵防范
+- id: REM-AIX-3-19
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 19
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 3级 L3-CES1-20 入侵防范
+- id: REM-AIX-3-20
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 20
+  priority: 高
+  problem: 未定期进行漏洞扫描，无法对可能存在的漏洞进行评估后再进行补丁修复。
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: 建议定期对服务器进行漏洞扫描，并根据漏洞扫描报告进行漏洞修复
+  clause: GB/T 22239-2019 3级 L3-CES1-21 入侵防范
+- id: REM-AIX-3-21
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 21
+  priority: 低
+  problem: '1、操作系统未安装主机型入侵检测软件。
+
+    2、未能对入侵事件进行检测记录并报警'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: 建议采取入侵检测措施，根据需要安装第三方主机入侵检测软件
+  clause: GB/T 22239-2019 3级 L3-CES1-22 入侵防范
+- id: REM-AIX-3-22
+  title: 恶意代码防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 22
+  priority: 高
+  problem: '1、未安装防病毒软件
+
+    2、防病毒软件病毒库长时间未更新'
+  cause: 病毒木马感染、勒索软件
+  action: 建议安装主机防病毒软件，并定期更新防病毒软件特征库
+  clause: GB/T 22239-2019 3级 L3-CES1-23 恶意代码防范
+- id: REM-AIX-3-23
+  title: 可信验证要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 23
+  priority: 低
+  problem: '1、未基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证；
+
+    2、部署了可信验证检测的设备，但检测到可信性受到破坏时无法进行报警。'
+  cause: 系统被篡改无法发现、后门植入
+  action: '1、建议基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警；
+
+    2、建议对可信验证设备的配置进行检查和调整，使其发现可信性受到破坏后及时向管理员进行报警。'
+  clause: GB/T 22239-2019 3级 L3-CES1-24 可信验证
+- id: REM-AIX-3-24
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 24
+  priority: 高
+  problem: 服务器远程管理时采用Telnet/Ftp明文传输方式，无法保证鉴别数据传输过程中的完整性
+  cause: 传输或存储数据被篡改
+  action: 建议远程连接管理时，采取相应措施防止鉴别信息被篡改，如使用SSL协议等
+  clause: GB/T 22239-2019 3级 L3-CES1-25 数据完整性
+- id: REM-AIX-3-25
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 25
+  priority: 低
+  problem: /
+  cause: 传输或存储数据被篡改
+  action: /
+  clause: GB/T 22239-2019 3级 L3-CES1-26 数据完整性
+- id: REM-AIX-3-26
+  title: 数据保密性要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 26
+  priority: 高
+  problem: 服务器远程管理时采用Telnet/Ftp明文传输方式，无法保证鉴别数据传输过程中的保密性
+  cause: 鉴别信息或敏感数据被窃听
+  action: 建议远程连接管理时，采取相应措施防止鉴别信息被窃听，如使用SSL协议等
+  clause: GB/T 22239-2019 3级 L3-CES1-27 数据保密性
+- id: REM-AIX-3-27
+  title: 数据保密性要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 27
+  priority: 低
+  problem: /
+  cause: 鉴别信息或敏感数据被窃听
+  action: /
+  clause: GB/T 22239-2019 3级 L3-CES1-28 数据保密性
+- id: REM-AIX-3-28
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 28
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 3级 L3-CES1-29 数据备份恢复
+- id: REM-AIX-3-29
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 29
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 3级 L3-CES1-30 数据备份恢复
+- id: REM-AIX-3-30
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 30
+  priority: 中
+  problem: 重要服务器未采用热冗余的方式进行部署
+  cause: 数据丢失、业务中断
+  action: 建议部署热备服务器，并在热备服务器上安装相应的业务组件
+  clause: GB/T 22239-2019 3级 L3-CES1-31 数据备份恢复
+- id: REM-AIX-3-31
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 31
+  priority: 低
+  problem: /
+  cause: 残留信息泄露
+  action: /
+  clause: GB/T 22239-2019 3级 L3-CES1-32 剩余信息保护
+- id: REM-AIX-3-32
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 32
+  priority: 低
+  problem: /
+  cause: 残留信息泄露
+  action: /
+  clause: GB/T 22239-2019 3级 L3-CES1-33 剩余信息保护
+- id: REM-AIX-3-33
+  title: 个人信息保护要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 33
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: —
+  action: —
+  clause: GB/T 22239-2019 3级 L3-CES1-34 个人信息保护
+- id: REM-AIX-3-34
+  title: 个人信息保护要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 34
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: —
+  action: —
+  clause: GB/T 22239-2019 3级 L3-CES1-35 个人信息保护
+- id: REM-AIX-4-01
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 1
+  priority: 高
+  problem: '1、未对登录操作系统的用户进行身份鉴别
+
+    2、身份标识不具有唯一性
+
+    3、管理员现用口令不满足口令复杂度要求
+
+    4、操作系统未提供口令复杂度校验功能/口令复杂度校验功能参数设置不合理、未要求定期更换口令'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议操作系统实现身份鉴别功能，采用用户名和口令的方式对用户进行身份鉴别
+
+    2、建议修改/etc/passwd文件，修改UID相同的用户
+
+    3、建议修改管理用户现用口令，口令长度8位以上，包含大写字母、小写字母、数字以及特殊符号
+
+    4、建议修改配置文件/etc/security/user，合理配置参数实现口令复杂校验功能及口令更换周期限制'
+  clause: GB/T 22239-2019 4级 L4-CES1-01 身份鉴别
+- id: REM-AIX-4-02
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 2
+  priority: 低
+  problem: '1、未提供登录失败处理、超时自动退出功能
+
+    2、未提供登录失败吃力功能/登录失败处理功能设置不合理
+
+    3、未提供超时自动退出功能/超时自动退出功能设置不合理'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议修改配置文件/etc/security/login.cfg或/etc/security/user实现登录失败处理功能
+
+    2、建议修改配置文件/etc/profile，合理配置TimeOUT参数实现超时自动退出功能'
+  clause: GB/T 22239-2019 4级 L4-CES1-02 身份鉴别
+- id: REM-AIX-4-03
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 3
+  priority: 高
+  problem: '1、未采用加密措施进行远程管理
+
+    2、未关闭telnet、FTP等口令明文传输的服务'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: 建议远程连接管理时，采取相应措施防止鉴别信息被窃听，如使用SSL协议等
+  clause: GB/T 22239-2019 4级 L4-CES1-03 身份鉴别
+- id: REM-AIX-4-04
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 4
+  priority: 高
+  problem: 操作系统未采用两种或两种以上组合的鉴别技术。
+  cause: 身份冒用、口令猜测与暴力破解
+  action: 建议除账户口令外再采用另一种身份验证方式，如：UKey、CA证书等。
+  clause: GB/T 22239-2019 4级 L4-CES1-04 身份鉴别
+- id: REM-AIX-4-05
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 5
+  priority: 高
+  problem: '1、未对需要登录使用设备的人员单独设立账户并分配权限；
+
+    2、未对匿名账户XXX进行禁用或限制'
+  cause: 越权访问、权限滥用
+  action: '1、建议为需要登录使用服务器的人员单独设立账户并分配权限；
+
+    2、建议对匿名账户进行禁用'
+  clause: GB/T 22239-2019 4级 L4-CES1-05 访问控制
+- id: REM-AIX-4-06
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 6
+  priority: 中
+  problem: '1、未重命名系统默认账户。
+
+    2、未修改默认账户口令。'
+  cause: 越权访问、权限滥用
+  action: 建议重命名root等系统默认账户的用户名，或修改其默认口令为强口令
+  clause: GB/T 22239-2019 4级 L4-CES1-06 访问控制
+- id: REM-AIX-4-07
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 7
+  priority: 高
+  problem: '1、操作系统存在多余账户
+
+    2、操作系统存在过期账户
+
+    3、操作系统存在多人共用一个账户的情况'
+  cause: 越权访问、权限滥用
+  action: 建议删除操作系统中多余的、过期的账户，为需要使用操作系统的人员创建各自的账户
+  clause: GB/T 22239-2019 4级 L4-CES1-07 访问控制
+- id: REM-AIX-4-08
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 8
+  priority: 高
+  problem: 未实现管理用户权限分离
+  cause: 越权访问、权限滥用
+  action: 建议授予不同用户为完成各自承担的任务所需的最小权限，将系统管理员和业务操作员权限分离，并设置独立的安全审计员账户、安全管理员账户
+  clause: GB/T 22239-2019 4级 L4-CES1-08 访问控制
+- id: REM-AIX-4-09
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 9
+  priority: 高
+  problem: 操作系统中XXX文件权限设置不合理
+  cause: 越权访问、权限滥用
+  action: 建议合理设置重要文件的权限，重要文件权限应不大于644
+  clause: GB/T 22239-2019 4级 L4-CES1-09 访问控制
+- id: REM-AIX-4-10
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 10
+  priority: 高
+  problem: 操作系统中访问控制要求设置不合理
+  cause: 越权访问、权限滥用
+  action: 建议合理设置重要文件的权限，重要文件权限应不大于644
+  clause: GB/T 22239-2019 4级 L4-CES1-10 访问控制
+- id: REM-AIX-4-11
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 11
+  priority: 高
+  problem: 未提供设置敏感标记功能。
+  cause: 越权访问、权限滥用
+  action: 建议对系统重要资源增加敏感标记的功能，并控制用户对已标记的敏感信息的操作
+  clause: GB/T 22239-2019 4级 L4-CES1-11 访问控制
+- id: REM-AIX-4-12
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 12
+  priority: 低
+  problem: '1、服务器未启用审计服务auditd；
+
+    2、服务器未启用日志服务rsyslog；'
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: 建议启动auditd、rsyslog服务，对重要的用户行为和重要安全事件进行审计
+  clause: GB/T 22239-2019 4级 L4-CES1-12 安全审计
+- id: REM-AIX-4-13
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 13
+  priority: 低
+  problem: 服务器中日志记录仅包括XX，不够完善
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: 建议将服务器日志记录内容进行完善，至少包含：日期和时间、用户、事件类型、事件是否成功等重要信息
+  clause: GB/T 22239-2019 4级 L4-CES1-13 安全审计
+- id: REM-AIX-4-14
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 14
+  priority: 高
+  problem: '1、未合理配置日志文件权限
+
+    2、审计记录未定期备份。'
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: '建议合理设置日志文件权限，仅root用户、审计管理员可以对日志进行读写操作。
+
+    建议对审计记录定期备份，备份时长超过6个月。'
+  clause: GB/T 22239-2019 4级 L4-CES1-14 安全审计
+- id: REM-AIX-4-15
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 15
+  priority: 低
+  problem: 日志审计进程可被单独中断。
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: 建议安装第三方审计进程保护软件，避免审计进程受到未预期的中断。
+  clause: GB/T 22239-2019 4级 L4-CES1-15 安全审计
+- id: REM-AIX-4-16
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 16
+  priority: 高
+  problem: 操作系统未最小化安装，存在多余的组件或服务。
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: 建议卸载多余的组件、服务
+  clause: GB/T 22239-2019 4级 L4-CES1-16 入侵防范
+- id: REM-AIX-4-17
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 17
+  priority: 高
+  problem: '1、服务器中未关闭与业务无关的系统服务XXX；
+
+    2、未关闭服务器X磁盘默认共享功能；
+
+    3、服务器中启用了多余端口'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议关闭服务器中与业务无关的系统服务XXX；
+
+    2、建议关闭系统中X磁盘默认共享功能；
+
+    3、建议关闭服务器中多余端口'
+  clause: GB/T 22239-2019 4级 L4-CES1-17 入侵防范
+- id: REM-AIX-4-18
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 18
+  priority: 低
+  problem: 未限制终端接入地址。
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: 建议设置严格的访问控制规则，如对IP地址段的限制
+  clause: GB/T 22239-2019 4级 L4-CES1-18 入侵防范
+- id: REM-AIX-4-19
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 19
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 4级 L4-CES1-19 入侵防范
+- id: REM-AIX-4-20
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 20
+  priority: 高
+  problem: 未定期进行漏洞扫描，无法对可能存在的漏洞进行评估后再进行补丁修复。
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: 建议定期对服务器进行漏洞扫描，并根据漏洞扫描报告进行漏洞修复
+  clause: GB/T 22239-2019 4级 L4-CES1-20 入侵防范
+- id: REM-AIX-4-21
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 21
+  priority: 低
+  problem: '1、操作系统未安装主机型入侵检测软件。
+
+    2、未能对入侵事件进行检测记录并报警'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: 建议采取入侵检测措施，根据需要安装第三方主机入侵检测软件
+  clause: GB/T 22239-2019 4级 L4-CES1-21 入侵防范
+- id: REM-AIX-4-22
+  title: 恶意代码防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 22
+  priority: 高
+  problem: '1、未安装防病毒软件
+
+    2、防病毒软件病毒库长时间未更新'
+  cause: 病毒木马感染、勒索软件
+  action: 建议安装主机防病毒软件，并定期更新防病毒软件特征库
+  clause: GB/T 22239-2019 4级 L4-CES1-22 恶意代码防范
+- id: REM-AIX-4-23
+  title: 可信验证要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 23
+  priority: 低
+  problem: '1、服务器未基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证；
+
+    2、不能够在应用程序所有执行环节进行动态可信验证；
+
+    3、验证可信性受到破坏后未进行告警；
+
+    4、验证结果未形成审计记录送至安全管理中心
+
+    5、未进行动态关联感知'
+  cause: 系统被篡改无法发现、后门植入
+  action: 建议基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的所有执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心，并进行动态关联感知
+  clause: GB/T 22239-2019 4级 L4-CES1-23 可信验证
+- id: REM-AIX-4-24
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 24
+  priority: 高
+  problem: 服务器远程管理时采用Telnet/Ftp明文传输方式，无法保证鉴别数据传输过程中的完整性
+  cause: 传输或存储数据被篡改
+  action: 建议远程连接管理时，采取相应措施防止鉴别信息被篡改，如使用SSL协议等
+  clause: GB/T 22239-2019 4级 L4-CES1-24 数据完整性
+- id: REM-AIX-4-25
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 25
+  priority: 低
+  problem: /
+  cause: 传输或存储数据被篡改
+  action: /
+  clause: GB/T 22239-2019 4级 L4-CES1-25 数据完整性
+- id: REM-AIX-4-26
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 26
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 4级 L4-CES1-26 数据完整性
+- id: REM-AIX-4-27
+  title: 数据保密性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 27
+  priority: 高
+  problem: 服务器远程管理时采用Telnet/Ftp明文传输方式，无法保证鉴别数据传输过程中的保密性
+  cause: 鉴别信息或敏感数据被窃听
+  action: 建议远程连接管理时，采取相应措施防止鉴别信息被窃听，如使用SSL协议等
+  clause: GB/T 22239-2019 4级 L4-CES1-27 数据保密性
+- id: REM-AIX-4-28
+  title: 数据保密性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 28
+  priority: 低
+  problem: /
+  cause: 鉴别信息或敏感数据被窃听
+  action: /
+  clause: GB/T 22239-2019 4级 L4-CES1-28 数据保密性
+- id: REM-AIX-4-29
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 29
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 4级 L4-CES1-29 数据备份恢复
+- id: REM-AIX-4-30
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 30
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 4级 L4-CES1-30 数据备份恢复
+- id: REM-AIX-4-31
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 31
+  priority: 中
+  problem: 重要服务器未采用热冗余的方式进行部署
+  cause: 数据丢失、业务中断
+  action: 建议部署热备服务器，并在热备服务器上安装相应的业务组件
+  clause: GB/T 22239-2019 4级 L4-CES1-31 数据备份恢复
+- id: REM-AIX-4-32
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 32
+  priority: 高
+  problem: 未部署异地灾备中心
+  cause: 数据丢失、业务中断
+  action: 建议建立应用级灾备环境，确保其可在故障发生时及时接管生产系统的业务服务。
+  clause: GB/T 22239-2019 4级 L4-CES1-32 数据备份恢复
+- id: REM-AIX-4-33
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 33
+  priority: 低
+  problem: /
+  cause: 残留信息泄露
+  action: /
+  clause: GB/T 22239-2019 4级 L4-CES1-33 剩余信息保护
+- id: REM-AIX-4-34
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 34
+  priority: 低
+  problem: /
+  cause: 残留信息泄露
+  action: /
+  clause: GB/T 22239-2019 4级 L4-CES1-34 剩余信息保护

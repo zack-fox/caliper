@@ -1,0 +1,476 @@
+version: 0.1.0
+status: active
+asset_family: server
+rules:
+- section: 1. SYSTEM
+  title: Host / OS / kernel / time
+  command: hostname; uname -a; date; uptime; cat /etc/os-release 2>/dev/null
+  file: /etc/os-release
+  expect: 主机名、发行版、内核与当前时间
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 1. SYSTEM
+  title: Network
+  command: ip -brief address; ip route show
+  file: /etc/hosts
+  expect: 网卡地址与默认路由
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 2. IDENTIFICATION
+  title: Duplicate UID / UID=0 accounts
+  command: 'cut -d: -f3 /etc/passwd | sort | uniq -d; awk -F: ''$3==0{print $1}'' /etc/passwd'
+  file: /etc/passwd
+  expect: 无重复 UID 与 UID=0 账户
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 2. IDENTIFICATION
+  title: Accounts and last password change
+  command: 'awk -F: ''($3==0||$3>=1000)&&$7!~/(nologin|false)$/{print $1}'' /etc/passwd | while read -r u; do chage -l "$u" 2>/dev/null | grep -i ''Last password''; done'
+  file: /etc/shadow
+  expect: 各登录账户最近一次口令修改时间
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 2. IDENTIFICATION
+  title: Empty / expired password
+  command: 'awk -F: ''$2==""{print $1" empty-password"}{print $1" last-change="$3" max="$5" expire="$8}'' /etc/shadow'
+  file: /etc/shadow
+  expect: 无空口令与已过期账户
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 2. IDENTIFICATION
+  title: Password hash algorithm
+  command: 'awk -F: ''$2!~/^[!*]/{print $1, substr($2,1,3)}'' /etc/shadow; grep -h ''pam_unix.so'' /etc/pam.d/common-password 2>/dev/null'
+  file: /etc/shadow
+  expect: 口令哈希算法前缀
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 2. IDENTIFICATION
+  title: Password policy (login.defs)
+  command: grep -E '^(PASS_|ENCRYPT_METHOD|UMASK)' /etc/login.defs
+  file: /etc/login.defs
+  expect: 口令最长/最短使用期与警告天数
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 2. IDENTIFICATION
+  title: Password complexity
+  command: grep -RhE 'pam_(pwquality|cracklib)' /etc/pam.d 2>/dev/null; cat /etc/security/pwquality.conf 2>/dev/null
+  file: /etc/security/pwquality.conf
+  expect: 已启用口令复杂度模块及策略参数
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 2. IDENTIFICATION
+  title: Login failure lockout (faillock)
+  command: grep -RhE 'pam_(faillock|tally)' /etc/pam.d 2>/dev/null; cat /etc/security/faillock.conf 2>/dev/null
+  file: /etc/security/faillock.conf
+  expect: 已启用登录失败锁定策略
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 2. IDENTIFICATION
+  title: Session timeout TMOUT
+  command: grep -RhE 'TMOUT=' /etc/profile /etc/profile.d 2>/dev/null
+  file: /etc/profile
+  expect: 已设置会话超时 TMOUT
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 2. IDENTIFICATION
+  title: SSH host key algorithm
+  command: sshd -T 2>/dev/null | grep -E '^hostkey '; ls -l /etc/ssh/ssh_host_*_key.pub 2>/dev/null
+  file: /etc/ssh
+  expect: 主机密钥算法与公钥文件
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 2. IDENTIFICATION
+  title: SSH effective config
+  command: sshd -T 2>/dev/null | grep -Ei '^(permit[a-z]*login|passwordauthentication|pubkeyauthentication|permitemptypasswords|maxauthtries|logingracetime|clientalive)'
+  file: /etc/ssh/sshd_config
+  expect: 实际生效的登录认证与超时参数
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 2. IDENTIFICATION
+  title: Remote login source restriction
+  command: sshd -T 2>/dev/null | grep -Ei '^(allow|deny)(users|groups)'; grep -hE '^(AllowUsers|AllowGroups|DenyUsers|DenyGroups)' /etc/ssh/sshd_config 2>/dev/null; iptables -S 2>/dev/null | grep 'dport 22'
+  file: /etc/ssh/sshd_config
+  expect: 已限制远程登录来源地址
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 3. ACCESS CONTROL
+  title: Key file permissions
+  command: stat -c '%a %U:%G %n' /etc/passwd /etc/shadow /etc/group /etc/gshadow /etc/ssh/sshd_config /etc/sudoers 2>/dev/null
+  file: /etc/passwd
+  expect: 关键文件权限与属主
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 3. ACCESS CONTROL
+  title: Privileged groups
+  command: getent group sudo adm shadow 2>/dev/null
+  file: /etc/group
+  expect: 特权组成员清单
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 3. ACCESS CONTROL
+  title: sudo authorization / NOPASSWD
+  command: grep -RhE 'NOPASSWD' /etc/sudoers /etc/sudoers.d 2>/dev/null
+  file: /etc/sudoers
+  expect: 无 NOPASSWD 免密提权配置
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 3. ACCESS CONTROL
+  title: Separation of duty (three roles)
+  command: grep -hE '^[^#[:space:]]' /etc/sudoers /etc/sudoers.d/* 2>/dev/null; getent group adm systemd-journal 2>/dev/null
+  file: /etc/sudoers
+  expect: 系统管理员、审计管理员、安全管理员分设
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 3. ACCESS CONTROL
+  title: umask
+  command: grep -E '^[[:space:]]*UMASK' /etc/login.defs 2>/dev/null; umask
+  file: /etc/login.defs
+  expect: 默认权限掩码
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 3. ACCESS CONTROL
+  title: World-writable / tmp perms
+  command: find /etc /usr /bin /sbin -xdev -type f -perm -0002 2>/dev/null; stat -c '%a %U:%G %n' /tmp /var/tmp /dev/shm 2>/dev/null
+  file: /tmp
+  expect: 无任意用户可写文件，临时目录权限受限
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 4. AUDIT
+  title: auditd status and rules
+  command: systemctl is-active auditd 2>/dev/null; systemctl is-enabled auditd 2>/dev/null; auditctl -l 2>/dev/null
+  file: /etc/audit/rules.d
+  expect: 审计服务运行且已加载审计规则
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 4. AUDIT
+  title: Log service
+  command: systemctl is-active systemd-journald rsyslog 2>/dev/null; systemctl is-enabled systemd-journald rsyslog 2>/dev/null
+  file: /etc/systemd/journald.conf
+  expect: 日志服务运行并开机自启
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 4. AUDIT
+  title: Log retention
+  command: grep -E '^[[:space:]]*(rotate|maxage|daily|weekly|monthly)' /etc/logrotate.conf /etc/logrotate.d/* 2>/dev/null; grep -E '^(Storage|MaxRetentionSec|SystemMaxUse)' /etc/systemd/journald.conf 2>/dev/null
+  file: /etc/logrotate.conf
+  expect: 日志保存周期不少于要求
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 4. AUDIT
+  title: Log archives on disk
+  command: find /var/log -xdev -type f \( -name '*.gz' -o -name '*.zst' -o -name '*.xz' \) 2>/dev/null | head -20; du -sh /var/log 2>/dev/null
+  file: /var/log
+  expect: 存在归档日志与日志占用统计
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 4. AUDIT
+  title: Log forwarding
+  command: grep -RhE '^[[:space:]]*\*\.\*.*@@?' /etc/rsyslog.conf /etc/rsyslog.d 2>/dev/null
+  file: /etc/rsyslog.conf
+  expect: 已配置日志转发
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 4. AUDIT
+  title: Log dir permissions
+  command: stat -c '%a %U:%G %n' /var/log /var/log/audit /var/log/journal 2>/dev/null
+  file: /var/log
+  expect: 日志目录权限最小化
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 4. AUDIT
+  title: Recent login records
+  command: lastb -n 5 2>/dev/null; last -n 8 2>/dev/null
+  file: /var/log/btmp
+  expect: 最近登录与失败登录记录
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 5. INTRUSION PREVENTION
+  title: Listening ports / processes
+  command: ss -lntup 2>/dev/null
+  file: /proc/net/tcp
+  expect: 监听端口与对应进程
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 5. INTRUSION PREVENTION
+  title: Running services
+  command: systemctl list-units --type=service --state=running --no-pager --no-legend 2>/dev/null
+  expect: 正在运行的服务清单
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 5. INTRUSION PREVENTION
+  title: Patches / reboot
+  command: test -f /var/run/reboot-required && echo reboot-required; apt list --upgradable 2>/dev/null | head -20
+  file: /var/run/reboot-required
+  expect: 待安装补丁与重启提示
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 6. MALWARE / BACKDOOR
+  title: Security agent (EDR / AV / IDS)
+  command: pgrep -af 'aegis|YunJing|sangfor|falcon|clamd|osquery|wazuh|suricata|snort' 2>/dev/null; dpkg -l 2>/dev/null | awk '$1=="ii"{print $2,$3}' | grep -Ei 'aegis|edr|antivirus|clam|osquery|wazuh|suricata|snort'
+  file: /opt
+  expect: 已安装并运行安全防护组件
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 6. MALWARE / BACKDOOR
+  title: Backdoor / proxy / C2 process
+  command: pgrep -af 'x-ui|v2ray|xray|frps|frpc|ngrok|chisel|teamviewer|anydesk|socat' 2>/dev/null
+  file: /tmp
+  expect: 无后门、代理或远控进程
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 6. MALWARE / BACKDOOR
+  title: New malware / fileless
+  command: ls -l /proc/*/exe 2>/dev/null | grep deleted; cat /etc/ld.so.preload 2>/dev/null; find /tmp /var/tmp /dev/shm -xdev -type f -perm -u+x 2>/dev/null | head -20
+  file: /tmp
+  expect: 无已被删除的可执行文件、无预加载劫持
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 6. MALWARE / BACKDOOR
+  title: Cron / timer (persistence)
+  command: systemctl list-timers --all --no-pager 2>/dev/null; cat /etc/crontab 2>/dev/null; ls -l /etc/cron.d /etc/cron.daily 2>/dev/null
+  file: /etc/crontab
+  expect: 计划任务与定时器清单
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 7. DATA / BACKUP
+  title: Disk encryption
+  command: lsblk -f 2>/dev/null; grep -E 'crypt|LUKS' /etc/fstab 2>/dev/null
+  file: /etc/fstab
+  expect: 已启用磁盘加密
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 7. DATA / BACKUP
+  title: Swap
+  command: swapon --show 2>/dev/null; grep -E '[[:space:]]swap[[:space:]]' /etc/fstab 2>/dev/null
+  file: /etc/fstab
+  expect: 交换分区使用情况
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 7. DATA / BACKUP
+  title: History setting (HISTSIZE)
+  command: grep -RhE '^[[:space:]]*(export[[:space:]]+)?HISTSIZE=' /etc/profile /etc/profile.d /etc/bash.bashrc 2>/dev/null
+  file: /etc/profile
+  expect: 已设置命令历史保存条数与清空策略
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 7. DATA / BACKUP
+  title: Backup job / NFS
+  command: crontab -l 2>/dev/null; mount 2>/dev/null | grep -Ei 'nfs|cifs'; grep -E 'nfs|cifs' /etc/fstab 2>/dev/null
+  file: /etc/fstab
+  expect: 存在本地备份任务，NFS/CIFS 挂载受控
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 7. DATA / BACKUP
+  title: SSH key permissions
+  command: stat -c '%a %U:%G %n' /home/*/.ssh /home/*/.ssh/authorized_keys "$HOME/.ssh" "$HOME/.ssh/authorized_keys" 2>/dev/null
+  file: /home
+  expect: 密钥目录与授权文件权限最小化
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 7. DATA / BACKUP
+  title: Trust files / home dirs
+  command: ls -la "$HOME/.rhosts" "$HOME/.netrc" /home/*/.rhosts /home/*/.netrc 2>/dev/null; stat -c '%a %U:%G %n' /home/* 2>/dev/null
+  file: /home
+  expect: 无信任文件，家目录权限受限
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 8. CENTRAL MANAGEMENT
+  title: Time sync
+  command: timedatectl 2>/dev/null | grep -Ei 'time zone|system clock|NTP'; systemctl is-active systemd-timesyncd 2>/dev/null
+  file: /etc/chrony.conf
+  expect: 时间同步服务已启用
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 8. CENTRAL MANAGEMENT
+  title: Monitor / mgmt agent (all)
+  command: pgrep -af 'agent|exporter|monitor|zabbix|telegraf|filebeat|logstash|prometheus' 2>/dev/null
+  file: /opt
+  expect: 已部署集中监控或管理代理
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 2. IDENTIFICATION
+  title: Login source restriction
+  command: sshd -T 2>/dev/null | grep -Ei '^(allow|deny)(users|groups)'; grep -E '^[[:space:]]*(AllowUsers|AllowGroups|DenyUsers|DenyGroups)' /etc/ssh/sshd_config 2>/dev/null
+  file: /etc/ssh/sshd_config
+  expect: CentOS/RHEL 已限制登录来源
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server
+- section: 3. ACCESS CONTROL
+  title: Default accounts
+  command: 'awk -F: ''$3 < 1000 {print $1 ":" $3 ":" $7}'' /etc/passwd'
+  file: /etc/passwd
+  expect: 默认账户已重命名或删除。
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - server

@@ -1,0 +1,15 @@
+name: Windows
+vendor: Windows
+aliases:
+- windows
+- windows server
+- win server
+- microsoft windows
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 服务器
+- 存储设备
+manual_all: true

@@ -1,0 +1,14 @@
+name: VMware ESXi
+vendor: VMware ESXi
+aliases:
+- esxi
+- vmware
+- vmware esxi
+- vsphere
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 服务器
+manual_all: true

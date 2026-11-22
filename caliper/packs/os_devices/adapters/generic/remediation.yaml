@@ -1,0 +1,1277 @@
+version: 0.1.0
+status: active
+rules:
+- id: REM-GENERIC-2-01
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 1
+  priority: 中
+  problem: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-01 身份鉴别
+- id: REM-GENERIC-2-02
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 2
+  priority: 中
+  problem: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-02 身份鉴别
+- id: REM-GENERIC-2-03
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 3
+  priority: 中
+  problem: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-03 身份鉴别
+- id: REM-GENERIC-2-04
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 4
+  priority: 中
+  problem: a）应对登录的用户分配账户和权限；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-04 访问控制
+- id: REM-GENERIC-2-05
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 5
+  priority: 中
+  problem: b）应重命名或删除默认账户，修改默认账户的默认口令；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-05 访问控制
+- id: REM-GENERIC-2-06
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 6
+  priority: 中
+  problem: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-06 访问控制
+- id: REM-GENERIC-2-07
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 7
+  priority: 中
+  problem: d）应授予管理用户所需的最小权限，实现管理用户的权限分离；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-07 访问控制
+- id: REM-GENERIC-2-08
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 8
+  priority: 中
+  problem: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-08 安全审计
+- id: REM-GENERIC-2-09
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 9
+  priority: 中
+  problem: b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-09 安全审计
+- id: REM-GENERIC-2-10
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 10
+  priority: 中
+  problem: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-10 安全审计
+- id: REM-GENERIC-2-11
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 11
+  priority: 中
+  problem: a）应遵循最小安装的原则，仅安装需要的组件和应用程序；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-11 入侵防范
+- id: REM-GENERIC-2-12
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 12
+  priority: 中
+  problem: b）应关闭不需要的系统服务、默认共享和高危端口；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-12 入侵防范
+- id: REM-GENERIC-2-13
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 13
+  priority: 中
+  problem: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-13 入侵防范
+- id: REM-GENERIC-2-14
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 14
+  priority: 中
+  problem: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-14 入侵防范
+- id: REM-GENERIC-2-15
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 15
+  priority: 中
+  problem: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-15 入侵防范
+- id: REM-GENERIC-2-16
+  title: 恶意代码防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 16
+  priority: 中
+  problem: a）应安装防恶意代码软件或配置具有相应功能的软件，并定期进行升级和更新防恶意代码库。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-16 恶意代码防范
+- id: REM-GENERIC-2-17
+  title: 可信验证要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 17
+  priority: 中
+  problem: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-17 可信验证
+- id: REM-GENERIC-2-18
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 18
+  priority: 中
+  problem: a）应采用校验技术保证重要数据在传输过程中的完整性。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-18 数据完整性
+- id: REM-GENERIC-2-19
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 19
+  priority: 中
+  problem: a）应提供重要数据的本地数据备份与恢复功能；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-19 数据备份恢复
+- id: REM-GENERIC-2-20
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 20
+  priority: 中
+  problem: b）应提供异地数据备份功能，利用通信网络将重要数据定时批量传送至备用场地。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-20 数据备份恢复
+- id: REM-GENERIC-2-21
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 21
+  priority: 中
+  problem: a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-21 剩余信息保护
+- id: REM-GENERIC-2-22
+  title: 个人信息保护要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 22
+  priority: 中
+  problem: a）应仅采集和保存业务必需的用户个人信息；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-22 个人信息保护
+- id: REM-GENERIC-2-23
+  title: 个人信息保护要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 23
+  priority: 中
+  problem: b）应禁止未授权访问和非法使用用户个人信息。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 2级 L2-CES1-23 个人信息保护
+- id: REM-GENERIC-3-01
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 1
+  priority: 中
+  problem: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-01 身份鉴别
+- id: REM-GENERIC-3-02
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 2
+  priority: 中
+  problem: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-02 身份鉴别
+- id: REM-GENERIC-3-03
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 3
+  priority: 中
+  problem: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-03 身份鉴别
+- id: REM-GENERIC-3-04
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 4
+  priority: 中
+  problem: d）应采用口令、密码技术、生物技术等两种或两种以上组合的鉴别技术对用户进行身份鉴别，且其中一种鉴别技术至少应使用密码技术来实现。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-04 身份鉴别
+- id: REM-GENERIC-3-05
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 5
+  priority: 中
+  problem: a）应对登录的用户分配账户和权限；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-05 访问控制
+- id: REM-GENERIC-3-06
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 6
+  priority: 中
+  problem: b）应重命名或删除默认账户，修改默认账户的默认口令；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-06 访问控制
+- id: REM-GENERIC-3-07
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 7
+  priority: 中
+  problem: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-07 访问控制
+- id: REM-GENERIC-3-08
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 8
+  priority: 中
+  problem: d）应授予管理用户所需的最小权限，实现管理用户的权限分离；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-08 访问控制
+- id: REM-GENERIC-3-09
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 9
+  priority: 中
+  problem: e）应由授权主体配置访问控制策略，访问控制策略规定主体对客体的访问规则；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-09 访问控制
+- id: REM-GENERIC-3-10
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 10
+  priority: 中
+  problem: f）访问控制的粒度应达到主体为用户级或进程级，客体为文件、数据库表级；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-10 访问控制
+- id: REM-GENERIC-3-11
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 11
+  priority: 中
+  problem: g）应对重要主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-11 访问控制
+- id: REM-GENERIC-3-12
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 12
+  priority: 中
+  problem: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-12 安全审计
+- id: REM-GENERIC-3-13
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 13
+  priority: 中
+  problem: b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-13 安全审计
+- id: REM-GENERIC-3-14
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 14
+  priority: 中
+  problem: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-14 安全审计
+- id: REM-GENERIC-3-15
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 15
+  priority: 中
+  problem: d）应对审计进程进行保护，防止未经授权的中断。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-15 安全审计
+- id: REM-GENERIC-3-16
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 16
+  priority: 中
+  problem: a）应遵循最小安装的原则，仅安装需要的组件和应用程序；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-16 入侵防范
+- id: REM-GENERIC-3-17
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 17
+  priority: 中
+  problem: b）应关闭不需要的系统服务、默认共享和高危端口；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-17 入侵防范
+- id: REM-GENERIC-3-18
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 18
+  priority: 中
+  problem: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-18 入侵防范
+- id: REM-GENERIC-3-19
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 19
+  priority: 中
+  problem: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-19 入侵防范
+- id: REM-GENERIC-3-20
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 20
+  priority: 中
+  problem: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-20 入侵防范
+- id: REM-GENERIC-3-21
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 21
+  priority: 中
+  problem: f）应能够检测到对重要节点进行入侵的行为，并在发生严重入侵事件时提供报警。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-21 入侵防范
+- id: REM-GENERIC-3-22
+  title: 恶意代码防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 22
+  priority: 中
+  problem: a）应采用免受恶意代码攻击的技术措施或主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-22 恶意代码防范
+- id: REM-GENERIC-3-23
+  title: 可信验证要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 23
+  priority: 中
+  problem: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-23 可信验证
+- id: REM-GENERIC-3-24
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 24
+  priority: 中
+  problem: a）应采用校验技术或密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-24 数据完整性
+- id: REM-GENERIC-3-25
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 25
+  priority: 中
+  problem: b）应采用校验技术或密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-25 数据完整性
+- id: REM-GENERIC-3-26
+  title: 数据保密性要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 26
+  priority: 中
+  problem: a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-26 数据保密性
+- id: REM-GENERIC-3-27
+  title: 数据保密性要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 27
+  priority: 中
+  problem: b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-27 数据保密性
+- id: REM-GENERIC-3-28
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 28
+  priority: 中
+  problem: a）应提供重要数据的本地数据备份与恢复功能；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-28 数据备份恢复
+- id: REM-GENERIC-3-29
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 29
+  priority: 中
+  problem: b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-29 数据备份恢复
+- id: REM-GENERIC-3-30
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 30
+  priority: 中
+  problem: c）应提供重要数据处理系统的热冗余，保证系统的高可用性。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-30 数据备份恢复
+- id: REM-GENERIC-3-31
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 31
+  priority: 中
+  problem: a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-31 剩余信息保护
+- id: REM-GENERIC-3-32
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 32
+  priority: 中
+  problem: b）应保证存有敏感数据的存储空间被释放或重新分配前得到完全清除。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-32 剩余信息保护
+- id: REM-GENERIC-3-33
+  title: 个人信息保护要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 33
+  priority: 中
+  problem: a）应仅采集和保存业务必需的用户个人信息；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-33 个人信息保护
+- id: REM-GENERIC-3-34
+  title: 个人信息保护要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 34
+  priority: 中
+  problem: b）应禁止未授权访问和非法使用用户个人信息。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 3级 L3-CES1-34 个人信息保护
+- id: REM-GENERIC-4-01
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 1
+  priority: 中
+  problem: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-01 身份鉴别
+- id: REM-GENERIC-4-02
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 2
+  priority: 中
+  problem: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-02 身份鉴别
+- id: REM-GENERIC-4-03
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 3
+  priority: 中
+  problem: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-03 身份鉴别
+- id: REM-GENERIC-4-04
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 4
+  priority: 中
+  problem: d）应采用口令、密码技术、生物技术等两种或两种以上组合的鉴别技术对用户进行身份鉴别，且其中一种鉴别技术至少应使用密码技术来实现。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-04 身份鉴别
+- id: REM-GENERIC-4-05
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 5
+  priority: 中
+  problem: a）应对登录的用户分配账户和权限；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-05 访问控制
+- id: REM-GENERIC-4-06
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 6
+  priority: 中
+  problem: b）应重命名或删除默认账户，修改默认账户的默认口令；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-06 访问控制
+- id: REM-GENERIC-4-07
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 7
+  priority: 中
+  problem: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-07 访问控制
+- id: REM-GENERIC-4-08
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 8
+  priority: 中
+  problem: d）应授予管理用户所需的最小权限，实现管理用户的权限分离；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-08 访问控制
+- id: REM-GENERIC-4-09
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 9
+  priority: 中
+  problem: e）应由授权主体配置访问控制策略，访问控制策略规定主体对客体的访问规则；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-09 访问控制
+- id: REM-GENERIC-4-10
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 10
+  priority: 中
+  problem: f）访问控制的粒度应达到主体为用户级或进程级，客体为文件、数据库表级；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-10 访问控制
+- id: REM-GENERIC-4-11
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 11
+  priority: 中
+  problem: g）应对重要主体、客体设置安全标记，并依据安全标记和强制访问控制规则确定主体对客体的访问。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-11 访问控制
+- id: REM-GENERIC-4-12
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 12
+  priority: 中
+  problem: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-12 安全审计
+- id: REM-GENERIC-4-13
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 13
+  priority: 中
+  problem: b）审计记录应包括事件的日期和时间、用户、事件类型、主体标识、客体标识和结果等；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-13 安全审计
+- id: REM-GENERIC-4-14
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 14
+  priority: 中
+  problem: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-14 安全审计
+- id: REM-GENERIC-4-15
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 15
+  priority: 中
+  problem: d）应对审计进程进行保护，防止未经授权的中断。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-15 安全审计
+- id: REM-GENERIC-4-16
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 16
+  priority: 中
+  problem: a）应遵循最小安装的原则，仅安装需要的组件和应用程序；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-16 入侵防范
+- id: REM-GENERIC-4-17
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 17
+  priority: 中
+  problem: b）应关闭不需要的系统服务、默认共享和高危端口；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-17 入侵防范
+- id: REM-GENERIC-4-18
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 18
+  priority: 中
+  problem: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-18 入侵防范
+- id: REM-GENERIC-4-19
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 19
+  priority: 中
+  problem: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-19 入侵防范
+- id: REM-GENERIC-4-20
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 20
+  priority: 中
+  problem: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-20 入侵防范
+- id: REM-GENERIC-4-21
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 21
+  priority: 中
+  problem: f）应能够检测到对重要节点进行入侵的行为，并在发生严重入侵事件时提供报警。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-21 入侵防范
+- id: REM-GENERIC-4-22
+  title: 恶意代码防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 22
+  priority: 中
+  problem: a）应采主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-22 恶意代码防范
+- id: REM-GENERIC-4-23
+  title: 可信验证要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 23
+  priority: 中
+  problem: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的所有执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心，并进行动态关联感知。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-23 可信验证
+- id: REM-GENERIC-4-24
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 24
+  priority: 中
+  problem: a）应采用密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-24 数据完整性
+- id: REM-GENERIC-4-25
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 25
+  priority: 中
+  problem: b）应采用密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-25 数据完整性
+- id: REM-GENERIC-4-26
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 26
+  priority: 中
+  problem: c）在可能涉及法律责任认定的应用中，应采用密码技术提供数据原发证据和数据接收证据，实现数据原发行为的抗抵赖和数据接收行为的抗抵赖
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-26 数据完整性
+- id: REM-GENERIC-4-27
+  title: 数据保密性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 27
+  priority: 中
+  problem: a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-27 数据保密性
+- id: REM-GENERIC-4-28
+  title: 数据保密性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 28
+  priority: 中
+  problem: b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-28 数据保密性
+- id: REM-GENERIC-4-29
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 29
+  priority: 中
+  problem: a）应提供重要数据的本地数据备份与恢复功能；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-29 数据备份恢复
+- id: REM-GENERIC-4-30
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 30
+  priority: 中
+  problem: b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-30 数据备份恢复
+- id: REM-GENERIC-4-31
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 31
+  priority: 中
+  problem: c）应提供重要数据处理系统的热冗余，保证系统的高可用性。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-31 数据备份恢复
+- id: REM-GENERIC-4-32
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 32
+  priority: 中
+  problem: d）应建立异地灾难备份中心，提供业务应用的实时切换。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-32 数据备份恢复
+- id: REM-GENERIC-4-33
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 33
+  priority: 中
+  problem: a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除；
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-33 剩余信息保护
+- id: REM-GENERIC-4-34
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 34
+  priority: 中
+  problem: b）应保证存有敏感数据的存储空间被释放或重新分配前得到完全清除。
+  cause: 通用操作系统基线未落实。
+  action: 按通用操作系统安全基线完成配置核查与整改。
+  clause: GB/T 22239-2019 4级 L4-CES1-34 剩余信息保护

@@ -1,0 +1,1619 @@
+version: 0.1.0
+status: active
+rules:
+- id: REM-UBUNTU-2-01
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 1
+  priority: 高
+  problem: '1、登录服务器时未对用户进行身份鉴别；
+
+    2、服务器中用户身份标识不唯一；
+
+    3、服务器口令强度不够完善；
+
+    4、服务器未设置口令更换策略；
+
+    5、服务器未设置口令复杂度要求；
+
+    6、服务器未定期进行口令更改'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议登录访问服务器时必须对用户进行身份鉴别，不允许用空口令登录；
+
+    2、建议为不同用户设立不同的身份标识；
+
+    3、建议增强服务器口令强度，长度大于8位，至少包含大写字母、小写字母、数字以及特殊符号中的任意三种组合；
+
+    4、建议在/etc/login.defs文件中完善服务器口令更换策略；
+
+    5、建议在/etc/pam.d/common-password文件中设置服务器口令复杂度策略，强制要求口令长度大于8位，至少包含大写字母、小写字母、数字以及特殊符号中的任意三种组合
+
+    6、建议定期在口令有效期内（至少90天内）进行口令更改'
+  clause: GB/T 22239-2019 2级 L2-CES1-01 身份鉴别
+- id: REM-UBUNTU-2-02
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 2
+  priority: 低
+  problem: '1、服务器未设置登录失败处理功能；
+
+    2、服务器未设置超时自动退出功能'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议在/etc/pam.d/login或 /etc/pam.d/common-auth文件中为服务器设置登录失败处理功能，例如登录失败3次锁定30分钟；
+
+    2、建议在/etc/profile文件中为服务器设置超时自动退出功能，例如600秒无操作自动退出'
+  clause: GB/T 22239-2019 2级 L2-CES1-02 身份鉴别
+- id: REM-UBUNTU-2-03
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 3
+  priority: 低
+  problem: '1、远程登录服务器时采用Telnet/FTP明文传输协议进行连接；
+
+    2、服务器未关闭Telnet/FTP明文传输方式'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议在远程管理时采用SSH加密协议进行连接；
+
+    2、建议关闭服务器Telnet/FTP明文传输管理方式'
+  clause: GB/T 22239-2019 2级 L2-CES1-03 身份鉴别
+- id: REM-UBUNTU-2-04
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 4
+  priority: 低
+  problem: '1、未对需要登录使用设备的人员单独设立账户并分配权限；
+
+    2、未对匿名账户XXX进行禁用或限制'
+  cause: 越权访问、权限滥用
+  action: '1、建议为需要登录使用服务器的人员单独设立账户并分配权限；
+
+    2、建议对匿名账户进行禁用'
+  clause: GB/T 22239-2019 2级 L2-CES1-04 访问控制
+- id: REM-UBUNTU-2-05
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 5
+  priority: 中
+  problem: '1、未对服务器默认管理用户root进行重命名、未禁用默认账户X；
+
+    2、未对X账户的默认口令进行修改'
+  cause: 越权访问、权限滥用
+  action: '1、建议对服务器默认管理用户root进行重命名，禁用默认管理账户X；
+
+    2、建议对XXX账户默认口令进行修改'
+  clause: GB/T 22239-2019 2级 L2-CES1-05 访问控制
+- id: REM-UBUNTU-2-06
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 6
+  priority: 高
+  problem: '1、服务器中存在多余账户X；
+
+    2、服务器中存在过期账户X；
+
+    3、服务器中账户与实际人员未对应，存在多人共用一个X账户的情况'
+  cause: 越权访问、权限滥用
+  action: '1、建议删除服务器中多余账户X；
+
+    2、建议删除服务器中过期账户X；
+
+    3、建议为需要使用服务器的人员单独设立账户，避免多人共用一个账户的情况'
+  clause: GB/T 22239-2019 2级 L2-CES1-06 访问控制
+- id: REM-UBUNTU-2-07
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 7
+  priority: 低
+  problem: 未实现管理用户权限分离
+  cause: 越权访问、权限滥用
+  action: 建议授予不同用户为完成各自承担的任务所需的最小权限，将系统管理员和业务操作员权限分离，并设置独立的安全审计员账户、安全管理员账户
+  clause: GB/T 22239-2019 2级 L2-CES1-07 访问控制
+- id: REM-UBUNTU-2-08
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 8
+  priority: 低
+  problem: '1、服务器未启用审计服务auditd；
+
+    2、服务器未启用日志服务rsyslog；
+
+    3、服务器日志审计范围不够完善'
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: '1、建议启用服务器审计服务auditd；
+
+    2、建议启用服务器日志服务rsyslog；
+
+    3、建议完善服务器日志审计范围，将服务器中各种重要安全事件进行审计记录'
+  clause: GB/T 22239-2019 2级 L2-CES1-08 安全审计
+- id: REM-UBUNTU-2-09
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 9
+  priority: 低
+  problem: 服务器中日志记录仅包括XX，不够完善
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: 建议将服务器日志记录内容进行完善，至少包含：事件的日期和时间、用户、事件类型、主体标识、客体标识和结果等信息
+  clause: GB/T 22239-2019 2级 L2-CES1-09 安全审计
+- id: REM-UBUNTU-2-10
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 10
+  priority: 高
+  problem: '1、服务器中非授权用户可以对审计记录进行修改/删除；
+
+    2、未定期对服务器日志记录进行备份；
+
+    3、服务器日志记录保存时间小于6个月'
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: '1、建议将var/audit/audit.log、/var/log/syslog文件权限设置为644范围以内，避免非授权用户对其中的日志记录进行删除、修改；
+
+    2、建议定期对服务器日志记录进行备份保存；
+
+    3、建议加长日志记录的保存时间，至少保存6个月'
+  clause: GB/T 22239-2019 2级 L2-CES1-10 安全审计
+- id: REM-UBUNTU-2-11
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 11
+  priority: 高
+  problem: '1、服务器中安装了与多余的组件XXX；
+
+    2、服务器中部分组件/应用程序XX未遵循最小化安装原则'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议删除服务器中安装的多余组件XXX；
+
+    2、建议将部分组件/应用程序XX安装过程中非必要的连带组件进行删除，确保最小安装'
+  clause: GB/T 22239-2019 2级 L2-CES1-11 入侵防范
+- id: REM-UBUNTU-2-12
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 12
+  priority: 高
+  problem: '1、服务器中未关闭与业务无关的系统服务XXX；
+
+    2、未关闭服务器X磁盘默认共享功能；
+
+    3、服务器中启用了多余端口'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议关闭服务器中与业务无关的系统服务XXX；
+
+    2、建议关闭系统中X磁盘默认共享功能；
+
+    3、建议关闭服务器中多余端口'
+  clause: GB/T 22239-2019 2级 L2-CES1-12 入侵防范
+- id: REM-UBUNTU-2-13
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 13
+  priority: 低
+  problem: '1、未对服务器接入方式或网络地址范围进行限制；
+
+    2、服务器接入方式/网络地址范围限制不合理'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议对服务器接入方式或网络地址范围进行限制（接入方式例如必须通过VPN或堡垒机、地址范围限制例如仅特定IP允许访问）；
+
+    2、建议合理限制服务器接入方式/网络地址范围（接入方式例如必须通过VPN或堡垒机、地址范围限制例如仅特定IP允许访问）'
+  clause: GB/T 22239-2019 2级 L2-CES1-13 入侵防范
+- id: REM-UBUNTU-2-14
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 14
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 2级 L2-CES1-14 入侵防范
+- id: REM-UBUNTU-2-15
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 15
+  priority: 高
+  problem: '1、服务器定期对服务器进行漏洞扫描；
+
+    2、未提供服务器漏洞扫描报告；
+
+    3、未对发现的服务器漏洞进行及时修复'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议定期对服务器进行漏洞扫描（至少一个季度进行一次）；
+
+    2、建议每次开展漏洞扫描后将扫描报告进行保存留档；
+
+    3、建议对扫描发现的服务器漏洞进行评估并修复，且保留修复记录'
+  clause: GB/T 22239-2019 2级 L2-CES1-15 入侵防范
+- id: REM-UBUNTU-2-16
+  title: 恶意代码防范要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 16
+  priority: 高
+  problem: '1、未部署主机防病毒软件；
+
+    2、未定期对防病毒软件病毒库进行更新；
+
+    3、防病毒软件中不具备杀毒记录，无法确保软件防护功能是否正常运行'
+  cause: 病毒木马感染、勒索软件
+  action: '1、建议为服务器部署主机防病毒软件；
+
+    2、建议定期对防病毒软件病毒库进行更新；
+
+    3、建议对防病毒软件进行故障排查，确保其运行正常，并保留杀毒记录'
+  clause: GB/T 22239-2019 2级 L2-CES1-16 恶意代码防范
+- id: REM-UBUNTU-2-17
+  title: 可信验证要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 17
+  priority: 低
+  problem: '1、未基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证；
+
+    2、部署了可信验证检测的设备，但检测到可信性受到破坏时无法进行报警。'
+  cause: 系统被篡改无法发现、后门植入
+  action: '1、建议基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警；
+
+    2、建议对可信验证设备的配置进行检查和调整，使其发现可信性受到破坏后及时向管理员进行报警。'
+  clause: GB/T 22239-2019 2级 L2-CES1-17 可信验证
+- id: REM-UBUNTU-2-18
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 18
+  priority: 低
+  problem: 服务器远程管理时采用Telnet/Ftp明文传输方式，无法保证鉴别数据传输过程中的完整性
+  cause: 传输或存储数据被篡改
+  action: 建议采用SSH远程连接服务器，保证鉴别数据在传输过程中的完整性
+  clause: GB/T 22239-2019 2级 L2-CES1-18 数据完整性
+- id: REM-UBUNTU-2-19
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 19
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 2级 L2-CES1-19 数据备份恢复
+- id: REM-UBUNTU-2-20
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 20
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 2级 L2-CES1-20 数据备份恢复
+- id: REM-UBUNTU-2-21
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 21
+  priority: 低
+  problem: /
+  cause: 残留信息泄露
+  action: /
+  clause: GB/T 22239-2019 2级 L2-CES1-21 剩余信息保护
+- id: REM-UBUNTU-2-22
+  title: 个人信息保护要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 22
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: —
+  action: —
+  clause: GB/T 22239-2019 2级 L2-CES1-22 个人信息保护
+- id: REM-UBUNTU-2-23
+  title: 个人信息保护要求未满足
+  applies_to:
+    level:
+    - 2
+    family:
+    - server
+    item_seqs:
+    - 23
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: —
+  action: —
+  clause: GB/T 22239-2019 2级 L2-CES1-23 个人信息保护
+- id: REM-UBUNTU-3-01
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 1
+  priority: 高
+  problem: '1、登录服务器时未对用户进行身份鉴别；
+
+    2、服务器中用户身份标识不唯一；
+
+    3、服务器口令强度不够完善；
+
+    4、服务器未设置口令更换策略；
+
+    5、服务器未设置口令复杂度要求；
+
+    6、服务器未定期进行口令更改'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议登录访问服务器时必须对用户进行身份鉴别，不允许用空口令登录；
+
+    2、建议为不同用户设立不同的身份标识；
+
+    3、建议增强服务器口令强度，长度大于8位，至少包含大写字母、小写字母、数字以及特殊符号中的任意三种组合；
+
+    4、建议在/etc/login.defs文件中完善服务器口令更换策略；
+
+    5、建议在/etc/pam.d/common-password文件中设置服务器口令复杂度策略，强制要求口令长度大于8位，至少包含大写字母、小写字母、数字以及特殊符号中的任意三种组合
+
+    6、建议定期在口令有效期内（至少90天内）进行口令更改'
+  clause: GB/T 22239-2019 3级 L3-CES1-01 身份鉴别
+- id: REM-UBUNTU-3-02
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 2
+  priority: 低
+  problem: '1、服务器未设置登录失败处理功能；
+
+    2、服务器未设置超时自动退出功能'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议在/etc/pam.d/login或 /etc/pam.d/common-auth文件中为服务器设置登录失败处理功能，例如登录失败3次锁定30分钟；
+
+    2、建议在/etc/profile文件中为服务器设置超时自动退出功能，例如600秒无操作自动退出'
+  clause: GB/T 22239-2019 3级 L3-CES1-02 身份鉴别
+- id: REM-UBUNTU-3-03
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 3
+  priority: 高
+  problem: '1、远程登录服务器时采用Telnet/FTP明文传输协议进行连接；
+
+    2、服务器未关闭Telnet/FTP明文传输方式'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议在远程管理时采用SSH加密协议进行连接；
+
+    2、建议关闭服务器Telnet/FTP明文传输管理方式'
+  clause: GB/T 22239-2019 3级 L3-CES1-03 身份鉴别
+- id: REM-UBUNTU-3-04
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 4
+  priority: 高
+  problem: '服务器未采用双因子鉴别技术对登录用户进行身份验证
+
+    或
+
+    服务器所使用的X身份验证方式非密码技术技术'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '建议登录服务器时采用双因子鉴别技术对用户进行身份鉴别，例如用户名口令+USB-key/数字证书/令牌等；
+
+    或
+
+    建议将第二种身份鉴别方式改为密码技术'
+  clause: GB/T 22239-2019 3级 L3-CES1-04 身份鉴别
+- id: REM-UBUNTU-3-05
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 5
+  priority: 高
+  problem: '1、未对需要登录使用设备的人员单独设立账户并分配权限；
+
+    2、未对匿名账户XXX进行禁用或限制'
+  cause: 越权访问、权限滥用
+  action: '1、建议为需要登录使用服务器的人员单独设立账户并分配权限；
+
+    2、建议对匿名账户进行禁用'
+  clause: GB/T 22239-2019 3级 L3-CES1-05 访问控制
+- id: REM-UBUNTU-3-06
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 6
+  priority: 中
+  problem: '1、未对服务器默认管理用户root进行重命名、未禁用默认账户X；
+
+    2、未对X账户的默认口令进行修改'
+  cause: 越权访问、权限滥用
+  action: '1、建议对服务器默认管理用户root进行重命名，禁用默认管理账户X；
+
+    2、建议对XXX账户默认口令进行修改'
+  clause: GB/T 22239-2019 3级 L3-CES1-06 访问控制
+- id: REM-UBUNTU-3-07
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 7
+  priority: 高
+  problem: '1、服务器中存在多余账户X；
+
+    2、服务器中存在过期账户X；
+
+    3、服务器中账户与实际人员未对应，存在多人共用一个X账户的情况'
+  cause: 越权访问、权限滥用
+  action: '1、建议删除服务器中多余账户X；
+
+    2、建议删除服务器中过期账户X；
+
+    3、建议为需要使用服务器的人员单独设立账户，避免多人共用一个账户的情况'
+  clause: GB/T 22239-2019 3级 L3-CES1-07 访问控制
+- id: REM-UBUNTU-3-08
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 8
+  priority: 高
+  problem: 未实现管理用户权限分离
+  cause: 越权访问、权限滥用
+  action: 建议授予不同用户为完成各自承担的任务所需的最小权限，将系统管理员和业务操作员权限分离，并设置独立的安全审计员账户、安全管理员账户
+  clause: GB/T 22239-2019 3级 L3-CES1-08 访问控制
+- id: REM-UBUNTU-3-09
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 9
+  priority: 高
+  problem: '1、未指定授权主体负责访问控制策略的配置；
+
+    2、服务器中存在文件XXXX访问权限设置不合理的情况'
+  cause: 越权访问、权限滥用
+  action: '1、建议指定授权主体对服务器中访问控制策略进行配置；
+
+    2、建议修改服务器中XXX文件访问权限为644范围内'
+  clause: GB/T 22239-2019 3级 L3-CES1-09 访问控制
+- id: REM-UBUNTU-3-10
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 10
+  priority: 高
+  problem: 服务器中存在文件XXXX访问权限设置不合理的情况
+  cause: 越权访问、权限滥用
+  action: 建议修改XXX文件的访问权限范围为644以内
+  clause: GB/T 22239-2019 3级 L3-CES1-10 访问控制
+- id: REM-UBUNTU-3-11
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 11
+  priority: 高
+  problem: 未对重要文件/资源设置安全标记
+  cause: 越权访问、权限滥用
+  action: 建议对系统重要资源增加安全标记的功能，并控制用户对已标记的信息的操作。
+  clause: GB/T 22239-2019 3级 L3-CES1-11 访问控制
+- id: REM-UBUNTU-3-12
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 12
+  priority: 低
+  problem: '1、服务器未启用审计服务auditd；
+
+    2、服务器未启用日志服务rsyslog；
+
+    3、服务器日志审计范围不够完善'
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: '1、建议启用服务器审计服务auditd；
+
+    2、建议启用服务器日志服务rsyslog；
+
+    3、建议完善服务器日志审计范围，将服务器中各种重要安全事件进行审计记录'
+  clause: GB/T 22239-2019 3级 L3-CES1-12 安全审计
+- id: REM-UBUNTU-3-13
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 13
+  priority: 低
+  problem: 服务器中日志记录仅包括XX，不够完善
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: 建议将服务器日志记录内容进行完善，至少包含：事件的日期和时间、用户、事件类型、主体标识、客体标识和结果等信息
+  clause: GB/T 22239-2019 3级 L3-CES1-13 安全审计
+- id: REM-UBUNTU-3-14
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 14
+  priority: 高
+  problem: '1、服务器中非授权用户可以对审计记录进行修改/删除；
+
+    2、未定期对服务器日志记录进行备份；
+
+    3、服务器日志记录保存时间小于6个月'
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: '1、建议将var/audit/audit.log、/var/log/syslog文件权限设置为644范围以内，避免非授权用户对其中的日志记录进行删除、修改；
+
+    2、建议定期对服务器日志记录进行备份保存；
+
+    3、建议加长日志记录的保存时间，至少保存6个月'
+  clause: GB/T 22239-2019 3级 L3-CES1-14 安全审计
+- id: REM-UBUNTU-3-15
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 15
+  priority: 低
+  problem: 服务器中存在XX账户可以非授权中止审计进程的情况
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: 建议删除或修改XX账户对审计进程的启停权限
+  clause: GB/T 22239-2019 3级 L3-CES1-15 安全审计
+- id: REM-UBUNTU-3-16
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 16
+  priority: 高
+  problem: '1、服务器中安装了与多余的组件XXX；
+
+    2、服务器中部分组件/应用程序XX未遵循最小化安装原则'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议删除服务器中安装的多余组件XXX；
+
+    2、建议将部分组件/应用程序XX安装过程中非必要的连带组件进行删除，确保最小安装'
+  clause: GB/T 22239-2019 3级 L3-CES1-17 入侵防范
+- id: REM-UBUNTU-3-17
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 17
+  priority: 高
+  problem: '1、服务器中未关闭与业务无关的系统服务XXX；
+
+    2、未关闭服务器X磁盘默认共享功能；
+
+    3、服务器中启用了多余端口'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议关闭服务器中与业务无关的系统服务XXX；
+
+    2、建议关闭系统中X磁盘默认共享功能；
+
+    3、建议关闭服务器中多余端口'
+  clause: GB/T 22239-2019 3级 L3-CES1-18 入侵防范
+- id: REM-UBUNTU-3-18
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 18
+  priority: 低
+  problem: '1、未对服务器接入方式或网络地址范围进行限制；
+
+    2、服务器接入方式/网络地址范围限制不合理'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议对服务器接入方式或网络地址范围进行限制（接入方式例如必须通过VPN或堡垒机、地址范围限制例如仅特定IP允许访问）；
+
+    2、建议合理限制服务器接入方式/网络地址范围（接入方式例如必须通过VPN或堡垒机、地址范围限制例如仅特定IP允许访问）'
+  clause: GB/T 22239-2019 3级 L3-CES1-19 入侵防范
+- id: REM-UBUNTU-3-19
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 19
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 3级 L3-CES1-20 入侵防范
+- id: REM-UBUNTU-3-20
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 20
+  priority: 高
+  problem: '1、服务器定期对服务器进行漏洞扫描；
+
+    2、未提供服务器漏洞扫描报告；
+
+    3、未对发现的服务器漏洞进行及时修复'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议定期对服务器进行漏洞扫描（至少一个季度进行一次）；
+
+    2、建议每次开展漏洞扫描后将扫描报告进行保存留档；
+
+    3、建议对扫描发现的服务器漏洞进行评估并修复，且保留修复记录'
+  clause: GB/T 22239-2019 3级 L3-CES1-21 入侵防范
+- id: REM-UBUNTU-3-21
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 21
+  priority: 低
+  problem: '1、未部署主机型入侵检测系统；
+
+    2、服务器部署的入侵检测系统无告警措施'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议部署主机型入侵检测软件，对服务器层面入侵行为进行检测；
+
+    2、建议启用/增设入侵检测软件的实时告警功能，确保第一时间发现入侵行为并采取措施进行阻止'
+  clause: GB/T 22239-2019 3级 L3-CES1-22 入侵防范
+- id: REM-UBUNTU-3-22
+  title: 恶意代码防范要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 22
+  priority: 高
+  problem: '1、未部署主机防病毒软件；
+
+    2、未定期对防病毒软件病毒库进行更新；
+
+    3、不具备更新记录'
+  cause: 病毒木马感染、勒索软件
+  action: '1、建议为服务器部署主机防病毒软件；
+
+    2、建议定期对防病毒软件病毒库进行更新；
+
+    3、建议保留更新记录'
+  clause: GB/T 22239-2019 3级 L3-CES1-23 恶意代码防范
+- id: REM-UBUNTU-3-23
+  title: 可信验证要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 23
+  priority: 低
+  problem: '1、未基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证；
+
+    2、部署了可信验证检测的设备，但检测到可信性受到破坏时无法进行报警。'
+  cause: 系统被篡改无法发现、后门植入
+  action: '1、建议基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警；
+
+    2、建议对可信验证设备的配置进行检查和调整，使其发现可信性受到破坏后及时向管理员进行报警。'
+  clause: GB/T 22239-2019 3级 L3-CES1-24 可信验证
+- id: REM-UBUNTU-3-24
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 24
+  priority: 高
+  problem: 服务器远程管理时采用Telnet/Ftp明文传输方式，无法保证鉴别数据传输过程中的完整性
+  cause: 传输或存储数据被篡改
+  action: 建议采用SSH远程连接服务器，保证鉴别数据在传输过程中的完整性
+  clause: GB/T 22239-2019 3级 L3-CES1-25 数据完整性
+- id: REM-UBUNTU-3-25
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 25
+  priority: 低
+  problem: '使用的XX算法无法保证鉴别信息存储的完整性
+
+    或
+
+    未使用校验就技术或密码技术保证鉴别信息在存储过程中的完整性'
+  cause: 传输或存储数据被篡改
+  action: 建议使用密码技术或校验技术保证鉴别信息在存储过程中的完整性
+  clause: GB/T 22239-2019 3级 L3-CES1-26 数据完整性
+- id: REM-UBUNTU-3-26
+  title: 数据保密性要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 26
+  priority: 高
+  problem: 服务器远程管理时采用Telnet/Ftp明文传输方式，无法保证鉴别数据传输过程中的保密性
+  cause: 鉴别信息或敏感数据被窃听
+  action: 建议采用SSH远程连接服务器，保证鉴别数据在传输过程中的保密性
+  clause: GB/T 22239-2019 3级 L3-CES1-27 数据保密性
+- id: REM-UBUNTU-3-27
+  title: 数据保密性要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 27
+  priority: 低
+  problem: '使用的XX算法无法保证鉴别信息存储的保密性
+
+    或
+
+    未使用密码技术保证鉴别信息在存储过程中的保密性'
+  cause: 鉴别信息或敏感数据被窃听
+  action: 建议使用密码技术保证鉴别信息在存储过程中的保密性
+  clause: GB/T 22239-2019 3级 L3-CES1-28 数据保密性
+- id: REM-UBUNTU-3-28
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 28
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 3级 L3-CES1-29 数据备份恢复
+- id: REM-UBUNTU-3-29
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 29
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 3级 L3-CES1-30 数据备份恢复
+- id: REM-UBUNTU-3-30
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 30
+  priority: 中
+  problem: 重要服务器未采用热冗余的方式进行部署
+  cause: 数据丢失、业务中断
+  action: 建议对重要数据处理类服务器采用热冗余的形式进行部署，保证系统高可用性
+  clause: GB/T 22239-2019 3级 L3-CES1-31 数据备份恢复
+- id: REM-UBUNTU-3-31
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 31
+  priority: 低
+  problem: /
+  cause: 残留信息泄露
+  action: /
+  clause: GB/T 22239-2019 3级 L3-CES1-32 剩余信息保护
+- id: REM-UBUNTU-3-32
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 32
+  priority: 低
+  problem: 记录了XXX条历史命令信息，剩余信息清除不完善
+  cause: 残留信息泄露
+  action: 建议将HISTSIZE参数值设置为0，不允许记录历史命令信息
+  clause: GB/T 22239-2019 3级 L3-CES1-33 剩余信息保护
+- id: REM-UBUNTU-3-33
+  title: 个人信息保护要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 33
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: —
+  action: —
+  clause: GB/T 22239-2019 3级 L3-CES1-34 个人信息保护
+- id: REM-UBUNTU-3-34
+  title: 个人信息保护要求未满足
+  applies_to:
+    level:
+    - 3
+    family:
+    - server
+    item_seqs:
+    - 34
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: —
+  action: —
+  clause: GB/T 22239-2019 3级 L3-CES1-35 个人信息保护
+- id: REM-UBUNTU-4-01
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 1
+  priority: 高
+  problem: '1、登录服务器时未对用户进行身份鉴别；
+
+    2、服务器中用户身份标识不唯一；
+
+    3、服务器口令强度不够完善；
+
+    4、服务器未设置口令更换策略；
+
+    5、服务器未设置口令复杂度要求；
+
+    6、服务器未定期进行口令更改'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议登录访问服务器时必须对用户进行身份鉴别，不允许用空口令登录；
+
+    2、建议为不同用户设立不同的身份标识；
+
+    3、建议增强服务器口令强度，长度大于8位，至少包含大写字母、小写字母、数字以及特殊符号中的任意三种组合；
+
+    4、建议在/etc/login.defs文件中完善服务器口令更换策略；
+
+    5、建议在/etc/pam.d/common-password文件中设置服务器口令复杂度策略，强制要求口令长度大于8位，至少包含大写字母、小写字母、数字以及特殊符号中的任意三种组合
+
+    6、建议定期在口令有效期内（至少90天内）进行口令更改'
+  clause: GB/T 22239-2019 4级 L4-CES1-01 身份鉴别
+- id: REM-UBUNTU-4-02
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 2
+  priority: 低
+  problem: '1、服务器未设置登录失败处理功能；
+
+    2、服务器未设置超时自动退出功能'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议在/etc/pam.d/login或 /etc/pam.d/common-auth文件中为服务器设置登录失败处理功能，例如登录失败3次锁定30分钟；
+
+    2、建议在/etc/profile文件中为服务器设置超时自动退出功能，例如600秒无操作自动退出'
+  clause: GB/T 22239-2019 4级 L4-CES1-02 身份鉴别
+- id: REM-UBUNTU-4-03
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 3
+  priority: 高
+  problem: '1、远程登录服务器时采用Telnet/FTP明文传输协议进行连接；
+
+    2、服务器未关闭Telnet/FTP明文传输方式'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '1、建议在远程管理时采用SSH加密协议进行连接；
+
+    2、建议关闭服务器Telnet/FTP明文传输管理方式'
+  clause: GB/T 22239-2019 4级 L4-CES1-03 身份鉴别
+- id: REM-UBUNTU-4-04
+  title: 身份鉴别要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 4
+  priority: 高
+  problem: '服务器未采用双因子鉴别技术对登录用户进行身份验证
+
+    或
+
+    服务器所使用的X身份验证方式非密码技术技术'
+  cause: 身份冒用、口令猜测与暴力破解
+  action: '建议登录服务器时采用双因子鉴别技术对用户进行身份鉴别，例如用户名口令+USB-key/数字证书/令牌等；
+
+    或
+
+    建议将第二种身份鉴别方式改为密码技术'
+  clause: GB/T 22239-2019 4级 L4-CES1-04 身份鉴别
+- id: REM-UBUNTU-4-05
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 5
+  priority: 高
+  problem: '1、未对需要登录使用设备的人员单独设立账户并分配权限；
+
+    2、未对匿名账户XXX进行禁用或限制'
+  cause: 越权访问、权限滥用
+  action: '1、建议为需要登录使用服务器的人员单独设立账户并分配权限；
+
+    2、建议对匿名账户进行禁用'
+  clause: GB/T 22239-2019 4级 L4-CES1-05 访问控制
+- id: REM-UBUNTU-4-06
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 6
+  priority: 中
+  problem: '1、未对服务器默认管理用户root进行重命名、未禁用默认账户X；
+
+    2、未对X账户的默认口令进行修改'
+  cause: 越权访问、权限滥用
+  action: '1、建议对服务器默认管理用户root进行重命名，禁用默认管理账户X；
+
+    2、建议对XXX账户默认口令进行修改'
+  clause: GB/T 22239-2019 4级 L4-CES1-06 访问控制
+- id: REM-UBUNTU-4-07
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 7
+  priority: 高
+  problem: '1、服务器中存在多余账户X；
+
+    2、服务器中存在过期账户X；
+
+    3、服务器中账户与实际人员未对应，存在多人共用一个X账户的情况'
+  cause: 越权访问、权限滥用
+  action: '1、建议删除服务器中多余账户X；
+
+    2、建议删除服务器中过期账户X；
+
+    3、建议为需要使用服务器的人员单独设立账户，避免多人共用一个账户的情况'
+  clause: GB/T 22239-2019 4级 L4-CES1-07 访问控制
+- id: REM-UBUNTU-4-08
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 8
+  priority: 高
+  problem: 未实现管理用户权限分离
+  cause: 越权访问、权限滥用
+  action: 建议授予不同用户为完成各自承担的任务所需的最小权限，将系统管理员和业务操作员权限分离，并设置独立的安全审计员账户、安全管理员账户
+  clause: GB/T 22239-2019 4级 L4-CES1-08 访问控制
+- id: REM-UBUNTU-4-09
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 9
+  priority: 高
+  problem: '1、未指定授权主体负责访问控制策略的配置；
+
+    2、服务器中存在文件XXXX访问权限设置不合理的情况'
+  cause: 越权访问、权限滥用
+  action: '1、建议指定授权主体对服务器中访问控制策略进行配置；
+
+    2、建议修改服务器中XXX文件访问权限为644范围内'
+  clause: GB/T 22239-2019 4级 L4-CES1-09 访问控制
+- id: REM-UBUNTU-4-10
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 10
+  priority: 高
+  problem: 服务器中存在文件XXXX访问权限设置不合理的情况
+  cause: 越权访问、权限滥用
+  action: 建议修改XXX文件的访问权限范围为644以内
+  clause: GB/T 22239-2019 4级 L4-CES1-10 访问控制
+- id: REM-UBUNTU-4-11
+  title: 访问控制要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 11
+  priority: 高
+  problem: 无法实现主体对客体访问的强制访问控制功能
+  cause: 越权访问、权限滥用
+  action: 建议对操作系统设置安全标记的功能，例如使用椒图等软件
+  clause: GB/T 22239-2019 4级 L4-CES1-11 访问控制
+- id: REM-UBUNTU-4-12
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 12
+  priority: 低
+  problem: '1、服务器未启用审计服务auditd；
+
+    2、服务器未启用日志服务rsyslog；
+
+    3、服务器日志审计范围不够完善'
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: '1、建议启用服务器审计服务auditd；
+
+    2、建议启用服务器日志服务rsyslog；
+
+    3、建议完善服务器日志审计范围，将服务器中各种重要安全事件进行审计记录'
+  clause: GB/T 22239-2019 4级 L4-CES1-12 安全审计
+- id: REM-UBUNTU-4-13
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 13
+  priority: 低
+  problem: 服务器中日志记录仅包括XX，不够完善
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: 建议将服务器日志记录内容进行完善，至少包含：事件的日期和时间、用户、事件类型、主体标识、客体标识和结果等信息
+  clause: GB/T 22239-2019 4级 L4-CES1-13 安全审计
+- id: REM-UBUNTU-4-14
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 14
+  priority: 高
+  problem: '1、服务器中非授权用户可以对审计记录进行修改/删除；
+
+    2、未定期对服务器日志记录进行备份；
+
+    3、服务器日志记录保存时间小于6个月'
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: '1、建议将var/audit/audit.log、/var/log/syslog文件权限设置为644范围以内，避免非授权用户对其中的日志记录进行删除、修改；
+
+    2、建议定期对服务器日志记录进行备份保存；
+
+    3、建议加长日志记录的保存时间，至少保存6个月'
+  clause: GB/T 22239-2019 4级 L4-CES1-14 安全审计
+- id: REM-UBUNTU-4-15
+  title: 安全审计要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 15
+  priority: 低
+  problem: 服务器中存在XX账户可以非授权中止审计进程的情况
+  cause: 审计记录被篡改或删除、行为无法追溯
+  action: 建议删除或修改XX账户对审计进程的启停权限
+  clause: GB/T 22239-2019 4级 L4-CES1-15 安全审计
+- id: REM-UBUNTU-4-16
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 16
+  priority: 高
+  problem: '1、服务器中安装了与多余的组件XXX；
+
+    2、服务器中部分组件/应用程序XX未遵循最小化安装原则'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议删除服务器中安装的多余组件XXX；
+
+    2、建议将部分组件/应用程序XX安装过程中非必要的连带组件进行删除，确保最小安装'
+  clause: GB/T 22239-2019 4级 L4-CES1-16 入侵防范
+- id: REM-UBUNTU-4-17
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 17
+  priority: 高
+  problem: '1、服务器中未关闭与业务无关的系统服务XXX；
+
+    2、未关闭服务器X磁盘默认共享功能；
+
+    3、服务器中启用了多余端口'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议关闭服务器中与业务无关的系统服务XXX；
+
+    2、建议关闭系统中X磁盘默认共享功能；
+
+    3、建议关闭服务器中多余端口'
+  clause: GB/T 22239-2019 4级 L4-CES1-17 入侵防范
+- id: REM-UBUNTU-4-18
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 18
+  priority: 低
+  problem: '1、未对服务器接入方式或网络地址范围进行限制；
+
+    2、服务器接入方式/网络地址范围限制不合理'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议对服务器接入方式或网络地址范围进行限制（接入方式例如必须通过VPN或堡垒机、地址范围限制例如仅特定IP允许访问）；
+
+    2、建议合理限制服务器接入方式/网络地址范围（接入方式例如必须通过VPN或堡垒机、地址范围限制例如仅特定IP允许访问）'
+  clause: GB/T 22239-2019 4级 L4-CES1-18 入侵防范
+- id: REM-UBUNTU-4-19
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 19
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 4级 L4-CES1-19 入侵防范
+- id: REM-UBUNTU-4-20
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 20
+  priority: 高
+  problem: '1、服务器定期对服务器进行漏洞扫描；
+
+    2、未提供服务器漏洞扫描报告；
+
+    3、未对发现的服务器漏洞进行及时修复'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议定期对服务器进行漏洞扫描（至少一个季度进行一次）；
+
+    2、建议每次开展漏洞扫描后将扫描报告进行保存留档；
+
+    3、建议对扫描发现的服务器漏洞进行评估并修复，且保留修复记录'
+  clause: GB/T 22239-2019 4级 L4-CES1-20 入侵防范
+- id: REM-UBUNTU-4-21
+  title: 入侵防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 21
+  priority: 低
+  problem: '1、未部署主机型入侵检测系统；
+
+    2、服务器部署的入侵检测系统无告警措施'
+  cause: 漏洞利用、恶意代码植入、非授权外联
+  action: '1、建议部署主机型入侵检测软件，对服务器层面入侵行为进行检测；
+
+    2、建议启用/增设入侵检测软件的实时告警功能，确保第一时间发现入侵行为并采取措施进行阻止'
+  clause: GB/T 22239-2019 4级 L4-CES1-21 入侵防范
+- id: REM-UBUNTU-4-22
+  title: 恶意代码防范要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 22
+  priority: 高
+  problem: '1、未部署主机防病毒软件；
+
+    2、未定期对防病毒软件病毒库进行更新；
+
+    3、未采用主动免疫可信验证技术'
+  cause: 病毒木马感染、勒索软件
+  action: '1、建议为服务器部署主机防病毒软件；
+
+    2、建议定期对防病毒软件病毒库进行更新；
+
+    3、建议采用主动免疫可信验证技术'
+  clause: GB/T 22239-2019 4级 L4-CES1-22 恶意代码防范
+- id: REM-UBUNTU-4-23
+  title: 可信验证要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 23
+  priority: 低
+  problem: '1、服务器未基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证；
+
+    2、不能够在应用程序所有执行环节进行动态可信验证；
+
+    3、验证可信性受到破坏后未进行告警；
+
+    4、验证结果未形成审计记录送至安全管理中心
+
+    5、未进行动态关联感知'
+  cause: 系统被篡改无法发现、后门植入
+  action: 建议基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的所有执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心，并进行动态关联感知
+  clause: GB/T 22239-2019 4级 L4-CES1-23 可信验证
+- id: REM-UBUNTU-4-24
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 24
+  priority: 高
+  problem: 服务器远程管理时采用Telnet/Ftp明文传输方式，无法保证鉴别数据传输过程中的完整性
+  cause: 传输或存储数据被篡改
+  action: 建议采用SSH远程连接服务器，保证鉴别数据在传输过程中的完整性
+  clause: GB/T 22239-2019 4级 L4-CES1-24 数据完整性
+- id: REM-UBUNTU-4-25
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 25
+  priority: 低
+  problem: '使用的XX算法无法保证鉴别信息存储的完整性
+
+    或
+
+    未使用校验就技术或密码技术保证鉴别信息在存储过程中的完整性'
+  cause: 传输或存储数据被篡改
+  action: 建议使用密码技术或校验技术保证鉴别信息在存储过程中的完整性
+  clause: GB/T 22239-2019 4级 L4-CES1-25 数据完整性
+- id: REM-UBUNTU-4-26
+  title: 数据完整性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 26
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 4级 L4-CES1-26 数据完整性
+- id: REM-UBUNTU-4-27
+  title: 数据保密性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 27
+  priority: 高
+  problem: 服务器远程管理时采用Telnet/Ftp明文传输方式，无法保证鉴别数据传输过程中的保密性
+  cause: 鉴别信息或敏感数据被窃听
+  action: 建议采用SSH远程连接服务器，保证鉴别数据在传输过程中的保密性
+  clause: GB/T 22239-2019 4级 L4-CES1-27 数据保密性
+- id: REM-UBUNTU-4-28
+  title: 数据保密性要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 28
+  priority: 低
+  problem: '使用的XX算法无法保证鉴别信息存储的保密性
+
+    或
+
+    未使用密码技术保证鉴别信息在存储过程中的保密性'
+  cause: 鉴别信息或敏感数据被窃听
+  action: 建议使用密码技术保证鉴别信息在存储过程中的保密性
+  clause: GB/T 22239-2019 4级 L4-CES1-28 数据保密性
+- id: REM-UBUNTU-4-29
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 29
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 4级 L4-CES1-29 数据备份恢复
+- id: REM-UBUNTU-4-30
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 30
+  priority: 中
+  problem: /
+  cause: —
+  action: /
+  clause: GB/T 22239-2019 4级 L4-CES1-30 数据备份恢复
+- id: REM-UBUNTU-4-31
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 31
+  priority: 中
+  problem: 重要服务器未采用热冗余的方式进行部署
+  cause: 数据丢失、业务中断
+  action: 建议对重要数据处理类服务器采用热冗余的形式进行部署，保证系统高可用性
+  clause: GB/T 22239-2019 4级 L4-CES1-31 数据备份恢复
+- id: REM-UBUNTU-4-32
+  title: 数据备份恢复要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 32
+  priority: 高
+  problem: '1、不具备异地灾难备份中心；
+
+    2、不具备应用实时切换功能'
+  cause: 数据丢失、业务中断
+  action: 建议建立本系统的应用级备份系统，确保应用系统能够进行实时切换。
+  clause: GB/T 22239-2019 4级 L4-CES1-32 数据备份恢复
+- id: REM-UBUNTU-4-33
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 33
+  priority: 低
+  problem: /
+  cause: 残留信息泄露
+  action: /
+  clause: GB/T 22239-2019 4级 L4-CES1-33 剩余信息保护
+- id: REM-UBUNTU-4-34
+  title: 剩余信息保护要求未满足
+  applies_to:
+    level:
+    - 4
+    family:
+    - server
+    item_seqs:
+    - 34
+  priority: 低
+  problem: 记录了XXX条历史命令信息，剩余信息清除不完善
+  cause: 残留信息泄露
+  action: 建议将HISTSIZE参数值设置为0，不允许记录历史命令信息
+  clause: GB/T 22239-2019 4级 L4-CES1-34 剩余信息保护

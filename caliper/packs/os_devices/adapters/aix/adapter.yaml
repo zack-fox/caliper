@@ -1,0 +1,13 @@
+name: AIX
+vendor: AIX
+aliases:
+- aix
+- ibm aix
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 服务器
+- 存储设备
+manual_all: true

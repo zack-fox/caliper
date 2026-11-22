@@ -1074,6 +1074,58 @@ def _adapter_meta(engine: str, seqs_by_level: dict[int, dict[str, int]]) -> dict
     return payload
 
 
+def _coverage(
+    records: list[dict], engine: str, level: int, seqs_by_level: dict[int, dict[str, int]]
+) -> str:
+    meta = ENGINES[engine]
+    seqs = seqs_by_level[level]
+    items = build_items(records, level)
+    if engine == "mysql":
+        specs = MYSQL_RULES
+    elif engine == "oracle":
+        specs = ORACLE_RULES
+    else:
+        specs = []
+    rules = _rules(engine, specs, seqs, level) if specs else []
+    adapter_meta = _adapter_meta(engine, seqs_by_level)
+    extra_manual = adapter_meta.get("manual_points_by_level", {}).get(level, {})
+    lines = [
+        f"# {meta['name']} {level} 级数据库规则域覆盖报告",
+        "",
+        "本报告由 `tools/build_database_pack.py` 从数据库指导书自动生成。",
+        "采集命令、判定规则与人工核查点只适用于本引擎，不能复制给其他引擎。",
+    ]
+    if meta.get("manual_all"):
+        lines.append("")
+        lines.append(
+            "该引擎指导书未提供可直接执行的采集命令，整包按人工核查模板处理。"
+        )
+    lines.extend(
+        [
+            "",
+            "| 项 | 控制点 | 模式 | 自动实施点 | 人工核查点 |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+    )
+    for item in items:
+        seq = item["seq"]
+        auto_points = sorted({rule["point"] for rule in rules if rule["item"] == seq})
+        manual_points = {entry["point"] for entry in item.get("manual_points", [])}
+        manual_points.update(
+            entry["point"] for entry in extra_manual.get(seq, [])
+        )
+        lines.append(
+            "| {seq} | {point} | {mode} | {auto} | {manual} |".format(
+                seq=seq,
+                point=item["控制点"],
+                mode=item["mode"],
+                auto=",".join(map(str, auto_points)) or "—",
+                manual=",".join(map(str, sorted(manual_points))) or "—",
+            )
+        )
+    return "\n".join(lines) + "\n"
+
+
 def build(guide: Path, out: Path) -> None:
     records = _all_records(guide)
     if out.exists():
@@ -1196,6 +1248,15 @@ def build(guide: Path, out: Path) -> None:
     # SQL Server 与通用模板也保留文案，便于人工核查时生成问题描述。
     for engine in ("sqlserver", "generic"):
         _dump(out / "adapters" / engine / "texts" / "library.yaml", {"texts": all_texts})
+
+    reports = REPO_ROOT / "guides" / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    for engine in ENGINES:
+        for level in LEVELS:
+            (reports / f"database_{engine}_L{level}.md").write_text(
+                _coverage(records, engine, level, seqs_by_level),
+                encoding="utf-8",
+            )
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="生成数据库设备规则域")

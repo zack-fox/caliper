@@ -1,0 +1,18 @@
+version: 0.2.0
+status: active
+rules:
+- id: REC-01
+  match: 符合
+  text: 符合(1分)
+- id: REC-02
+  match: 部分符合
+  text: 不符合(0分)
+- id: REC-03
+  match: 不符合
+  text: 不符合(0分)
+- id: REC-04
+  match: 不适用
+  text: 不适用
+- id: REC-05
+  match: 未采集
+  text: ''

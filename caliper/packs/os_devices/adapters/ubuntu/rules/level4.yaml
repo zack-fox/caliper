@@ -1,0 +1,326 @@
+rules:
+- item: 1
+  point: 1
+  block: Duplicate UID / UID=0 accounts
+  expect:
+    contains: fact:duplicate_uid.none=true
+  pass_reason: 未发现重复 UID
+  fail_reason: 存在重复 UID，身份标识不唯一
+  level: 4
+  rule_id: L4-01-P01-001
+- item: 1
+  point: 2
+  block: Duplicate UID / UID=0 accounts
+  expect:
+    contains: fact:uid0.only_root=true
+  pass_reason: UID=0 账户仅 root
+  fail_reason: 除 root 外还存在 UID=0 账户
+  level: 4
+  rule_id: L4-01-P02-002
+- item: 1
+  point: 3
+  block: Empty / expired password
+  expect:
+    contains: fact:empty_password.none=true
+  pass_reason: 未发现空口令账户
+  fail_reason: 存在空口令账户
+  level: 4
+  rule_id: L4-01-P03-003
+- item: 1
+  point: 4
+  block: Password complexity
+  expect:
+    contains: fact:pam.password_complexity.enabled=true
+  pass_reason: 已配置口令复杂度策略
+  fail_reason: 未配置口令复杂度策略
+  level: 4
+  rule_id: L4-01-P04-004
+- item: 1
+  point: 4
+  block: Password policy (login.defs)
+  expect:
+    lt:
+      prefix: PASS_MAX_DAYS
+      value: 91
+  pass_reason: 口令最大有效期不超过 90 天
+  fail_reason: 口令最大有效期超过 90 天或未限制
+  level: 4
+  rule_id: L4-01-P04-005
+- item: 2
+  point: 1
+  block: Login failure lockout (faillock)
+  expect:
+    contains: fact:faillock.module=true
+  pass_reason: 已启用登录失败处理模块
+  fail_reason: 未启用登录失败处理模块
+  level: 4
+  rule_id: L4-02-P01-006
+- item: 2
+  point: 2
+  block: Login failure lockout (faillock)
+  expect:
+    contains: fact:faillock.policy=true
+  pass_reason: 已配置失败次数与锁定时间
+  fail_reason: 未配置失败次数或锁定时间
+  level: 4
+  rule_id: L4-02-P02-007
+- item: 2
+  point: 3
+  block: Session timeout TMOUT
+  expect:
+    contains: fact:session.tmout.valid=true
+  pass_reason: 已配置登录连接超时退出
+  fail_reason: 未配置登录连接超时退出
+  level: 4
+  rule_id: L4-02-P03-008
+- item: 3
+  point: 1
+  block: SSH host key algorithm
+  expect:
+    contains: 'SHA256:'
+  pass_reason: 远程管理使用 SSH 加密通道
+  fail_reason: 未发现 SSH 主机密钥，远程管理加密情况无法确认
+  level: 4
+  rule_id: L4-03-P01-009
+- item: 5
+  point: 1
+  block: Key file permissions
+  expect:
+    all:
+    - contains: fact:file_permissions.passwd.secure=true
+    - contains: fact:file_permissions.shadow.secure=true
+  pass_reason: 账户与鉴别信息文件权限符合要求
+  fail_reason: 账户或鉴别信息文件权限不符合要求
+  level: 4
+  rule_id: L4-05-P01-010
+- item: 7
+  point: 1
+  block: Accounts and last password change
+  expect:
+    contains: fact:account.expired.none=true
+  pass_reason: 未发现过期账户
+  fail_reason: 存在过期账户或无法确认账户过期状态
+  level: 4
+  rule_id: L4-07-P01-011
+- item: 10
+  point: 1
+  block: World-writable / tmp perms
+  expect:
+    contains: none
+  pass_reason: 未发现全局可写关键文件
+  fail_reason: 存在全局可写文件，访问控制粒度不足
+  level: 4
+  rule_id: L4-10-P01-012
+- item: 10
+  point: 1
+  block: umask
+  expect:
+    not_contains: '0002'
+  pass_reason: 默认 umask 未放开其他用户写权限
+  fail_reason: 默认 umask 允许其他用户写，访问控制粒度不足
+  level: 4
+  rule_id: L4-10-P01-013
+- item: 12
+  point: 1
+  block: auditd status and rules
+  expect:
+    all:
+    - contains: fact:auditd.active=true
+    - contains: fact:auditd.rules_loaded=true
+  pass_reason: 审计服务已启用且已加载审计规则
+  fail_reason: 审计服务未启用或未加载审计规则
+  level: 4
+  rule_id: L4-12-P01-014
+- item: 12
+  point: 3
+  block: Log forwarding
+  expect:
+    contains: fact:log.forwarding.enabled=true
+  pass_reason: 审计记录已转发至集中日志
+  fail_reason: 未配置日志转发
+  level: 4
+  rule_id: L4-12-P03-015
+- item: 13
+  point: 1
+  block: Recent login records
+  expect:
+    contains: wtmp begins
+  pass_reason: 登录审计记录可读取
+  fail_reason: 未读取到登录审计记录
+  level: 4
+  rule_id: L4-13-P01-016
+- item: 14
+  point: 1
+  block: Log retention
+  expect:
+    contains: fact:log.retention.six_months=true
+  pass_reason: 日志留存周期满足半年要求
+  fail_reason: 日志留存周期不足半年
+  level: 4
+  rule_id: L4-14-P01-017
+- item: 14
+  point: 1
+  block: Log dir permissions
+  expect:
+    contains: /var/log
+  pass_reason: 日志目录权限可核查
+  fail_reason: 日志目录权限无法核查
+  level: 4
+  rule_id: L4-14-P01-018
+- item: 14
+  point: 2
+  block: Log archives on disk
+  expect:
+    contains: fact:log.archives.present=true
+  pass_reason: 历史日志已归档
+  fail_reason: 历史日志未归档
+  level: 4
+  rule_id: L4-14-P02-019
+- item: 17
+  point: 1
+  block: Listening ports / processes
+  expect:
+    all:
+    - not_contains: ':21 '
+    - not_contains: ':23 '
+    - not_contains: :3389
+    - not_contains: ':445 '
+  pass_reason: 未监听常见高危端口
+  fail_reason: 存在高危端口监听
+  level: 4
+  rule_id: L4-17-P01-020
+- item: 17
+  point: 2
+  block: Backup job / NFS
+  expect:
+    not_contains: mount at
+  pass_reason: 未发现默认共享挂载
+  fail_reason: 存在默认共享挂载
+  level: 4
+  rule_id: L4-17-P02-021
+- item: 18
+  point: 1
+  block: Remote login source restriction
+  expect:
+    any:
+    - contains: AllowUsers
+    - contains: AllowGroups
+    - contains: hosts.deny
+  pass_reason: 已限制远程登录来源
+  fail_reason: 未限制远程登录来源
+  level: 4
+  rule_id: L4-18-P01-022
+- item: 20
+  point: 1
+  block: Patches / reboot
+  expect:
+    contains: security 0
+  pass_reason: 无待安装安全补丁
+  fail_reason: 存在待安装安全补丁
+  level: 4
+  rule_id: L4-20-P01-023
+- item: 20
+  point: 2
+  block: Patches / reboot
+  expect:
+    not_contains: reboot required
+  pass_reason: 无待重启生效的补丁
+  fail_reason: 补丁安装后未重启，漏洞可能仍未修复
+  level: 4
+  rule_id: L4-20-P02-024
+- item: 22
+  point: 1
+  block: Security agent (EDR / AV / IDS)
+  expect:
+    contains: fact:security_agent.process.present=true
+  pass_reason: 已部署主机安全防护进程
+  fail_reason: 未发现主机安全防护进程
+  level: 4
+  rule_id: L4-22-P01-025
+- item: 22
+  point: 2
+  block: New malware / fileless
+  expect:
+    not_contains: -> /home/
+  pass_reason: 未发现用户目录下的可疑可执行进程
+  fail_reason: 存在用户目录下运行的可疑可执行进程
+  level: 4
+  rule_id: L4-22-P02-026
+- item: 22
+  point: 3
+  block: Backdoor / proxy / C2 process
+  expect:
+    contains: none found
+  pass_reason: 未发现后门或代理进程
+  fail_reason: 发现疑似后门或代理进程
+  level: 4
+  rule_id: L4-22-P03-027
+- item: 8
+  point: 1
+  block: Separation of duty (three roles)
+  expect:
+    contains: sudo user
+  pass_reason: 已划分系统管理角色
+  fail_reason: 未划分系统管理角色
+  level: 4
+  rule_id: L4-08-P01-028
+- item: 8
+  point: 2
+  block: Separation of duty (three roles)
+  expect:
+    all:
+    - contains: sudo user
+    - contains: audit reader
+  pass_reason: 管理权限与审计权限已分离
+  fail_reason: 未实现管理权限与审计权限分离
+  level: 4
+  rule_id: L4-08-P02-029
+- item: 16
+  point: 1
+  block: Running services
+  expect:
+    all:
+    - not_contains: telnet
+    - not_contains: rsh
+  pass_reason: 未运行常见冗余网络服务
+  fail_reason: 存在冗余网络服务
+  level: 4
+  rule_id: L4-16-P01-030
+- item: 16
+  point: 2
+  block: Running services
+  expect:
+    all:
+    - not_contains: xinetd
+    - not_contains: inetd
+  pass_reason: 未发现非必要组件服务
+  fail_reason: 存在非必要组件服务
+  level: 4
+  rule_id: L4-16-P02-031
+- rule_id: L4-EXTRA-06-P01-01
+  level: 4
+  item: 6
+  point: 1
+  block: Default accounts
+  expect:
+    eq: fact:os.default_accounts.none=true
+  pass_reason: 未发现常见系统默认账户。
+  fail_reason: 仍存在常见系统默认账户，应重命名或删除。
+- rule_id: L4-EXTRA-09-P01-02
+  level: 4
+  item: 9
+  point: 1
+  block: Separation of duty (three roles)
+  expect:
+    contains: sudo user
+  pass_reason: 已由授权主体配置访问控制策略。
+  fail_reason: 未发现授权主体配置访问控制策略的证据。
+- rule_id: L4-EXTRA-09-P02-03
+  level: 4
+  item: 9
+  point: 2
+  block: sudo authorization / NOPASSWD
+  expect:
+    not_contains: NOPASSWD
+  pass_reason: 未发现免密提权规则，访问控制策略受限。
+  fail_reason: 存在 NOPASSWD 免密提权规则，应复核最小权限。

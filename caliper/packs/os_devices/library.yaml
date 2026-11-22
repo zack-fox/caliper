@@ -1,0 +1,43 @@
+version: 0.1.0
+libraries:
+  capture:
+    title: 数据采集命令库
+    status: active
+    paths:
+    - adapters/linux/capture.yaml
+    - adapters/ubuntu/capture.yaml
+  record:
+    title: 记录表生成规则库
+    status: active
+    path: record.yaml
+  judge:
+    title: 记录表判定规则库
+    status: active
+    paths:
+    - adapters/linux/rules/level2.yaml
+    - adapters/linux/rules/level3.yaml
+    - adapters/linux/rules/level4.yaml
+    - adapters/ubuntu/rules/level2.yaml
+    - adapters/ubuntu/rules/level3.yaml
+    - adapters/ubuntu/rules/level4.yaml
+  remediation:
+    title: 风险分析与整改建议库
+    status: active
+    paths:
+    - adapters/linux/remediation.yaml
+    - adapters/ubuntu/remediation.yaml
+    - adapters/windows/remediation.yaml
+    - adapters/aix/remediation.yaml
+    - adapters/solaris/remediation.yaml
+    - adapters/esxi/remediation.yaml
+    - adapters/generic/remediation.yaml
+  high_risk:
+    title: 高风险判定规则库
+    status: active
+    paths:
+    - adapters/linux/high_risk.yaml
+    - adapters/ubuntu/high_risk.yaml
+  major:
+    title: 重大风险隐患规则库
+    status: active
+    path: major.yaml
