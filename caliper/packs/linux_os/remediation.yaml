@@ -1,0 +1,206 @@
+# 风险分析与整改建议库
+#
+# 每条规则 = 命中条件 + 问题描述 + 成因 + 整改动作 + 优先级 + 标准条款。
+# 文案只使用通用表述，不包含真实项目、资产、IP 或账户信息。
+# 大模型只能润色语言，事实、条款与整改动作一律来自本库。
+version: 0.1.0
+status: active
+rules:
+  - id: REM-01
+    title: 身份鉴别口令强度不足
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [1]
+    priority: 高
+    problem: 登录账户存在空口令、弱口令或长期未更换的口令，身份标识的复杂度和有效期不满足要求。
+    cause: 未启用口令复杂度与有效期策略，账户开通流程缺少口令合规校验。
+    action: 启用口令复杂度与有效期策略，清理空口令和弱口令账户，口令长度不少于 8 位并包含大写字母、小写字母、数字和特殊字符中的多类，按周期强制更换。
+    clause: GB/T 22239-2019 8.1.4.1 身份鉴别；GB/T 28448-2019 6.1.4.1 身份鉴别
+  - id: REM-02
+    title: 登录失败处理措施缺失
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [2]
+    priority: 中
+    problem: 未配置登录失败处理、结束会话或登录连接超时自动退出措施。
+    cause: 认证组件默认关闭失败锁定与超时策略，安全基线未落地。
+    action: 配置登录失败次数阈值和账户锁定时间，启用登录连接超时及无操作自动退出功能。
+    clause: GB/T 22239-2019 8.1.4.1 身份鉴别；GB/T 28448-2019 6.1.4.1 身份鉴别
+  - id: REM-03
+    title: 远程管理鉴别信息明文传输
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [3]
+    priority: 高
+    problem: 远程管理通道未加密，身份鉴别信息以明文方式在网络中传输。
+    cause: 使用 Telnet、未加密的 HTTP 等明文协议提供远程管理。
+    action: 停用明文管理协议，改用 SSH、HTTPS 或经密码技术保护的 VPN 通道，并限制远程管理地址范围。
+    clause: GB/T 22239-2019 8.1.4.1 身份鉴别；GB/T 28448-2019 6.1.4.1 身份鉴别
+  - id: REM-04
+    title: 未采用两种以上组合鉴别技术
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [4]
+    priority: 中
+    problem: 用户身份鉴别仅采用用户名加口令的单因素方式。
+    cause: 未部署动态口令、数字证书、生物特征等第二种鉴别技术。
+    action: 为重要用户和核心设备增加基于密码技术的第二鉴别因素，并确保鉴别路径无旁路。
+    clause: GB/T 22239-2019 8.1.4.1 身份鉴别；GB/T 28448-2019 6.1.4.1 身份鉴别
+  - id: REM-05
+    title: 默认账户未处置
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [6]
+    priority: 高
+    problem: 系统存在未重命名或未修改默认口令的默认账户。
+    cause: 系统安装后未执行账户基线加固，默认账户被保留使用。
+    action: 重命名或禁用不必要的默认账户，修改默认口令为符合复杂度要求的唯一口令，并纳入变更记录。
+    clause: GB/T 22239-2019 8.1.4.2 访问控制；GB/T 28448-2019 6.1.4.2 访问控制
+  - id: REM-06
+    title: 存在多余过期或共享账户
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [7]
+    priority: 中
+    problem: 存在多余、过期或多人共用的账户，账户生命周期管理缺失。
+    cause: 人员或职责变更后未同步清理账户，未建立账户定期核查机制。
+    action: 清理多余和过期账户，禁止共享账户，建立账户定期核查与离岗回收流程。
+    clause: GB/T 22239-2019 8.1.4.2 访问控制；GB/T 28448-2019 6.1.4.2 访问控制
+  - id: REM-07
+    title: 权限未最小化或未分离
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [8]
+    priority: 中
+    problem: 管理用户权限过大，未按职责实现最小权限和权限分离。
+    cause: 直接使用高权限账户开展日常运维，缺少角色划分和授权审批。
+    action: 按角色授予完成任务所需的最小权限，分离系统管理员、审计管理员和安全管理员职责，禁止日常使用超级用户。
+    clause: GB/T 22239-2019 8.1.4.2 访问控制；GB/T 28448-2019 6.1.4.2 访问控制
+  - id: REM-08
+    title: 安全审计功能未启用
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [12]
+    priority: 高
+    problem: 未启用安全审计功能，重要用户行为和重要安全事件未被记录。
+    cause: 审计服务未开启或审计策略未覆盖关键操作。
+    action: 启用系统审计服务，配置覆盖用户登录、权限变更、重要文件访问等关键行为的审计策略。
+    clause: GB/T 22239-2019 8.1.4.3 安全审计；GB/T 28448-2019 6.1.4.3 安全审计
+  - id: REM-09
+    title: 审计记录要素不完整
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [13]
+    priority: 中
+    problem: 审计记录缺少日期时间、用户、事件类型、事件结果等必要要素。
+    cause: 审计配置过于简化，未按标准要素完整记录事件。
+    action: 完善审计记录字段，确保包含事件日期时间、用户、事件类型、事件是否成功及其他相关信息。
+    clause: GB/T 22239-2019 8.1.4.3 安全审计；GB/T 28448-2019 6.1.4.3 安全审计
+  - id: REM-10
+    title: 审计记录未保护或未备份
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [14]
+    priority: 中
+    problem: 审计记录可被未授权删除、修改或覆盖，且缺少定期备份。
+    cause: 审计文件权限过宽，未配置独立存储或日志轮转备份。
+    action: 限制审计记录访问权限，配置远程日志或只追加存储，定期备份并校验完整性。
+    clause: GB/T 22239-2019 8.1.4.3 安全审计；GB/T 28448-2019 6.1.4.3 安全审计
+  - id: REM-11
+    title: 无用服务与高危端口开放
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [17]
+    priority: 中
+    problem: 系统开启不必要的服务、默认共享或高危端口。
+    cause: 安装时采用默认组件，未按最小安装原则裁剪服务。
+    action: 按业务需要关闭无用服务和默认共享，收紧高危端口访问策略，并纳入基线核查。
+    clause: GB/T 22239-2019 8.1.4.4 入侵防范；GB/T 28448-2019 6.1.4.4 入侵防范
+  - id: REM-12
+    title: 已知漏洞未及时修补
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [20]
+    priority: 高
+    problem: 系统存在未修复的已知高危漏洞。
+    cause: 缺少漏洞扫描和补丁管理机制，补丁未经过测试验证后及时部署。
+    action: 建立漏洞扫描与补丁管理流程，评估后及时安装安全补丁，无法修补时采取补偿性防护措施。
+    clause: GB/T 22239-2019 8.1.4.4 入侵防范；GB/T 28448-2019 6.1.4.4 入侵防范
+  - id: REM-13
+    title: 恶意代码防范措施缺失
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [22]
+    priority: 高
+    problem: 未部署恶意代码防范措施，或恶意代码特征库长期未更新。
+    cause: 未安装防恶意代码软件，特征库更新机制缺失。
+    action: 部署与系统兼容的恶意代码防范措施，定期更新特征库并保留查杀记录。
+    clause: GB/T 22239-2019 8.1.4.5 恶意代码防范；GB/T 28448-2019 6.1.4.5 恶意代码防范
+  - id: REM-14
+    title: 本地数据备份与恢复缺失
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [28]
+    priority: 高
+    problem: 重要数据未提供本地备份与恢复功能。
+    cause: 未制定备份策略，缺少本地备份介质和恢复验证。
+    action: 明确重要数据范围，配置本地定期备份，定期开展恢复演练并记录结果。
+    clause: GB/T 22239-2019 8.1.4.9 数据备份恢复；GB/T 28448-2019 6.1.4.9 数据备份恢复
+  - id: REM-15
+    title: 异地数据备份缺失
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [29]
+    priority: 中
+    problem: 重要数据未提供异地实时备份。
+    cause: 未建设异地备份环境或备份链路。
+    action: 根据业务连续性要求建设异地备份能力，利用通信网络将重要数据实时备份至备份场地。
+    clause: GB/T 22239-2019 8.1.4.9 数据备份恢复；GB/T 28448-2019 6.1.4.9 数据备份恢复
+  - id: REM-16
+    title: 重要数据处理系统缺少热冗余
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [30]
+    priority: 中
+    problem: 重要数据处理系统未提供热冗余，存在单点故障风险。
+    cause: 关键节点按单机部署，未配置冗余或故障切换。
+    action: 对关键节点采用冗余部署，配置故障切换与健康检查，定期验证切换有效性。
+    clause: GB/T 22239-2019 8.1.4.9 数据备份恢复；GB/T 28448-2019 6.1.4.9 数据备份恢复
+  - id: REM-17
+    title: 重要数据存储保密性不足
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [27]
+    priority: 中
+    problem: 重要数据在存储过程中未采用密码技术保证保密性。
+    cause: 敏感数据以明文落盘，未启用加密存储或密钥管理。
+    action: 对鉴别信息和重要业务数据采用经认可的密码技术加密存储，规范密钥生成、保存和轮换。
+    clause: GB/T 22239-2019 8.1.4.8 数据保密性；GB/T 28448-2019 6.1.4.8 数据保密性
+  - id: REM-18
+    title: 重要数据存储完整性校验缺失
+    applies_to:
+      level: [3]
+      family: [server, database]
+      item_seqs: [25]
+    priority: 中
+    problem: 重要数据在存储过程中缺少完整性校验或密码保护。
+    cause: 未对重要数据配置校验机制，无法发现未授权篡改。
+    action: 对重要数据采用校验技术或密码技术保护存储完整性，并定期核验。
+    clause: GB/T 22239-2019 8.1.4.7 数据完整性；GB/T 28448-2019 6.1.4.7 数据完整性

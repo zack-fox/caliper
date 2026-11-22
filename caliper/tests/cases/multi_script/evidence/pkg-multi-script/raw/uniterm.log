@@ -1,0 +1,50 @@
+# ===== Ubuntu/Debian baseline check (family=server, level=3) =====
+===== RESULTS (collected) =====
+===== 2. IDENTIFICATION =====
+[01] Duplicate UID / UID=0 accounts
+  cmd: cut -d: -f3 /etc/passwd | sort | uniq -d; awk -F: '$3==0{print $1}' /etc/passwd
+  file: /etc/passwd
+  no duplicate uid
+  UID=0: root
+[02] Empty / expired password
+  cmd: awk -F: '$2==""{print $1" empty-password"}{print $1" last-change="$3" max="$5" expire="$8}' /etc/shadow
+  file: /etc/shadow
+  no empty-password account
+[03] Password complexity
+  cmd: grep -RhE 'pam_(pwquality|cracklib)' /etc/pam.d 2>/dev/null; cat /etc/security/pwquality.conf 2>/dev/null
+  file: /etc/security/pwquality.conf
+  minlen=12
+[04] Password policy (login.defs)
+  cmd: grep -E '^(PASS_|ENCRYPT_METHOD|UMASK)' /etc/login.defs
+  file: /etc/login.defs
+  PASS_MAX_DAYS 60
+[05] Remote login source restriction
+  cmd: grep -hE '^(AllowUsers|AllowGroups|DenyUsers|DenyGroups)' /etc/ssh/sshd_config 2>/dev/null
+  file: /etc/ssh/sshd_config
+  AllowUsers 占位账号
+===== END OF REPORT =====
+# ===== CentOS/RHEL baseline check (family=server, level=3) =====
+===== RESULTS (collected) =====
+===== 2. IDENTIFICATION =====
+[01] Duplicate UID / UID=0 accounts
+  cmd: cut -d: -f3 /etc/passwd | sort | uniq -d; awk -F: '$3==0{print $1}' /etc/passwd
+  file: /etc/passwd
+  duplicate uid: 1002
+  UID=0: 占位账号
+[02] Empty / expired password
+  cmd: awk -F: '$2==""{print $1" empty-password"}{print $1" last-change="$3" max="$5" expire="$8}' /etc/shadow
+  file: /etc/shadow
+  占位账号 empty-password last-change=2026-01-01 max=99999 expire=
+[03] Password complexity
+  cmd: grep -RhE 'pam_(pwquality|cracklib)' /etc/pam.d 2>/dev/null; cat /etc/security/pwquality.conf 2>/dev/null
+  file: /etc/security/pwquality.conf
+  pam_pwquality absent
+[04] Password policy (login.defs)
+  cmd: grep -E '^(PASS_|ENCRYPT_METHOD|UMASK)' /etc/login.defs
+  file: /etc/login.defs
+  PASS_MAX_DAYS 999
+[05] Remote login source restriction
+  cmd: grep -hE '^(AllowUsers|AllowGroups|DenyUsers|DenyGroups)' /etc/ssh/sshd_config 2>/dev/null
+  file: /etc/ssh/sshd_config
+  DenyUsers 占位账号
+===== END OF REPORT =====

@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QMessageBox,
     QPushButton,
     QStackedWidget,
     QTableWidget,
@@ -15,8 +16,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.controller import AppController
-from app.widgets import Card, EmptyState, PageHeader, StatCard, hbox
+from app.controller import AppController, ControllerError, MajorReview
+from app.widgets import Badge, Card, EmptyState, PageHeader, StatCard
 
 PREVIEW_COLUMNS = (
     "问题编号",
@@ -25,7 +26,9 @@ PREVIEW_COLUMNS = (
     "安全控制点",
     "测评项",
     "问题概述",
-    "符合重大判定原则",
+    "高风险降风险",
+    "重大隐患评分",
+    "确认状态",
 )
 
 
@@ -65,14 +68,24 @@ class IssuesScreen(QWidget):
         self.table.setHorizontalHeaderLabels(PREVIEW_COLUMNS)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.setAlternatingRowColors(True)
+        self.table.setWordWrap(True)
         self.table.setShowGrid(False)
         self.table.verticalHeader().setVisible(False)
         header = self.table.horizontalHeader()
         header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        header.setSectionResizeMode(QHeaderView.Stretch)
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(len(PREVIEW_COLUMNS) - 1, QHeaderView.ResizeToContents)
-        self.table.itemChanged.connect(self._toggle_major)
+        header.setSectionResizeMode(QHeaderView.Interactive)
+        header.setSectionResizeMode(5, QHeaderView.Stretch)
+        for column, width in (
+            (0, 62),
+            (1, 74),
+            (2, 100),
+            (3, 84),
+            (4, 116),
+            (6, 286),
+            (7, 248),
+            (8, 152),
+        ):
+            self.table.setColumnWidth(column, width)
 
         self.empty = EmptyState(
             "尚未运行核查",
@@ -97,16 +110,17 @@ class IssuesScreen(QWidget):
         if self.controller.run_result is None:
             self.stack.setCurrentWidget(self.empty)
             self.count.setText("尚未运行核查：先在「证据与资产」页导入证据并开始核查")
-            self._set_stats(0, 0, 0)
+            self._set_stats(0, 0, 0, 0)
             self._loading = False
             return
 
         self.stack.setCurrentWidget(self.table)
-        confirmed = self.controller.confirmations()
+        reviews = self._reviews()
         assets: set[str] = set()
         for issue in rows:
             row = self.table.rowCount()
             self.table.insertRow(row)
+            review = reviews.get((issue.item_id, issue.asset_type))
             values = (
                 issue.issue_no,
                 issue.asset_type,
@@ -114,43 +128,119 @@ class IssuesScreen(QWidget):
                 issue.values["安全控制点"],
                 issue.values["测评项"],
                 issue.values["问题概述"],
+                self._risk_text(review),
+                self._score_text(review),
             )
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                item.setToolTip(value)
+                item.setToolTip(
+                    self._risk_tip(review) if column == 6 else value
+                )
                 self.table.setItem(row, column, item)
             assets.add(issue.values["关联资产"])
-            check = QTableWidgetItem()
-            check.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-            check.setCheckState(
-                Qt.Checked
-                if (issue.item_id, issue.asset_type) in confirmed
-                else Qt.Unchecked
+            self.table.setCellWidget(
+                row, len(PREVIEW_COLUMNS) - 1, self._review_cell(issue, review)
             )
-            check.setData(Qt.UserRole, (issue.item_id, issue.asset_type))
-            self.table.setItem(row, len(values), check)
 
-        self._set_stats(len(rows), len(confirmed), len(assets))
+        self.table.resizeRowsToContents()
+        confirmed = sum(1 for review in reviews.values() if review.confirmed)
+        pending = sum(1 for review in reviews.values() if not review.confirmed)
+        self._set_stats(len(rows), confirmed, len(assets), pending)
         self.count.setText(
-            f"共 {len(rows)} 行待汇总，其中 {len(confirmed)} 行已确认符合重大判定原则"
+            f"共 {len(rows)} 行待汇总，其中 {confirmed} 行重大确认有效，"
+            f"{pending} 行待确认或已失效"
         )
         self._loading = False
 
-    def _set_stats(self, total: int, confirmed: int, assets: int) -> None:
+    def _reviews(self) -> dict[tuple[str, str], MajorReview]:
+        try:
+            return self.controller.major_reviews()
+        except ControllerError as exc:
+            self.count.setText(f"重大隐患规则上下文不可用：{exc}")
+            return {}
+
+    def _risk_text(self, review: MajorReview | None) -> str:
+        if review is None:
+            return "无高风险命中"
+        if not review.reducible:
+            return "可降风险：否"
+        basis = "；".join(review.reduction_basis) or "未填写前提"
+        first = basis.split("；")[0]
+        if len(first) > 46:
+            first = f"{first[:46]}…"
+        extra = f"（共 {len(review.reduction_basis)} 项前提）" if len(review.reduction_basis) > 1 else ""
+        return f"可降风险：是{extra}\n前提：{first}"
+
+    def _risk_tip(self, review: MajorReview | None) -> str:
+        if review is None:
+            return "无高风险命中"
+        if not review.reducible:
+            return "可降风险：否"
+        basis = "；".join(review.reduction_basis) or "未填写前提"
+        return f"可降风险：是\n前提：{basis}"
+
+    def _score_text(self, review: MajorReview | None) -> str:
+        if review is None:
+            return "—"
+        if not review.scores:
+            return "未命中重大隐患规则"
+        dimensions = " · ".join(f"{name} {score}" for name, score in review.scores)
+        state = "候选" if review.is_candidate else "未达阈值"
+        return (
+            f"{dimensions}\n总分 {review.total:.2f} / 阈值 {review.threshold:.2f}"
+            f"（{state}）"
+        )
+
+    def _review_cell(self, issue, review: MajorReview | None) -> QWidget:
+        host = QWidget()
+        layout = QHBoxLayout(host)
+        layout.setContentsMargins(8, 3, 8, 3)
+        layout.setSpacing(6)
+        if review is None:
+            layout.addWidget(Badge("无高风险", "neutral"))
+            layout.addStretch(1)
+            return host
+
+        if review.confirmed:
+            badge = Badge("已确认", "ok")
+            badge.setToolTip("规则版本与判定依据指纹一致")
+        elif review.reason == "未确认":
+            badge = Badge("待确认", "warn")
+            badge.setToolTip("尚未完成人工确认")
+        else:
+            badge = Badge("已失效", "bad")
+            badge.setToolTip(review.reason)
+        layout.addWidget(badge)
+
+        button = QPushButton(
+            "撤销"
+            if review.confirmed
+            else "重新确认"
+            if review.reason and review.reason != "未确认"
+            else "确认"
+        )
+        button.setObjectName("subtle")
+        button.clicked.connect(
+            lambda _checked=False, item=issue, reviewed=review: self._confirm(
+                item, reviewed
+            )
+        )
+        layout.addWidget(button)
+        layout.addStretch(1)
+        return host
+
+    def _confirm(self, issue, review: MajorReview) -> None:
+        try:
+            self.controller.set_major_confirmed(
+                issue.item_id, issue.asset_type, not review.confirmed
+            )
+        except ControllerError as exc:
+            QMessageBox.warning(self, "未能确认重大隐患", str(exc))
+            return
+        self.refresh()
+
+    def _set_stats(self, total: int, confirmed: int, assets: int, pending: int) -> None:
         self.stat_total.set_value(str(total))
         self.stat_confirmed.set_value(str(confirmed))
-        self.stat_pending.set_value(str(max(total - confirmed, 0)))
+        self.stat_pending.set_value(str(pending))
         self.stat_assets.set_value(str(assets))
-
-    def _toggle_major(self, item: QTableWidgetItem) -> None:
-        if self._loading or item.column() != len(PREVIEW_COLUMNS) - 1:
-            return
-        key = item.data(Qt.UserRole)
-        if not key:
-            return
-        self.controller.set_major_confirmed(*key, item.checkState() == Qt.Checked)
-        confirmed = len(self.controller.confirmations())
-        self._set_stats(self.table.rowCount(), confirmed, int(self.stat_assets.value_label.text() or 0))
-        self.count.setText(
-            f"共 {self.table.rowCount()} 行待汇总，其中 {confirmed} 行已确认符合重大判定原则"
-        )

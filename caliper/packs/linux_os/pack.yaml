@@ -3,7 +3,7 @@ name: linux_os
 version: 0.1.0
 levels: [2, 3]
 os_family: [debian, rhel]
-asset_types: [服务器, 存储设备]
+asset_types: [服务器, 存储设备, 数据库]
 # 资产记录表「作业指导书」列的注册列表
 guides: [二级-安全通用要求, 三级-安全通用要求]
 # 下列文件按 docs/CONTRACTS.md 在 P0 阶段生成并核对，缺失键必须报错而不是兜底

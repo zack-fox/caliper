@@ -1,7 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""Self-contained macOS app: runtime, built-in rule pack, and workbook masters."""
+"""Self-contained desktop app: runtime, built-in rule pack, and workbook masters."""
 
 from pathlib import Path
+import sys
 import tomllib
 
 ROOT = Path(SPECPATH).resolve().parent
@@ -51,15 +52,16 @@ coll = COLLECT(
     upx_exclude=[],
     name="Caliper",
 )
-app = BUNDLE(
-    coll,
-    name="Caliper.app",
-    icon=None,
-    bundle_identifier="com.caliper.assessment",
-    version=VERSION,
-    info_plist={
-        "CFBundleDisplayName": "Caliper",
-        "CFBundleVersion": VERSION,
-        "LSMinimumSystemVersion": "11.0",
-    },
-)
+if sys.platform == "darwin":
+    app = BUNDLE(
+        coll,
+        name="Caliper.app",
+        icon=None,
+        bundle_identifier="com.caliper.assessment",
+        version=VERSION,
+        info_plist={
+            "CFBundleDisplayName": "Caliper",
+            "CFBundleVersion": VERSION,
+            "LSMinimumSystemVersion": "11.0",
+        },
+    )

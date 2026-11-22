@@ -5,11 +5,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import openpyxl
+import yaml
 from openpyxl.styles import Alignment, Border, Font, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from core.contracts.columns import MAJOR_COLUMNS
 from core.contracts.filenames import major_filename
@@ -17,8 +20,67 @@ from core.issues.summary import IssueRow
 from core.model.entities import ProjectConfig
 from core.render.result_record import RenderError, estimate_height
 
+if TYPE_CHECKING:
+    from core.major.major import MajorLibrary
+
 _THIN = Side(style="thin")
 _BORDER = Border(left=_THIN, right=_THIN, top=_THIN, bottom=_THIN)
+
+
+class HighRiskError(Exception):
+    """高风险判例库不可用。"""
+
+
+class HighRiskEntry(BaseModel):
+    """高风险判例；可降风险与降风险前提只从原文提炼。"""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    hr_id: str
+    level_min: int
+    control_point: str = ""
+    summary: str = Field(alias="问题简述")
+    requirement: str = Field(alias="标准要求")
+    scope: str = Field(alias="适用范围")
+    description: str = Field(alias="问题描述")
+    mitigation: str = Field(alias="缓解措施")
+    risk: str = Field(alias="风险评价")
+    remediation: str = Field(alias="整改建议")
+    binds_items: list[int] = Field(default_factory=list)
+    reducible: bool = Field(alias="可降风险")
+    reduction_basis: str = Field(default="", alias="降风险前提")
+
+    @model_validator(mode="after")
+    def _reduction_basis_required(self) -> "HighRiskEntry":
+        if self.reducible and not self.reduction_basis.strip():
+            raise ValueError("可降风险为 true 时必须给出降风险前提")
+        return self
+
+    @property
+    def data(self) -> dict:
+        return self.model_dump(by_alias=True)
+
+
+def load_high_risk(path: Path) -> list[dict]:
+    """读取并校验高风险判例库，返回保持中文字段的字典列表。"""
+    try:
+        raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        raise HighRiskError(f"{path}：无法读取高风险判例库：{exc}") from exc
+    if not isinstance(raw, list) or not raw:
+        raise HighRiskError(f"{path}：高风险判例应为非空列表")
+    try:
+        entries = [HighRiskEntry.model_validate(row) for row in raw]
+    except ValidationError as exc:
+        raise HighRiskError(f"{path}：高风险判例字段非法：{exc}") from exc
+    return [entry.data for entry in entries]
+
+
+def as_entry_dict(entry: dict | HighRiskEntry) -> dict:
+    """兼容字典与模型两种高风险条目。"""
+    if isinstance(entry, HighRiskEntry):
+        return entry.data
+    return dict(entry)
 
 
 @dataclass(frozen=True)
@@ -28,10 +90,13 @@ class MajorRow:
     values: dict[str, str]
 
 
-def triggers_for(seq: int, level: int, high_risk: list[dict]) -> list[dict]:
+def triggers_for(
+    seq: int, level: int, high_risk: list[dict] | list[HighRiskEntry]
+) -> list[dict]:
     """返回该测评项在当前等级会触发的高风险条目（不含四级）。"""
     matched: list[dict] = []
-    for entry in high_risk:
+    for raw in high_risk:
+        entry = as_entry_dict(raw)
         if int(entry.get("level_min", 99)) > level:
             continue
         if seq in entry.get("binds_items", []):
@@ -41,9 +106,10 @@ def triggers_for(seq: int, level: int, high_risk: list[dict]) -> list[dict]:
 
 def build_major_rows(
     issue_rows: list[IssueRow],
-    high_risk: list[dict],
+    high_risk: list[dict] | list[HighRiskEntry],
     level: int,
     confirmed: set[tuple[str, str]],
+    library: "MajorLibrary | None" = None,
 ) -> list[MajorRow]:
     rows: list[MajorRow] = []
     for issue in issue_rows:
@@ -74,8 +140,32 @@ def build_major_rows(
                 "影响的网络区域": issue.values["影响的网络区域"],
             }
         )
+        if library is not None:
+            _fill_dimensions(values, entries, library)
         rows.append(MajorRow(issue.seq, issue.asset_type, values))
     return rows
+
+
+def _fill_dimensions(values: dict[str, str], entries: list[dict], library) -> None:
+    """把三维评分写入重大隐患表的维度列，理由保留原文提炼口径。"""
+    from core.major.major import assess_major
+
+    candidates = assess_major(entries, library)
+    if not candidates:
+        return
+    best = max(candidates, key=lambda item: (item.is_candidate, item.total))
+    for score in best.scores:
+        values[score.name] = f"{score.score}（{score.reason}）"
+    severity = next((item for item in best.scores if item.name == "严重性"), None)
+    if severity is not None:
+        values["后果分析"] = severity.reason
+    verdict = "达到阈值，列为重大隐患候选" if best.is_candidate else "未达阈值，经人工确认后纳入"
+    values["综合分析"] = (
+        f"规则 {best.rule_id}（{'、'.join(best.hr_ids)}）加权总分 "
+        f"{best.total:.2f}，阈值 {best.threshold:.2f}；{verdict}。"
+    )
+    if best.reducible and best.reduction_basis:
+        values["综合分析"] += "可降风险前提：" + "；".join(best.reduction_basis)
 
 
 def _header(ws: Worksheet) -> tuple[str, ...]:

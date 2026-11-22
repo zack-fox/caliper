@@ -146,7 +146,8 @@ def _judge_package(
             f"{block.title}（{block.source}）" for block in unmapped
         )
         run.diagnostics.append(
-            f"{len(unmapped)} 个检查块没有当前规则包的检查映射，未参与自动判定：{details}"
+            f"未映射：{len(unmapped)} 个检查块在 checks_map.yaml 中没有对应标题，"
+            f"未参与自动判定：{details}"
         )
 
     unsupported = [
@@ -183,21 +184,21 @@ def _judge_package(
     unimplemented = [
         result.seq
         for result in run.items
-        if result.note.startswith("未采集：规则尚未实现")
+        if "规则库无对应条目" in result.note
     ]
     if unimplemented:
         run.diagnostics.append(
-            f"{len(unimplemented)} 个自动测评项尚未配置判定规则："
+            f"{len(unimplemented)} 个自动测评项规则库无对应条目："
             + "、".join(map(str, unimplemented))
         )
     uncovered = [
         result.seq
         for result in run.items
-        if "规则未覆盖实施点" in result.note
+        if "规则库缺少实施点" in result.note
     ]
     if uncovered:
         run.diagnostics.append(
-            f"{len(uncovered)} 个自动测评项的规则未覆盖全部实施点："
+            f"{len(uncovered)} 个自动测评项的实施点未被规则覆盖："
             + "、".join(map(str, uncovered))
         )
 

@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QFormLayout,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QLineEdit,
     QMessageBox,
@@ -22,13 +23,17 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSplitter,
     QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
 from app.controller import AppController
+from app.widgets import EmptyState
 from core.contracts.enums import AssetType, Importance
 from core.model.entities import Asset
+from core.records.model import COLUMNS, RecordSheet
 
 
 class EvidenceReviewDialog(QDialog):
@@ -170,6 +175,143 @@ class TextDetailsDialog(QDialog):
         body.setReadOnly(True)
         body.setPlainText(text)
         layout.addWidget(body, 1)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.rejected.connect(self.reject)
+        buttons.button(QDialogButtonBox.StandardButton.Close).setText("关闭")
+        layout.addWidget(buttons)
+
+
+class RecordPreviewDialog(QDialog):
+    """只读预览当前资产的 9 列记录表；数据与 xlsx 生成同源。"""
+
+    def __init__(self, sheet: RecordSheet | None, parent=None) -> None:
+        super().__init__(parent)
+        self.sheet = sheet
+        self.setWindowTitle("记录表预览")
+        self.resize(1280, 700)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(18, 16, 18, 14)
+        layout.setSpacing(10)
+
+        if sheet is not None:
+            header = sheet.header
+            caption = (
+                f"{header.asset_name} · {header.asset_type} · {header.ip}　"
+                f"项目 {header.project_code or '未编号'} · {header.check_date}"
+            )
+        else:
+            caption = "尚未选择设备"
+        self.caption = QLabel(caption)
+        self.caption.setObjectName("muted")
+        self.caption.setWordWrap(True)
+        layout.addWidget(self.caption)
+
+        self.table = QTableWidget(0, len(COLUMNS))
+        self.table.setHorizontalHeaderLabels(COLUMNS)
+        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.table.setSelectionMode(QTableWidget.SingleSelection)
+        self.table.setWordWrap(True)
+        self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setStretchLastSection(True)
+        for column, width in enumerate((50, 90, 195, 250, 80, 64, 72, 210, 210)):
+            self.table.setColumnWidth(column, width)
+        self.empty = EmptyState(
+            "暂无可预览的记录",
+            "请先运行核查并在左侧选择设备；只有存在判定记录的资产才会生成记录表。",
+        )
+        self.stack = QStackedWidget()
+        self.stack.addWidget(self.table)
+        self.stack.addWidget(self.empty)
+        layout.addWidget(self.stack, 1)
+
+        if sheet is not None and sheet.rows:
+            self._populate(sheet)
+            self.stack.setCurrentWidget(self.table)
+        else:
+            if sheet is not None:
+                self.empty.set_text(
+                    "当前资产没有可写入记录表的测评项",
+                    "记录表只收录能在规则库中找到对应测评项的判定结果。",
+                )
+            self.stack.setCurrentWidget(self.empty)
+
+        hint = QLabel("预览与「生成记录表」使用同一 RecordSheet，不额外推算或改写判定。")
+        hint.setObjectName("muted")
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.rejected.connect(self.reject)
+        buttons.button(QDialogButtonBox.StandardButton.Close).setText("关闭")
+        layout.addWidget(buttons)
+
+    def _populate(self, sheet: RecordSheet) -> None:
+        self.table.setRowCount(len(sheet.rows))
+        for row_index, row in enumerate(sheet.rows):
+            for column, value in enumerate(row.values()):
+                cell = QTableWidgetItem(value)
+                cell.setToolTip(value)
+                self.table.setItem(row_index, column, cell)
+        self.table.resizeRowsToContents()
+        # Qt 的自动行高对中文折行略有低估，补一点余量避免末尾被省略。
+        self.table.verticalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        for row_index in range(self.table.rowCount()):
+            self.table.setRowHeight(
+                row_index, int(self.table.rowHeight(row_index) * 1.12) + 8
+            )
+
+
+class PolishPreviewDialog(QDialog):
+    """展示将要发送给模型的白名单字段；默认不启用模型，不发起请求。"""
+
+    FIELD_LABELS = {
+        "problem": "问题描述",
+        "cause": "成因",
+        "action": "整改动作",
+        "priority": "优先级",
+        "clause": "标准条款",
+        "title": "标题",
+    }
+
+    def __init__(self, payload: dict[str, str], parent=None) -> None:
+        super().__init__(parent)
+        self.payload = dict(payload)
+        self.setWindowTitle("润色预览")
+        self.resize(820, 520)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(18, 16, 18, 14)
+        layout.setSpacing(10)
+        note = QLabel(
+            "默认未启用模型，不会发起任何请求。以下仅为将要发送的白名单字段；"
+            "原始日志、证据原文、备注与主机信息不会出机。"
+        )
+        note.setObjectName("muted")
+        note.setWordWrap(True)
+        layout.addWidget(note)
+
+        self.table = QTableWidget(0, 2)
+        self.table.setHorizontalHeaderLabels(["字段", "内容"])
+        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table.setWordWrap(True)
+        self.table.verticalHeader().setVisible(False)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.table.setRowCount(len(self.payload))
+        for row, (key, value) in enumerate(self.payload.items()):
+            label = self.FIELD_LABELS.get(key, key)
+            name = QTableWidgetItem(f"{label}（{key}）")
+            name.setToolTip(key)
+            content = QTableWidgetItem(str(value))
+            content.setToolTip(str(value))
+            self.table.setItem(row, 0, name)
+            self.table.setItem(row, 1, content)
+        self.table.resizeRowsToContents()
+        layout.addWidget(self.table, 1)
+
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)
         buttons.button(QDialogButtonBox.StandardButton.Close).setText("关闭")

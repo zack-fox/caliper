@@ -20,8 +20,24 @@ from core.issues.summary import (
 )
 from core.items.loader import Pack, PackError, load_pack
 from core.judge.runner import RunError, run_project
-from core.major.risk import build_major_rows, render_major_workbook, verify_major_workbook
+from core.major.major import (
+    MajorGateError,
+    assess_major,
+    basis_fingerprints,
+    compute_rule_version,
+    ensure_major_confirmations as _ensure_major_confirmations,
+)
+from core.major.risk import (
+    build_major_rows,
+    render_major_workbook,
+    triggers_for,
+    verify_major_workbook,
+)
 from core.model.entities import Asset, EvidencePackage, Item, ProjectConfig, RunResult
+from core.records.model import RecordSheet, build_sheet
+from core.records.profile import RecordError
+from core.records.writer import write_record_book
+from core.remediation import Advice, RemediationError, RemediationLibrary, suggest
 from core.render.asset_record import AssetRecordError, fill_asset_workbook, verify_asset_workbook
 from core.render.result_record import (
     RenderError,
@@ -77,6 +93,21 @@ class EvidencePreview:
     images: int = 0
     files: int = 0
     analyzed_files: int = 0
+
+
+@dataclass(frozen=True)
+class MajorReview:
+    """问题行的重大隐患判定上下文：降风险、三维评分与确认状态。"""
+
+    rule_ids: tuple[str, ...]
+    reducible: bool
+    reduction_basis: tuple[str, ...]
+    scores: tuple[tuple[str, int], ...]
+    total: float
+    threshold: float
+    is_candidate: bool
+    confirmed: bool
+    reason: str
 
 
 class AppController:
@@ -318,15 +349,121 @@ class AppController:
     def set_major_confirmed(
         self, item_id: str, asset_type: str, confirmed: bool
     ) -> None:
+        """确认或撤销重大判定原则；确认时写入规则版本与判定依据指纹。"""
         store = self._store()
         try:
-            store.set(
-                self.project.level,
-                item_id,
-                asset_type,
-                "major",
-                "1" if confirmed else "",
+            if not confirmed:
+                store.set(self.project.level, item_id, asset_type, "major", "")
+                return
+            version, basis = self._major_basis(asset_type)
+            store.confirm_major(
+                self.project.level, item_id, asset_type, version, basis
             )
+        except (CorrectionError, sqlite3.Error) as exc:
+            raise ControllerError(str(exc)) from exc
+        finally:
+            store.close()
+
+    def _major_basis(self, asset_type: str) -> tuple[str, str]:
+        if self.run_result is None:
+            raise ControllerError("请先运行判定后再确认重大隐患")
+        pack = self.pack or self.load_pack()
+        if pack.major is None:
+            raise ControllerError("重大隐患规则库未装载")
+        version = compute_rule_version(
+            [pack.root / pack.meta.high_risk, pack.root / pack.meta.major]
+        )
+        basis = basis_fingerprints(self.run_result).get(asset_type, "")
+        if not basis:
+            raise ControllerError("缺少判定依据指纹，需重新运行判定")
+        return version, basis
+
+    def major_reviews(self) -> dict[tuple[str, str], MajorReview]:
+        """按问题行汇总高风险降风险、三维评分与确认有效性。"""
+        if self.run_result is None:
+            return {}
+        pack = self.pack or self.load_pack()
+        library = pack.major
+        if library is None:
+            return {}
+        issues = self.issue_rows()
+        version = compute_rule_version(
+            [pack.root / pack.meta.high_risk, pack.root / pack.meta.major]
+        )
+        fingerprints = basis_fingerprints(self.run_result)
+        store = self._store()
+        reviews: dict[tuple[str, str], MajorReview] = {}
+        try:
+            for issue in issues:
+                entries = triggers_for(issue.seq, self.project.level, pack.high_risk)
+                if not entries:
+                    continue
+                candidates = assess_major(entries, library)
+                best = max(
+                    candidates,
+                    key=lambda item: (item.is_candidate, item.total),
+                    default=None,
+                )
+                basis = fingerprints.get(issue.asset_type, "")
+                reason = (
+                    store.major_confirmation_issue(
+                        self.project.level,
+                        issue.item_id,
+                        issue.asset_type,
+                        version,
+                        basis,
+                    )
+                    if basis
+                    else "缺少判定依据指纹，需重新运行判定"
+                )
+                reviews[(issue.item_id, issue.asset_type)] = MajorReview(
+                    rule_ids=tuple(item.rule_id for item in candidates),
+                    reducible=bool(best and best.reducible),
+                    reduction_basis=best.reduction_basis if best else (),
+                    scores=tuple(
+                        (score.name, score.score) for score in best.scores
+                    )
+                    if best
+                    else (),
+                    total=best.total if best else 0.0,
+                    threshold=best.threshold if best else library.threshold,
+                    is_candidate=bool(best and best.is_candidate),
+                    confirmed=not reason,
+                    reason=reason,
+                )
+        except (CorrectionError, sqlite3.Error) as exc:
+            raise ControllerError(str(exc)) from exc
+        finally:
+            store.close()
+        return reviews
+
+    def ensure_major_confirmations(self) -> None:
+        """导出前的重大确认门禁；直接复用 core 校验，不在此处放宽条件。"""
+        if self.run_result is None:
+            raise ControllerError("请先运行判定")
+        pack = self.pack or self.load_pack()
+        library = pack.major
+        if library is None:
+            raise ControllerError("重大隐患规则库未装载")
+        issues = self.issue_rows()
+        version = compute_rule_version(
+            [pack.root / pack.meta.high_risk, pack.root / pack.meta.major]
+        )
+        store = self._store()
+        try:
+            _ensure_major_confirmations(
+                issues,
+                pack.high_risk,
+                library,
+                self.project.level,
+                self.run_result,
+                store,
+                version,
+            )
+        except MajorGateError as exc:
+            raise ControllerError(str(exc)) from exc
+        except (CorrectionError, sqlite3.Error) as exc:
+            raise ControllerError(str(exc)) from exc
         finally:
             store.close()
 
@@ -348,6 +485,72 @@ class AppController:
             self.confirmations(),
         )
 
+    # ---- 记录表 / 整改建议 ----
+    def _asset_run(self, asset_key: str):
+        if self.run_result is None:
+            return None
+        return next(
+            (
+                run
+                for run in self.run_result.asset_runs
+                if run.asset.device_name == asset_key
+            ),
+            None,
+        )
+
+    def _record_project(self, pack: Pack) -> ProjectConfig:
+        """记录表模型要求显式 pack_dir；内置 pack 用实际装载目录补齐。"""
+        return self.project.model_copy(update={"pack_dir": pack.root})
+
+    def record_sheet(self, asset_key: str) -> RecordSheet:
+        """返回当前资产的 9 列记录表模型，与 xlsx 生成共用同一构建器。"""
+        run = self._asset_run(asset_key)
+        if run is None:
+            raise ControllerError("请先运行判定并选择设备")
+        pack = self.pack or self.load_pack()
+        try:
+            return build_sheet(
+                self._record_project(pack),
+                run,
+                pack.items_for_level(self.project.level),
+            )
+        except RecordError as exc:
+            raise ControllerError(str(exc)) from exc
+
+    def generate_record_book(self) -> Path:
+        """调用 core 写出器生成公司格式记录表，默认写入项目输出目录。"""
+        if self.run_result is None:
+            raise ControllerError("请先运行判定")
+        pack = self.pack or self.load_pack()
+        items = {self.project.level: pack.items_for_level(self.project.level)}
+        try:
+            return write_record_book(
+                self._record_project(pack),
+                self.run_result,
+                items,
+                self.export_dir(),
+            )
+        except RecordError as exc:
+            raise ControllerError(str(exc)) from exc
+        except OSError as exc:
+            raise ControllerError(f"生成记录表失败：{exc}") from exc
+
+    def remediation_advice(self, asset_key: str, seq: int) -> Advice | None:
+        """返回指定记录命中的整改建议；未命中时为空，不编造内容。"""
+        run = self._asset_run(asset_key)
+        if run is None:
+            return None
+        pack = self.pack or self.load_pack()
+        items = pack.items_for_level(self.project.level)
+        try:
+            library = RemediationLibrary.load(pack.root, items)
+        except RemediationError as exc:
+            raise ControllerError(str(exc)) from exc
+        return next(
+            (advice for advice in suggest(library, items, run) if advice.seq == seq),
+            None,
+        )
+
     # ---- 导出 ----
     def export_dir(self) -> Path:
         output = self.project.output_dir
@@ -355,6 +558,7 @@ class AppController:
 
     def export_issue(self) -> tuple[Path, list[str]]:
         self._require_reviewed_records()
+        self.ensure_major_confirmations()
         pack = self.pack or self.load_pack()
         rows = self.issue_rows()
         try:
@@ -366,6 +570,7 @@ class AppController:
 
     def export_major(self) -> tuple[Path, list[str]]:
         self._require_reviewed_records()
+        self.ensure_major_confirmations()
         pack = self.pack or self.load_pack()
         rows = build_major_rows(
             self.issue_rows(), pack.high_risk, self.project.level, self.confirmations()

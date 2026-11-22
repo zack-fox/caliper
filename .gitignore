@@ -10,6 +10,8 @@
 **/fixtures/evidence/
 **/fixtures/golden/**/raw/
 *.log
+# 脱敏回归案例日志：静态入库，仅含文档保留地址与示例占位
+!caliper/tests/cases/**/*.log
 
 # 样例与产出数据（含真实资产信息，禁止入库）
 **/fixtures/samples/

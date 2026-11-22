@@ -2,8 +2,11 @@ PY ?= .venv/bin/python
 PROJECT ?= fixtures/samples/project.yaml
 PKG ?= fixtures/evidence/pkg-A01
 ASSETS ?= fixtures/samples/asset_record.xlsx
+OUT ?=
+FAMILY ?= server
+LEVEL ?= 3
 
-.PHONY: setup setup-gui syntax lint contracts test check parse run explain lint-rules export assets ui-lint golden build package-macos
+.PHONY: setup setup-gui syntax lint library-lint contracts test check parse run explain lint-rules export assets ui-lint golden capture records build package-macos
 
 setup:
 	python3 -m venv .venv
@@ -19,16 +22,25 @@ syntax:
 lint:
 	$(PY) -m core.contracts.selfcheck
 
+library-lint:
+	$(PY) -m core.cli lint-library --pack packs/linux_os
+
 contracts:
 	$(PY) -m core.contracts.check --templates templates --pack packs/linux_os
 
 test:
 	$(PY) -m pytest -q
 
-check: syntax lint contracts test
+check: syntax lint library-lint contracts test
 
 parse:
 	$(PY) -m core.cli parse --pkg $(PKG)
+
+capture:
+	$(PY) -m core.cli capture --pack packs/linux_os --family $(FAMILY) --level $(LEVEL)
+
+records:
+	$(PY) -m core.cli records --project $(PROJECT) $(if $(OUT),--out $(OUT),)
 
 run:
 	$(PY) -m core.cli run --project $(PROJECT)

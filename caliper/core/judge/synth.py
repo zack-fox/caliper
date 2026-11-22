@@ -9,6 +9,8 @@ from core.rules.dsl import evaluate
 from core.rules.engine import RuleSet
 
 UNCOLLECTED_PREFIX = "未采集："
+UNCOVERED_PREFIX = "未覆盖："
+MISSING_BLOCK = "未找到可核查证据块"
 
 
 def _synthesize(policy: Policy, values: list[bool]) -> Verdict:
@@ -70,13 +72,20 @@ def judge_item(
 
     item_rules = ruleset.for_item(item.seq, item.level)
     if not item_rules:
-        base.note = f"{UNCOLLECTED_PREFIX}规则尚未实现"
+        reason = f"{UNCOVERED_PREFIX}规则库无对应条目"
+        base.note = reason
+        base.warnings = [reason]
         return base
 
     if expected_points:
         uncovered = sorted(expected_points - {rule.point for rule in item_rules})
         if uncovered:
-            base.note = f"{UNCOLLECTED_PREFIX}规则未覆盖实施点 {', '.join(map(str, uncovered))}"
+            reason = (
+                f"{UNCOVERED_PREFIX}规则库缺少实施点 "
+                f"{', '.join(map(str, uncovered))} 的对应条目"
+            )
+            base.note = reason
+            base.warnings = [reason]
             return base
 
     points: list[PointResult] = []
@@ -92,22 +101,26 @@ def judge_item(
         anchors: list = []
         rule_refs: list[str] = []
         point_missing: list[str] = []
+        point_evaluated = 0
         block_title = ""
         for rule in point_rules:
             rule_refs.append(rule.reference_id(item.item_id))
             block_title = block_title or rule.block
             block = blocks.get(rule.block)
             if block is None:
-                reason = f"检查块「{rule.block}」缺失"
+                if rule.optional_block:
+                    continue
+                reason = f"{MISSING_BLOCK}「{rule.block}」"
                 missing.append(reason)
                 point_missing.append(reason)
                 continue
             if block.status in {CheckStatus.FAILED, CheckStatus.SKIPPED}:
-                reason = f"检查块「{rule.block}」未采集"
+                reason = f"{MISSING_BLOCK}「{rule.block}」（采集状态 {block.status.value}）"
                 missing.append(reason)
                 point_missing.append(reason)
                 continue
             rule_passed, rule_anchors = evaluate(rule.expect, block)
+            point_evaluated += 1
             passed = passed and rule_passed
             reasons.append(rule.pass_reason if rule_passed else rule.fail_reason)
             anchors.extend(rule_anchors)
@@ -116,6 +129,9 @@ def judge_item(
                 "缺少证据，无法完成实施点判定："
                 + "；".join(dict.fromkeys(point_missing))
             ]
+        elif point_evaluated == 0:
+            # 条件证据块未部署，该实施点不参与合成，避免把“未安装”误判为不通过。
+            continue
         points.append(
             PointResult(
                 point=point_no,
@@ -128,6 +144,10 @@ def judge_item(
         )
 
     base.points = points
+    if not points:
+        titles = "、".join(dict.fromkeys(rule.block for rule in item_rules))
+        base.note = f"{UNCOLLECTED_PREFIX}条件证据块未部署（{titles}）"
+        return base
     if missing:
         base.note = f"{UNCOLLECTED_PREFIX}{'；'.join(dict.fromkeys(missing))}"
         base.result_text = build_result_text(points)

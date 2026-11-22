@@ -32,10 +32,13 @@ class CorrectionStore:
                     value TEXT NOT NULL,
                     reason TEXT NOT NULL DEFAULT '',
                     updated_at TEXT NOT NULL,
+                    rule_version TEXT NOT NULL DEFAULT '',
+                    basis_fingerprint TEXT NOT NULL DEFAULT '',
                     PRIMARY KEY (level, item_id, asset_type, field)
                 )
                 """
             )
+            self._ensure_major_columns()
             self._connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS record_overrides (
@@ -82,6 +85,18 @@ class CorrectionStore:
     def close(self) -> None:
         self._connection.close()
 
+    def _ensure_major_columns(self) -> None:
+        """旧库增量升级：PRAGMA 探测后补列，不触碰已有数据。"""
+        columns = {
+            str(row[1])
+            for row in self._connection.execute("PRAGMA table_info(corrections)")
+        }
+        for name in ("rule_version", "basis_fingerprint"):
+            if name not in columns:
+                self._connection.execute(
+                    f"ALTER TABLE corrections ADD COLUMN {name} TEXT NOT NULL DEFAULT ''"
+                )
+
     def get(self, level: int, item_id: str, asset_type: str, field: str) -> str:
         row = self._connection.execute(
             "SELECT value FROM corrections WHERE level=? AND item_id=? AND asset_type=? AND field=?",
@@ -97,6 +112,8 @@ class CorrectionStore:
         field: str,
         value: str,
         reason: str = "",
+        rule_version: str = "",
+        basis_fingerprint: str = "",
     ) -> None:
         if len(reason) > MAX_REASON:
             raise CorrectionError(f"校正原因不能超过 {MAX_REASON} 字")
@@ -106,13 +123,33 @@ class CorrectionStore:
                 (level, item_id, asset_type, field),
             )
         else:
+            if (
+                field == "major"
+                and value.strip() == "1"
+                and not rule_version
+                and not basis_fingerprint
+            ):
+                # 未显式传入留痕信息时保留原值，避免重复勾选擦除已记录版本。
+                row = self._connection.execute(
+                    """
+                    SELECT rule_version, basis_fingerprint FROM corrections
+                    WHERE level=? AND item_id=? AND asset_type=? AND field='major'
+                    """,
+                    (level, item_id, asset_type),
+                ).fetchone()
+                if row:
+                    rule_version, basis_fingerprint = str(row[0]), str(row[1])
             self._connection.execute(
                 """
-                INSERT INTO corrections (level, item_id, asset_type, field, value, reason, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO corrections
+                    (level, item_id, asset_type, field, value, reason, updated_at,
+                     rule_version, basis_fingerprint)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(level, item_id, asset_type, field)
                 DO UPDATE SET value=excluded.value, reason=excluded.reason,
-                              updated_at=excluded.updated_at
+                              updated_at=excluded.updated_at,
+                              rule_version=excluded.rule_version,
+                              basis_fingerprint=excluded.basis_fingerprint
                 """,
                 (
                     level,
@@ -122,6 +159,8 @@ class CorrectionStore:
                     value.strip(),
                     reason.strip(),
                     datetime.now().isoformat(timespec="seconds"),
+                    rule_version.strip(),
+                    basis_fingerprint.strip(),
                 ),
             )
         self._connection.commit()
@@ -139,6 +178,77 @@ class CorrectionStore:
             (level,),
         ).fetchall()
         return {(str(item), str(asset)) for item, asset in rows}
+
+    def major_confirmations(self, level: int) -> dict[tuple[str, str], tuple[str, str]]:
+        """返回全部重大确认及其留痕（规则版本、判定依据指纹）。"""
+        rows = self._connection.execute(
+            """
+            SELECT item_id, asset_type, rule_version, basis_fingerprint
+            FROM corrections WHERE level=? AND field='major' AND value='1'
+            """,
+            (level,),
+        ).fetchall()
+        return {
+            (str(item), str(asset)): (str(version), str(basis))
+            for item, asset, version, basis in rows
+        }
+
+    def major_confirmation_issue(
+        self,
+        level: int,
+        item_id: str,
+        asset_type: str,
+        rule_version: str,
+        basis_fingerprint: str,
+    ) -> str:
+        """确认存在且版本/指纹一致时返回空串，否则返回失效原因。"""
+        row = self._connection.execute(
+            """
+            SELECT value, rule_version, basis_fingerprint FROM corrections
+            WHERE level=? AND item_id=? AND asset_type=? AND field='major'
+            """,
+            (level, item_id, asset_type),
+        ).fetchone()
+        if not row or str(row[0]) != "1":
+            return "未确认"
+        if str(row[1]) != rule_version:
+            return "规则版本已变更，需重新确认"
+        if str(row[2]) != basis_fingerprint:
+            return "判定依据已变化，需重新确认"
+        return ""
+
+    def major_confirmation_valid(
+        self,
+        level: int,
+        item_id: str,
+        asset_type: str,
+        rule_version: str,
+        basis_fingerprint: str,
+    ) -> bool:
+        return not self.major_confirmation_issue(
+            level, item_id, asset_type, rule_version, basis_fingerprint
+        )
+
+    def confirm_major(
+        self,
+        level: int,
+        item_id: str,
+        asset_type: str,
+        rule_version: str,
+        basis_fingerprint: str,
+        reason: str = "",
+    ) -> None:
+        """人工确认重大判定原则，同时写入规则版本与判定依据指纹。"""
+        self.set(
+            level,
+            item_id,
+            asset_type,
+            "major",
+            "1",
+            reason,
+            rule_version=rule_version,
+            basis_fingerprint=basis_fingerprint,
+        )
 
     def record_overrides(self, level: int, asset_key: str) -> dict[str, dict[str, str]]:
         rows = self._connection.execute(

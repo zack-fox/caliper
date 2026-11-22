@@ -170,7 +170,23 @@ class ExportScreen(QWidget):
         else:
             self.status_result.set_text("可导出", "ok")
         rows = len(self.controller.issue_rows()) if has_run else 0
-        confirmed = len(self.controller.confirmations()) if has_run else 0
+        reviews = {}
+        if has_run:
+            try:
+                reviews = self.controller.major_reviews()
+            except Exception:
+                reviews = {}
+        confirmed = sum(1 for review in reviews.values() if review.confirmed)
+        stale = sum(
+            1
+            for review in reviews.values()
+            if not review.confirmed and review.reason != "未确认"
+        )
+        waiting = sum(
+            1
+            for review in reviews.values()
+            if not review.confirmed and review.reason == "未确认"
+        )
         if not has_run:
             self.status_issue.set_text("待核查", "neutral")
             self.status_major.set_text("待核查", "neutral")
@@ -179,10 +195,14 @@ class ExportScreen(QWidget):
             self.status_major.set_text("待记录复核", "warn")
         else:
             self.status_issue.set_text(f"{rows} 行可导出", "info" if rows else "neutral")
-            self.status_major.set_text(
-                f"已确认 {confirmed} 行" if confirmed else "无重大确认行",
-                "info" if confirmed else "neutral",
-            )
+            if stale:
+                self.status_major.set_text(f"确认失效 {stale}", "bad")
+            elif waiting:
+                self.status_major.set_text(f"待确认 {waiting}", "warn")
+            elif confirmed:
+                self.status_major.set_text(f"已确认 {confirmed} 行", "info")
+            else:
+                self.status_major.set_text("无重大确认行", "neutral")
 
     # ---- 选择 ----
     def _pick_dir(self) -> None:
@@ -239,6 +259,36 @@ class ExportScreen(QWidget):
     def _mark(self, badge: Badge, text: str, tone: str) -> None:
         badge.set_text(text, tone)
 
+    def _gate_major(self, badge: Badge) -> bool:
+        """导出前复用 core 的重大确认门禁；未通过时在日志中列出条目。"""
+        try:
+            self.controller.ensure_major_confirmations()
+        except Exception as exc:
+            self.log.append(f"[门禁] {exc}")
+            self._log_major_items()
+            self._mark(badge, "未通过门禁", "bad")
+            return False
+        return True
+
+    def _log_major_items(self) -> None:
+        """门禁失败时逐条列出待确认 / 已失效的高风险行，便于现场处理。"""
+        try:
+            reviews = self.controller.major_reviews()
+            issues = self.controller.issue_rows()
+        except Exception:
+            return
+        for issue in issues:
+            review = reviews.get((issue.item_id, issue.asset_type))
+            if review is None or review.confirmed:
+                continue
+            if not review.is_candidate and review.reason == "未确认":
+                continue
+            rules = "、".join(review.rule_ids) or "无规则"
+            self.log.append(
+                f"  · {issue.asset_type} 第 {issue.seq} 项（{issue.item_id}，{rules}）："
+                f"{review.reason or '未确认'}"
+            )
+
     # ---- 导出动作 ----
     def _export_asset(self) -> None:
         source = self.asset_source.text().strip()
@@ -267,6 +317,8 @@ class ExportScreen(QWidget):
     def _export_issue(self) -> None:
         if not self._apply_output():
             return
+        if not self._gate_major(self.status_issue):
+            return
         try:
             target, problems = self.controller.export_issue()
         except Exception as exc:
@@ -280,6 +332,8 @@ class ExportScreen(QWidget):
 
     def _export_major(self) -> None:
         if not self._apply_output():
+            return
+        if not self._gate_major(self.status_major):
             return
         try:
             target, problems = self.controller.export_major()

@@ -180,6 +180,11 @@ class Asset(BaseModel):
             raise ValueError("设备名称与作业指导书必填")
         return value.strip()
 
+    @property
+    def family(self) -> str:
+        """规则库适用口径：按资产类型分 server / database 两路。"""
+        return self.asset_type.family
+
 
 class ProjectConfig(BaseModel):
     """项目配置。相对路径按项目文件所在目录解析。"""

@@ -1,0 +1,31 @@
+id: multi_script
+title: 单文件两段采集脚本：会话、块标题与系统类型分别保留
+level: 3
+project_code: 示例-回归-001
+system_name: 示例系统A
+assets:
+  - device_name: 示例系统A-混合环境服务器
+    ip: 192.0.2.10
+    importance: 一般
+    guide: 三级-安全通用要求
+    asset_type: 服务器
+evidence: pkg-multi-script
+expect:
+  sessions: 2
+  blocks: 10
+  block_titles:
+    - Duplicate UID / UID=0 accounts
+    - Empty / expired password
+    - Password complexity
+    - Password policy (login.defs)
+    - Remote login source restriction
+  os_family_by_session: [debian, rhel]
+  unmapped: 0
+  verdicts:
+    1: 符合
+    18: 符合
+  compliance:
+    1: 符合(1分)
+    18: 符合(1分)
+  remediation: []
+  major_candidates: []

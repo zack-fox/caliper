@@ -27,6 +27,8 @@ class Rule(BaseModel):
     expect: dict
     pass_reason: str
     fail_reason: str
+    # 条件证据：中间件/数据库块按组件是否部署才出现，缺失时跳过而不判为未采集。
+    optional_block: bool = False
 
     def reference_id(self, item_id: str = "") -> str:
         """生成内容稳定的规则引用号，规则条件变化时引用号也随之变化。"""

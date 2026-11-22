@@ -176,6 +176,7 @@ def test_missing_block_marks_uncollected() -> None:
     result = judge_item(item, rules, {}, expected_points={1})
     assert result.verdict is Verdict.UNCOLLECTED
     assert result.note.startswith("未采集：")
+    assert "未找到可核查证据块" in result.note
 
 
 def test_incomplete_point_is_rendered_as_uncollected() -> None:
@@ -232,4 +233,15 @@ def test_uncovered_points_mark_uncollected() -> None:
     )
     result = judge_item(item, rules, {"A": _block("A", ["ok"])}, expected_points={1, 2})
     assert result.verdict is Verdict.UNCOLLECTED
-    assert "规则未覆盖实施点 2" in result.note
+    assert result.note.startswith("未覆盖：")
+    assert "实施点 2" in result.note
+    assert result.warnings
+
+
+def test_item_without_rules_has_explicit_diagnostic() -> None:
+    item = _item("mixed_partial", False)
+    result = judge_item(item, RuleSet(rules=[]), {}, expected_points={1})
+    assert result.verdict is Verdict.UNCOLLECTED
+    assert result.note == "未覆盖：规则库无对应条目"
+    assert result.warnings == ["未覆盖：规则库无对应条目"]
+    assert result.result_text == ""

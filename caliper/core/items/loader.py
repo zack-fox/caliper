@@ -9,6 +9,8 @@ import yaml
 from pydantic import BaseModel, ValidationError
 
 from core.checks.mapping import ChecksMap
+from core.major.major import MajorError, MajorLibrary, load_major_library
+from core.major.risk import HighRiskError, load_high_risk
 from core.model.entities import Item
 from core.rules.engine import RuleSet
 
@@ -28,6 +30,7 @@ class PackMeta(BaseModel):
     rules_dir: str = "rules"
     checks_map: str = "checks_map.yaml"
     high_risk: str = "high_risk.yaml"
+    major: str = "major.yaml"
     texts: str = "texts/library.yaml"
 
 
@@ -39,6 +42,7 @@ class Pack:
     checks: ChecksMap
     rules: RuleSet
     high_risk: list[dict] = field(default_factory=list)
+    major: MajorLibrary | None = None
     texts: list[dict] = field(default_factory=list)
 
     def items_for_level(self, level: int) -> list[Item]:
@@ -85,14 +89,19 @@ def load_pack(pack_dir: Path) -> Pack:
     checks = ChecksMap.load(pack_dir / meta.checks_map)
     rules = RuleSet.load(pack_dir / meta.rules_dir, items)
 
-    high_risk = _load_yaml(pack_dir / meta.high_risk)
     texts = _load_yaml(pack_dir / meta.texts)
+    try:
+        high_risk_records = load_high_risk(pack_dir / meta.high_risk)
+        major = load_major_library(pack_dir / meta.major)
+    except (HighRiskError, MajorError) as exc:
+        raise PackError(str(exc)) from exc
     return Pack(
         root=pack_dir,
         meta=meta,
         items=items,
         checks=checks,
         rules=rules,
-        high_risk=list(high_risk or []),
+        high_risk=high_risk_records,
+        major=major,
         texts=list((texts or {}).get("texts", [])),
     )

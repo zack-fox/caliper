@@ -1,0 +1,18 @@
+# ===== Ubuntu/Debian baseline check (family=database, level=3) =====
+===== RESULTS (collected) =====
+===== 1. MYSQL BASELINE =====
+[01] MySQL 空口令与匿名账户
+  cmd: mysql -N -B -e "SELECT User,Host,plugin FROM mysql.user WHERE authentication_string='' OR User='';"
+  file: /etc/mysql/my.cnf
+  anonymous account: 占位账号
+  empty-password: none
+[02] MySQL 账户权限与最小化
+  cmd: mysql -N -B -e "SELECT User,Host,Super_priv,Grant_priv,File_priv,Process_priv FROM mysql.user ORDER BY User,Host;"
+  file: /etc/mysql/my.cnf
+  root	localhost	Y	Y	N	N
+  app_user	192.0.2.11	N	N	N	N
+[03] MySQL 口令复杂度策略
+  cmd: mysql -N -B -e "SHOW GLOBAL VARIABLES LIKE 'validate_password%'; SELECT PLUGIN_NAME,PLUGIN_STATUS FROM information_schema.PLUGINS WHERE PLUGIN_NAME LIKE '%validate_password%';"
+  file: /etc/mysql/mysql.conf.d/mysqld.cnf
+  VALIDATE_PASSWORD	ACTIVE
+===== END OF REPORT =====

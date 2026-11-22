@@ -8,6 +8,12 @@ from enum import Enum
 class AssetType(str, Enum):
     SERVER = "服务器"
     STORAGE = "存储设备"
+    DATABASE = "数据库"
+
+    @property
+    def family(self) -> str:
+        """规则库适用口径：服务器与数据库分开建模。"""
+        return "database" if self is AssetType.DATABASE else "server"
 
 
 class Importance(str, Enum):

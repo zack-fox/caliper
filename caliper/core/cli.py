@@ -13,6 +13,7 @@ from tempfile import TemporaryDirectory
 
 from core.contracts.filenames import RESULT_FILENAME
 from core.contracts.verdict import to_text
+from core.evidence.capture import CaptureError, load_capture, render_script
 from core.evidence.package import EvidenceError, load_evidence, summarize
 from core.golden import GoldenError, check_case, discover_cases, run_case, update_expected
 from core.items.loader import Pack, PackError, load_pack
@@ -23,12 +24,18 @@ from core.issues.summary import (
     render_issue_workbook,
     verify_issue_workbook,
 )
+from core.major.major import (
+    MajorGateError,
+    compute_rule_version,
+    ensure_major_confirmations,
+)
 from core.major.risk import (
     build_major_rows,
     render_major_workbook,
     verify_major_workbook,
 )
 from core.model.entities import CheckBlock, ProjectConfig, RunResult
+from core.records import RecordError, write_record_book
 from core.render.asset_record import (
     AssetRecordError,
     fill_asset_workbook,
@@ -42,6 +49,7 @@ from core.render.result_record import (
 )
 from core.rules.dsl import RuleError
 from core.rules.engine import RulesError
+from core.rules.library import LibraryError, RuleLibrary
 from core.store.corrections import (
     CorrectionError,
     CorrectionStore,
@@ -87,6 +95,19 @@ def build_parser() -> argparse.ArgumentParser:
 
     lint = sub.add_parser("lint-rules", help="校验规则库与映射")
     lint.add_argument("--pack", type=Path, required=True)
+
+    library = sub.add_parser("lint-library", help="校验六套规则库清单与装载")
+    library.add_argument("--pack", type=Path, required=True)
+
+    capture = sub.add_parser("capture", help="按资产族与等级生成采集脚本")
+    capture.add_argument("--pack", type=Path, required=True, help="规则包目录")
+    capture.add_argument("--family", required=True, choices=["server", "database"])
+    capture.add_argument("--level", required=True, type=int, choices=[2, 3])
+    capture.add_argument("--out", type=Path, help="输出脚本路径；省略则打印到标准输出")
+
+    records = sub.add_parser("records", help="生成公司格式记录表（每资产一张 sheet）")
+    records.add_argument("--project", required=True, type=Path)
+    records.add_argument("--out", type=Path, help="覆盖输出目录")
 
     golden = sub.add_parser("golden", help="金标准逐格回归比对（P12）")
     golden.add_argument(
@@ -182,7 +203,7 @@ def _run(args, render: bool = True) -> tuple[ProjectConfig, RunResult, Pack, Pat
         store.close()
     except CorrectionError as exc:
         raise CliError(str(exc)) from exc
-    _, out_dir = _resolve(project, base, args.pack)
+    _, out_dir = _resolve(project, base, getattr(args, "pack", None))
     out_override = getattr(args, "out", None)
     if out_override:
         out_dir = out_override
@@ -267,16 +288,35 @@ def _cmd_export(args) -> int:
         project, result, pack, out_dir, _ = _run(args, render=False)
         try:
             store = _correction_store(args.project)
-            confirmed = store.major_confirmed(project.level)
-            store.close()
+            try:
+                confirmed = store.major_confirmed(project.level)
+                issues = build_issue_rows(
+                    result,
+                    pack.items_for_level(project.level),
+                    TextLibrary(pack.texts),
+                    confirmed,
+                )
+                library = pack.major
+                if library is None:
+                    raise CliError("重大隐患规则库未装载")
+                version = compute_rule_version(
+                    [pack.root / pack.meta.high_risk, pack.root / pack.meta.major]
+                )
+                ensure_major_confirmations(
+                    issues,
+                    pack.high_risk,
+                    library,
+                    project.level,
+                    result,
+                    store,
+                    version,
+                )
+            finally:
+                store.close()
         except CorrectionError as exc:
             raise CliError(str(exc)) from exc
-        issues = build_issue_rows(
-            result,
-            pack.items_for_level(project.level),
-            TextLibrary(pack.texts),
-            confirmed,
-        )
+        except MajorGateError as exc:
+            raise CliError(str(exc)) from exc
         try:
             if args.table == "issue":
                 template = getattr(args, "template", None) or find_template(
@@ -287,7 +327,9 @@ def _cmd_export(args) -> int:
                 print(f"已导出：{target}")
                 print(f"自检：{len(issues)} 行，问题编号连续，25 列齐全")
             else:
-                rows = build_major_rows(issues, pack.high_risk, project.level, confirmed)
+                rows = build_major_rows(
+                    issues, pack.high_risk, project.level, confirmed, library
+                )
                 template = getattr(args, "template", None) or find_template(
                     pack.root, "major_risk.xlsx"
                 )
@@ -368,6 +410,12 @@ def _lint_pack(pack: Pack) -> list[str]:
         for seq in record.get("binds_items", []):
             if seq not in {item.seq for item in pack.items[3]}:
                 problems.append(f"{record.get('hr_id')}：引用不存在的 item {seq}")
+    if pack.major is not None:
+        missing = pack.major.missing_hr_ids(
+            str(record.get("hr_id", "")) for record in pack.high_risk
+        )
+        for hr_id in missing:
+            problems.append(f"重大隐患规则库未覆盖高风险判例 {hr_id}")
     return problems
 
 
@@ -389,6 +437,49 @@ def _cmd_lint(args) -> int:
             print(f"[失败] {problem}", file=sys.stderr)
         return 1
     print("规则检查通过：检查块引用、实施点覆盖、二值口径、高风险引用 全部一致")
+    return 0
+
+
+def _cmd_lint_library(args) -> int:
+    try:
+        library = RuleLibrary.load(args.pack)
+    except LibraryError as exc:
+        print(f"[失败] 六库清单：{exc}", file=sys.stderr)
+        return 1
+    for entry in library.entries:
+        print(
+            f"{entry.key:10s} {entry.status:8s} {entry.rule_count:>4d} 条  {entry.title}"
+        )
+    print(f"六库校验通过：{len(library.entries)} 个库，共 {library.total_rules()} 条规则")
+    return 0
+
+
+def _cmd_capture(args) -> int:
+    try:
+        library = load_capture(args.pack)
+        script = render_script(library, args.family, args.level)
+    except CaptureError as exc:
+        raise CliError(str(exc)) from exc
+    if args.out is None:
+        print(script, end="")
+        return 0
+    try:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(script, encoding="utf-8")
+    except OSError as exc:
+        raise CliError(f"写入 {args.out} 失败：{exc}") from exc
+    print(f"已生成采集脚本：{args.out}")
+    return 0
+
+
+def _cmd_records(args) -> int:
+    project, result, pack, out_dir, _ = _run(args, render=False)
+    items_by_level = {project.level: pack.items_for_level(project.level)}
+    try:
+        target = write_record_book(project, result, items_by_level, out_dir)
+    except RecordError as exc:
+        raise CliError(str(exc)) from exc
+    print(f"记录表：{target}")
     return 0
 
 
@@ -436,6 +527,9 @@ def main(argv: list[str] | None = None) -> int:
         "explain": _cmd_explain,
         "export": _cmd_export,
         "lint-rules": _cmd_lint,
+        "lint-library": _cmd_lint_library,
+        "capture": _cmd_capture,
+        "records": _cmd_records,
         "golden": _cmd_golden,
     }
     try:

@@ -1,0 +1,31 @@
+id: server_l3_compliant
+title: 服务器三级：第 1 项与第 18 项全部实施点符合
+level: 3
+project_code: 示例-回归-001
+system_name: 示例系统A
+assets:
+  - device_name: 示例系统A-应用服务器
+    ip: 192.0.2.10
+    importance: 一般
+    guide: 三级-安全通用要求
+    asset_type: 服务器
+evidence: pkg-server-compliant
+expect:
+  sessions: 1
+  blocks: 5
+  block_titles:
+    - Duplicate UID / UID=0 accounts
+    - Empty / expired password
+    - Password complexity
+    - Password policy (login.defs)
+    - Remote login source restriction
+  os_family_by_session: [debian]
+  unmapped: 0
+  verdicts:
+    1: 符合
+    18: 符合
+  compliance:
+    1: 符合(1分)
+    18: 符合(1分)
+  remediation: []
+  major_candidates: []

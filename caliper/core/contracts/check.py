@@ -176,12 +176,24 @@ def _check_high_risk(rows: list[dict], l3_items: list[dict]) -> None:
         "缓解措施",
         "风险评价",
         "整改建议",
+        "可降风险",
+        "降风险前提",
         "binds_items",
     )
     for index, row in enumerate(rows, 1):
         for key in required:
+            if key == "可降风险":
+                if not isinstance(row.get(key), bool):
+                    raise ContractError(f"high_risk.yaml 第 {index} 条可降风险应为布尔值")
+                continue
+            if key == "降风险前提":
+                if not isinstance(row.get(key), str):
+                    raise ContractError(f"high_risk.yaml 第 {index} 条降风险前提应为字符串")
+                continue
             if not row.get(key):
                 raise ContractError(f"high_risk.yaml 第 {index} 条缺少 {key}")
+        if row["可降风险"] and not row["降风险前提"].strip():
+            raise ContractError(f"high_risk.yaml 第 {index} 条可降风险为 true 但缺少前提")
         if row["hr_id"] != f"HR-{index:02d}":
             raise ContractError(f"high_risk.yaml 编号不连续：期望 HR-{index:02d}，实际 {row['hr_id']}")
         if not set(row["binds_items"]) <= seqs:
@@ -214,10 +226,23 @@ def _check_checks_map(rows: list[dict], l3_items: list[dict], l2_items: list[dic
             if level == 2:
                 mapped_l2.add(bind["item"])
     ubuntu = [row for row in rows if "debian" in row["os_family"]]
-    if len(ubuntu) != 44:
-        raise ContractError(f"checks_map.yaml Ubuntu 检查块应为 44，实际 {len(ubuntu)}")
+    # Ubuntu 系统基线仍按 44 块校验；中间件/数据库分区属于本期新增的可选扩展，
+    # 单独计数，避免扩展映射稀释基线覆盖约束。
+    extension_sections = {
+        "0. DETECT",
+        "1. NGINX",
+        "2. APACHE",
+        "3. TOMCAT",
+        "1. MYSQL BASELINE",
+    }
+    baseline = [row for row in ubuntu if row["section"] not in extension_sections]
+    if len(baseline) != 44:
+        raise ContractError(
+            f"checks_map.yaml Ubuntu 系统基线检查块应为 44，实际 {len(baseline)}"
+        )
     print(
-        f"[OK] checks_map.yaml：{len(rows)} 条映射 / Ubuntu 44 块全覆盖 / "
+        f"[OK] checks_map.yaml：{len(rows)} 条映射 / Ubuntu 系统基线 44 块全覆盖"
+        f"（中间件与数据库扩展 {len(ubuntu) - 44} 块）/ "
         f"三级与二级引用项均存在 / 二级映射 {len(mapped_l2)} 项"
     )
 

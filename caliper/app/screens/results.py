@@ -10,11 +10,13 @@ from PySide6.QtWidgets import (
     QStackedWidget, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget,
 )
 
+from adapters.llm import build_payload
 from app.controller import AppController, ControllerError
-from app.screens.dialogs import TextDetailsDialog
+from app.screens.dialogs import PolishPreviewDialog, RecordPreviewDialog, TextDetailsDialog
 from app.widgets import Badge, EmptyState
 from core.contracts.verdict import Verdict, from_text, to_text
 from core.model.entities import Item, ItemResult
+from core.remediation import Advice
 from core.traceability import standard_references
 
 VERDICT_TONES = {
@@ -35,6 +37,7 @@ class ResultsScreen(QWidget):
         super().__init__(parent)
         self.controller = controller
         self.current_result: ItemResult | None = None
+        self.current_advice: Advice | None = None
         self._items: dict[int, Item] = {}
         self._visible_results: list[ItemResult] = []
         self.setObjectName("page")
@@ -56,6 +59,14 @@ class ResultsScreen(QWidget):
         self.summary = QLabel("尚未生成记录")
         self.summary.setObjectName("muted")
         heading.addWidget(self.summary)
+        self.record_preview_button = QPushButton("记录表预览")
+        self.record_preview_button.setObjectName("subtle")
+        self.record_preview_button.clicked.connect(self._preview_record)
+        self.generate_record_button = QPushButton("生成记录表")
+        self.generate_record_button.setObjectName("subtle")
+        self.generate_record_button.clicked.connect(self._generate_record)
+        heading.addWidget(self.record_preview_button)
+        heading.addWidget(self.generate_record_button)
         root.addLayout(heading)
 
         self.diagnostic_banner = QFrame()
@@ -258,6 +269,18 @@ class ResultsScreen(QWidget):
         edit_actions.addWidget(self.reset_button)
         edit_actions.addWidget(self.save_button)
         editor_layout.addLayout(edit_actions)
+        advice_row = QHBoxLayout()
+        advice_row.setSpacing(8)
+        self.advice_summary = QLabel("选择记录后显示整改建议。")
+        self.advice_summary.setObjectName("muted")
+        self.advice_summary.setWordWrap(True)
+        self.polish_button = QPushButton("润色预览")
+        self.polish_button.setObjectName("subtle")
+        self.polish_button.setEnabled(False)
+        self.polish_button.clicked.connect(self._preview_polish)
+        advice_row.addWidget(self.advice_summary, 1)
+        advice_row.addWidget(self.polish_button)
+        editor_layout.addLayout(advice_row)
         self.table_page = QWidget()
         table_page_layout = QVBoxLayout(self.table_page)
         table_page_layout.setContentsMargins(0, 0, 0, 0)
@@ -383,6 +406,9 @@ class ResultsScreen(QWidget):
         self.table.setRowCount(0)
         self._visible_results = []
         if run is None:
+            self.current_advice = None
+            self.advice_summary.setText("选择记录后显示整改建议。")
+            self.polish_button.setEnabled(False)
             self.content_stack.setCurrentWidget(self.empty)
             return
         self.content_stack.setCurrentWidget(self.table_page)
@@ -423,7 +449,10 @@ class ResultsScreen(QWidget):
             self.table.selectRow(target)
         else:
             self.current_result = None
+            self.current_advice = None
             self.selected_title.setText("没有匹配记录")
+            self.advice_summary.setText("没有匹配记录，无可展示的整改建议。")
+            self.polish_button.setEnabled(False)
 
     def _on_table_selection(self) -> None:
         selected = self.table.selectedItems()
@@ -445,6 +474,62 @@ class ResultsScreen(QWidget):
         self.record_badge.set_text("已确认" if result.reviewed else result.verdict.value, "ok" if result.reviewed else VERDICT_TONES[result.verdict])
         self.reset_button.setEnabled(result.manual_override)
         self.evidence.setText(self._evidence_summary(result, item))
+        self._load_advice(run, result)
+
+    def _load_advice(self, run, result: ItemResult) -> None:
+        """按当前记录取整改建议；未命中也明确说明，不虚构条款。"""
+        self.current_advice = None
+        try:
+            advice = self.controller.remediation_advice(run.asset.device_name, result.seq)
+        except ControllerError as exc:
+            self.advice_summary.setText(f"整改建议不可用：{exc}")
+            self.polish_button.setEnabled(False)
+            return
+        if advice is None:
+            self.advice_summary.setText(
+                "当前记录无整改建议：仅不符合 / 部分符合且命中规则库时生成。"
+            )
+            self.polish_button.setEnabled(False)
+            return
+        self.current_advice = advice
+        self.advice_summary.setText(
+            f"整改建议 · {advice.priority}优先级 · {advice.rule_id} · {advice.clause}\n"
+            f"{advice.title}：{advice.action}"
+        )
+        self.polish_button.setEnabled(True)
+
+    def _current_asset_key(self) -> str:
+        run = self._current_run()
+        return run.asset.device_name if run is not None else ""
+
+    def _preview_record(self) -> None:
+        asset_key = self._current_asset_key()
+        if not asset_key:
+            QMessageBox.information(
+                self,
+                "记录表预览",
+                "当前没有可预览的记录。请先运行核查并在左侧选择设备。",
+            )
+            return
+        try:
+            sheet = self.controller.record_sheet(asset_key)
+        except ControllerError as exc:
+            QMessageBox.warning(self, "无法预览记录表", str(exc))
+            return
+        RecordPreviewDialog(sheet, self).exec()
+
+    def _generate_record(self) -> None:
+        try:
+            target = self.controller.generate_record_book()
+        except ControllerError as exc:
+            QMessageBox.warning(self, "生成记录表失败", str(exc))
+            return
+        QMessageBox.information(self, "已生成记录表", f"记录表已生成：\n{target}")
+
+    def _preview_polish(self) -> None:
+        if self.current_advice is None:
+            return
+        PolishPreviewDialog(build_payload(self.current_advice), self).exec()
 
     @staticmethod
     def _evidence_summary(result: ItemResult, item: Item | None) -> str:

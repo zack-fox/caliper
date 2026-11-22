@@ -233,3 +233,229 @@ rules:
         - {not_contains: "HISTSIZE=0"}
     pass_reason: 已限制敏感数据残留
     fail_reason: 未限制敏感数据残留
+
+  # ---- 中间件与数据库补充 ----
+  # 中间件/数据库块只在对应组件或资产族部署时出现。optional_block 让规则在块缺失时
+  # 跳过该实施点，避免把“未部署”误判为未采集；块存在但输出 not detected/skipped 时按不适用通过。
+  - item: 1
+    point: 4
+    block: MySQL 口令复杂度策略
+    expect:
+      any:
+        - {all: [{contains: "validate_password"}, {contains: "ACTIVE"}]}
+        - {all: [{contains: "VALIDATE_PASSWORD"}, {contains: "ACTIVE"}]}
+        - {contains: "not detected"}
+        - {contains: "skipped"}
+    pass_reason: 数据库已启用口令复杂度插件或未部署数据库
+    fail_reason: 数据库未启用口令复杂度插件
+    optional_block: true
+
+  - item: 2
+    point: 2
+    block: MySQL 登录失败处理
+    expect:
+      any:
+        - {all: [{contains: "connection_control"}, {contains: "ACTIVE"}]}
+        - {all: [{contains: "CONNECTION_CONTROL"}, {contains: "ACTIVE"}]}
+        - {contains: "not detected"}
+        - {contains: "skipped"}
+    pass_reason: 数据库已启用登录失败控制或未部署数据库
+    fail_reason: 数据库未启用登录失败控制
+    optional_block: true
+
+  - item: 6
+    point: 1
+    block: MySQL 空口令与匿名账户
+    expect:
+      any:
+        - {contains: "no anonymous"}
+        - {contains: "anonymous: none"}
+        - {contains: "not detected"}
+        - {contains: "skipped"}
+    pass_reason: 未发现匿名账户或未部署数据库
+    fail_reason: 存在匿名账户
+    optional_block: true
+
+  - item: 6
+    point: 2
+    block: MySQL 空口令与匿名账户
+    expect:
+      any:
+        - {contains: "no empty-password"}
+        - {contains: "empty-password: none"}
+        - {contains: "not detected"}
+        - {contains: "skipped"}
+    pass_reason: 未发现空口令账户或未部署数据库
+    fail_reason: 存在空口令账户
+    optional_block: true
+
+  - item: 8
+    point: 1
+    block: Separation of duty (three roles)
+    expect: {contains: "sudo user"}
+    pass_reason: 已划分系统管理角色
+    fail_reason: 未划分系统管理角色
+
+  - item: 8
+    point: 2
+    block: Separation of duty (three roles)
+    expect:
+      all:
+        - {contains: "sudo user"}
+        - {contains: "audit reader"}
+    pass_reason: 管理权限与审计权限已分离
+    fail_reason: 未实现管理权限与审计权限分离
+
+  - item: 8
+    point: 3
+    block: Nginx version / run user
+    expect:
+      any:
+        - {contains: "www-data"}
+        - {contains: "not detected"}
+        - {contains: "skipped"}
+    pass_reason: 中间件工作进程以非特权账户运行或未部署
+    fail_reason: 中间件以特权账户运行，权限未最小化
+    optional_block: true
+
+  - item: 9
+    point: 2
+    block: MySQL 账户权限与最小化
+    expect:
+      all:
+        - {contains: "root"}
+        - {not_contains: "\t%\tY"}
+    pass_reason: 账户权限清单可核查，且未发现对任意来源开放的超级权限账户
+    fail_reason: 无法读取账户权限清单，或存在对任意来源开放的超级权限账户
+    optional_block: true
+
+  - item: 12
+    point: 1
+    block: Nginx log path
+    expect:
+      any:
+        - {contains: "access_log"}
+        - {contains: "not detected"}
+        - {contains: "skipped"}
+    pass_reason: 中间件访问日志已配置或未部署
+    fail_reason: 未发现中间件访问日志配置
+    optional_block: true
+
+  - item: 12
+    point: 3
+    block: MySQL 审计日志
+    expect:
+      any:
+        - {contains: "general_log\tON"}
+        - {contains: "ACTIVE"}
+        - {contains: "not detected"}
+        - {contains: "skipped"}
+    pass_reason: 数据库已开启审计日志或未部署数据库
+    fail_reason: 数据库未开启审计日志
+    optional_block: true
+
+  - item: 13
+    point: 1
+    block: Nginx log format / sample
+    expect:
+      any:
+        - {contains: "combined"}
+        - {contains: "not detected"}
+        - {contains: "skipped"}
+    pass_reason: 中间件日志格式包含审计所需字段或未部署
+    fail_reason: 中间件日志格式无法确认审计字段
+    optional_block: true
+
+  - item: 14
+    point: 2
+    block: Nginx log retention
+    expect:
+      any:
+        - {gt: {prefix: "rotate", value: 26}}
+        - {contains: "not detected"}
+        - {contains: "skipped"}
+    pass_reason: 中间件日志轮转满足半年留存或未部署
+    fail_reason: 中间件日志轮转不足半年
+    optional_block: true
+
+  - item: 16
+    point: 1
+    block: Running services
+    expect:
+      all:
+        - {not_contains: "telnet"}
+        - {not_contains: "rsh"}
+    pass_reason: 未运行常见冗余网络服务
+    fail_reason: 存在冗余网络服务
+
+  - item: 16
+    point: 2
+    block: Running services
+    expect:
+      all:
+        - {not_contains: "xinetd"}
+        - {not_contains: "inetd"}
+    pass_reason: 未发现非必要组件服务
+    fail_reason: 存在非必要组件服务
+
+  - item: 16
+    point: 2
+    block: Apache
+    expect:
+      any:
+        - {contains: "not detected"}
+        - {contains: "not installed"}
+        - {contains: "skipped"}
+    pass_reason: 未安装 Apache
+    fail_reason: 检测到 Apache，需核实是否为必需组件
+    optional_block: true
+
+  - item: 16
+    point: 2
+    block: Tomcat
+    expect:
+      any:
+        - {contains: "not detected"}
+        - {contains: "not installed"}
+        - {contains: "skipped"}
+    pass_reason: 未安装 Tomcat
+    fail_reason: 检测到 Tomcat，需核实是否为必需组件
+    optional_block: true
+
+  - item: 17
+    point: 2
+    block: Docker containers
+    expect:
+      all:
+        - {not_contains: "0.0.0.0:"}
+        - {not_contains: ":::"}
+    pass_reason: 容器端口未对全网卡暴露
+    fail_reason: 容器端口对全网卡暴露
+    optional_block: true
+
+  - item: 17
+    point: 2
+    block: Nginx listen port
+    expect:
+      all:
+        - {not_contains: ":21 "}
+        - {not_contains: ":23 "}
+        - {not_contains: ":3389"}
+        - {not_contains: ":445 "}
+    pass_reason: 中间件未监听常见高危端口
+    fail_reason: 中间件存在高危端口监听
+    optional_block: true
+
+  - item: 18
+    point: 1
+    block: MySQL 远程访问限制
+    expect:
+      any:
+        - {contains: "bind_address\t127.0.0.1"}
+        - {contains: "bind_address\tlocalhost"}
+        - {contains: "skip_networking\tON"}
+        - {contains: "not detected"}
+        - {contains: "skipped"}
+    pass_reason: 数据库监听地址受限或未部署数据库
+    fail_reason: 数据库监听地址未受限
+    optional_block: true
