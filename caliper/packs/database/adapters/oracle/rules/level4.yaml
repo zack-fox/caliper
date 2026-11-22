@@ -1,0 +1,80 @@
+rules:
+- rule_id: DB-ORACLE-L4-AUTH_ID-P02-01
+  level: 4
+  item: 1
+  point: 2
+  block: Oracle 用户账户
+  expect:
+    contains: fact:db.oracle.users.unique=true
+  pass_reason: dba_users 中用户名唯一。
+  fail_reason: dba_users 中存在重复用户名，身份标识不唯一。
+- rule_id: DB-ORACLE-L4-AUTH_ID-P04-02
+  level: 4
+  item: 1
+  point: 4
+  block: Oracle 口令与登录策略
+  expect:
+    all:
+    - contains: fact:db.oracle.password_policy.verify_function=true
+    - gt:
+        prefix: fact:db.oracle.password_policy.life_days=
+        value: 0
+    - lt:
+        prefix: fact:db.oracle.password_policy.life_days=
+        value: 91
+  pass_reason: DEFAULT 概要文件配置了口令复杂度校验函数，口令有效期不超过 90 天。
+  fail_reason: 未配置口令复杂度校验函数，或口令未设置有效期、有效期超过 90 天。
+- rule_id: DB-ORACLE-L4-LOGIN_FAIL-P02-03
+  level: 4
+  item: 2
+  point: 2
+  block: Oracle 口令与登录策略
+  expect:
+    all:
+    - gt:
+        prefix: fact:db.oracle.login_fail.attempt=
+        value: 0
+    - lt:
+        prefix: fact:db.oracle.login_fail.attempt=
+        value: 11
+    - contains: fact:db.oracle.login_fail.locked=true
+  pass_reason: 登录失败次数限制不超过 10 次，且失败后账户会被锁定。
+  fail_reason: 未限制登录失败次数、阈值超过 10 次或失败后未设置账户锁定。
+- rule_id: DB-ORACLE-L4-LOGIN_FAIL-P03-04
+  level: 4
+  item: 2
+  point: 3
+  block: Oracle 口令与登录策略
+  expect:
+    lt:
+      prefix: fact:db.oracle.timeout.idle_minutes=
+      value: 31
+  pass_reason: 空闲会话超时时间不超过 30 分钟。
+  fail_reason: 未设置空闲会话超时或超过 30 分钟。
+- rule_id: DB-ORACLE-L4-EXTRA_ACCOUNT-P02-05
+  level: 4
+  item: 7
+  point: 2
+  block: Oracle 用户账户
+  expect:
+    contains: fact:db.oracle.users.expired.none=true
+  pass_reason: 未发现 EXPIRED 状态的账户。
+  fail_reason: 存在 EXPIRED 状态账户，未及时清理或续期。
+- rule_id: DB-ORACLE-L4-AUDIT_ENABLE-P01-06
+  level: 4
+  item: 12
+  point: 1
+  block: Oracle 审计参数
+  expect:
+    contains: fact:db.oracle.audit.enabled=true
+  pass_reason: audit_trail 已设置为 DB，数据库审计已开启。
+  fail_reason: audit_trail 未设置为 DB，数据库审计未开启。
+- rule_id: DB-ORACLE-L4-PRIV_SEP-P02-07
+  level: 4
+  item: 8
+  point: 2
+  block: Oracle 权限分离
+  expect:
+    contains: fact:db.oracle.privileges.o7_dictionary=false
+  pass_reason: O7_DICTIONARY_ACCESSIBILITY 为 FALSE，数据字典访问受限。
+  fail_reason: O7_DICTIONARY_ACCESSIBILITY 为 TRUE，普通权限用户可访问数据字典。

@@ -1,0 +1,38 @@
+===== RESULTS (collected) =====
+===== 账户、权限与存储 =====
+[01] MySQL 用户账户与权限
+  cmd: mysql -N -B -e "SELECT User,Host,plugin,authentication_string,account_locked,password_expired,Super_priv,Grant_priv,File_priv,Process_priv FROM mysql.user ORDER BY User,Host;"
+  app_rw	10.0.2.%	caching_sha2_password	$A$005$EXAMPLEHASH1	N	N	N	N	N	N
+  auditor	localhost	caching_sha2_password	$A$005$EXAMPLEHASH2	N	N	N	N	N	N
+  root	localhost	caching_sha2_password	$A$005$EXAMPLEHASH3	N	N	Y	N	Y	N
+[02] MySQL 口令策略
+  cmd: mysql -N -B -e "SHOW GLOBAL VARIABLES LIKE 'validate_password%'; SHOW GLOBAL VARIABLES LIKE 'default_password_lifetime';"
+  validate_password.policy	MEDIUM
+  validate_password.length	10
+  validate_password.mixed_case_count	1
+  validate_password.number_count	1
+  validate_password.special_char_count	1
+  default_password_lifetime	90
+[03] MySQL 登录失败与超时
+  cmd: mysql -N -B -e "SHOW GLOBAL VARIABLES LIKE 'connection_control%'; SHOW GLOBAL VARIABLES LIKE 'interactive_timeout'; SHOW GLOBAL VARIABLES LIKE 'wait_timeout'; SELECT PLUGIN_NAME,PLUGIN_STATUS FROM information_schema.PLUGINS WHERE PLUGIN_NAME LIKE '%connection_control%';"
+  connection_control_failed_connections_threshold	5
+  connection_control_min_connection_delay	300000
+  connection_control_max_connection_delay	2147483647
+  interactive_timeout	600
+  wait_timeout	600
+  connection_control	ACTIVE
+[04] MySQL 远程管理加密
+  cmd: mysql -N -B -e "SHOW GLOBAL VARIABLES LIKE '%ssl%'; SHOW GLOBAL VARIABLES LIKE 'skip_networking'; SHOW GLOBAL VARIABLES LIKE 'bind_address';"
+  have_ssl	YES
+  have_openssl	YES
+  skip_networking	OFF
+  bind_address	0.0.0.0
+[05] MySQL 安全审计
+  cmd: mysql -N -B -e "SHOW GLOBAL VARIABLES LIKE 'general_log'; SHOW GLOBAL VARIABLES LIKE 'slow_query_log'; SHOW GLOBAL VARIABLES LIKE 'log_output'; SHOW GLOBAL VARIABLES LIKE 'expire_logs_days'; SHOW GLOBAL VARIABLES LIKE 'binlog_expire_logs_seconds'; SELECT PLUGIN_NAME,PLUGIN_STATUS FROM information_schema.PLUGINS WHERE PLUGIN_NAME LIKE '%audit%';"
+  general_log	ON
+  slow_query_log	OFF
+  log_output	FILE
+  expire_logs_days	180
+  binlog_expire_logs_seconds	15552000
+  audit_log	ACTIVE
+===== END OF REPORT =====

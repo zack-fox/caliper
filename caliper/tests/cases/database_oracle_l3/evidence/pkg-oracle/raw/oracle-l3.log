@@ -1,0 +1,38 @@
+===== RESULTS (collected) =====
+===== 账户与权限 =====
+[01] Oracle 用户账户
+  cmd: printf "select username,account_status from dba_users order by username;" | sqlplus -S "$CALIPER_ORACLE_CONN"
+  USERNAME                       ACCOUNT_STATUS
+  ------------------------------ --------------------------------
+  APP                            OPEN
+  AUDIT                          OPEN
+  SYSTEM                         OPEN
+  SYS                            OPEN
+[02] Oracle 口令与登录策略
+  cmd: printf "select resource_name,limit from dba_profiles where profile='DEFAULT';" | sqlplus -S "$CALIPER_ORACLE_CONN"
+  RESOURCE_NAME                  LIMIT
+  ------------------------------ ------------------------------
+  PASSWORD_LIFE_TIME             90
+  FAILED_LOGIN_ATTEMPTS          5
+  PASSWORD_LOCK_TIME             1
+  IDLE_TIME                      15
+  PASSWORD_VERIFY_FUNCTION       ORA12C_STRONG_VERIFY_FUNCTION
+===== 安全审计 =====
+[03] Oracle 审计参数
+  cmd: printf "show parameter audit\nshow parameter audit_sys_operations\n" | sqlplus -S "$CALIPER_ORACLE_CONN"
+  NAME                                 TYPE        VALUE
+  ------------------------------------ ----------- ------------------------------
+  audit_trail                          string      DB
+  audit_sys_operations                 boolean     TRUE
+[04] Oracle 审计策略
+  cmd: printf "select * from dba_stmt_audit_opts;\nselect * from dba_priv_audit_opts;\n" | sqlplus -S "$CALIPER_ORACLE_CONN"
+  AUDIT_OPTION                             AUDIT_OPTION_TYPE SUCCESS    FAILURE
+  ---------------------------------------- ----------------- ---------- ----------
+  ALTER ANY TABLE                          BY ACCESS         SUCCESSFUL FAILURE
+===== 访问控制 =====
+[05] Oracle 权限分离
+  cmd: printf "show parameter o7_dictionary_accessibility\n" | sqlplus -S "$CALIPER_ORACLE_CONN"
+  NAME                                 TYPE        VALUE
+  ------------------------------------ ----------- ------------------------------
+  o7_dictionary_accessibility          boolean     FALSE
+===== END OF REPORT =====

@@ -1,0 +1,1305 @@
+version: 0.1.0
+status: active
+rules:
+- id: REM-GENERIC-L2-01
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 1
+  priority: 高
+  problem: 身份鉴别相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议为每个数据库账户设置唯一用户名和满足复杂度要求的口令，并启用口令有效期与登录失败处理策略。
+  clause: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换：
+- id: REM-GENERIC-L2-02
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 2
+  priority: 低
+  problem: 身份鉴别相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议启用登录失败锁定、登录超时自动退出等登录失败处理措施。
+  clause: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施：
+- id: REM-GENERIC-L2-03
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 3
+  priority: 低
+  problem: 身份鉴别相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议仅启用加密的远程管理方式，关闭明文管理协议。
+  clause: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听。
+- id: REM-GENERIC-L2-04
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 4
+  priority: 低
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议按岗位分配账户和最小权限，删除匿名或共享账户。
+  clause: a）应对登录的用户分配账户和权限：
+- id: REM-GENERIC-L2-05
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 5
+  priority: 中
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议重命名或删除默认账户，并修改默认口令。
+  clause: b）应重命名或删除默认账户，修改默认账户的默认口令：
+- id: REM-GENERIC-L2-06
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 6
+  priority: 高
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议删除或禁用多余、过期账户，并定期核查账户清单。
+  clause: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在：
+- id: REM-GENERIC-L2-07
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 7
+  priority: 低
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议划分系统管理员、安全管理员和审计管理员等角色，实现权限分离。
+  clause: d）应授予管理用户所需的最小权限，实现管理用户的权限分离。
+- id: REM-GENERIC-L2-08
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 8
+  priority: 低
+  problem: 安全审计相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议启用数据库审计功能，确保审计覆盖每个用户和重要安全事件。
+  clause: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计：
+- id: REM-GENERIC-L2-09
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 9
+  priority: 低
+  problem: 安全审计相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议审计记录覆盖日期时间、用户、事件类型、结果等必要内容。
+  clause: b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息：
+- id: REM-GENERIC-L2-10
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 10
+  priority: 高
+  problem: 安全审计相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议将审计记录备份至日志服务器，并限制审计记录访问。
+  clause: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等。
+- id: REM-GENERIC-L2-11
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 11
+  priority: 中
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议按指导书要求完善数据库安全配置。
+  clause: a）应遵循最小安装的原则，仅安装需要的组件和应用程序：
+- id: REM-GENERIC-L2-12
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 12
+  priority: 高
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议按指导书要求完善数据库安全配置。
+  clause: b）应关闭不需要的系统服务、默认共享和高危端口：
+- id: REM-GENERIC-L2-13
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 13
+  priority: 低
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议通过地址白名单限制允许登录数据库的终端范围。
+  clause: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制：
+- id: REM-GENERIC-L2-14
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 14
+  priority: 中
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对输入数据进行有效性校验，避免注入等输入验证缺陷。
+  clause: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求：
+- id: REM-GENERIC-L2-15
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 15
+  priority: 高
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议及时修补数据库已知漏洞，并关闭不必要的组件与端口。
+  clause: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞。
+- id: REM-GENERIC-L2-16
+  title: 恶意代码防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 16
+  priority: 中
+  problem: 恶意代码防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议部署恶意代码检测与防范措施，并及时更新特征库。
+  clause: a）应安装防恶意代码软件或配置具有相应功能的软件，并定期进行升级和更新防恶意代码库。
+- id: REM-GENERIC-L2-17
+  title: 可信验证整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 17
+  priority: 中
+  problem: 可信验证相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议基于可信根对数据库程序与重要配置进行可信验证。
+  clause: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。
+- id: REM-GENERIC-L2-18
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 18
+  priority: 低
+  problem: 数据完整性相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议使用加密协议传输数据库管理数据，保证传输完整性。
+  clause: a）应采用校验技术保证重要数据在传输过程中的完整性。
+- id: REM-GENERIC-L2-19
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 19
+  priority: 高
+  problem: 数据备份恢复相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议定期备份数据库与配置，并对备份文件采取保护措施。
+  clause: a）应提供重要数据的本地数据备份与恢复功能：
+- id: REM-GENERIC-L2-20
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 20
+  priority: 高
+  problem: 数据备份恢复相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议在异地保存重要数据备份，避免单点灾难导致数据丢失。
+  clause: b）应提供异地数据备份功能，利用通信网络将重要数据定时批量传送至备份场地。
+- id: REM-GENERIC-L2-21
+  title: 剩余信息保护整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 21
+  priority: 低
+  problem: 剩余信息保护相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议在数据库退役或介质复用前彻底清除剩余信息。
+  clause: a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除：
+- id: REM-GENERIC-L2-22
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 22
+  priority: 低
+  problem: 个人信息保护相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议仅采集业务必需的个人信息，并取得授权后处理。
+  clause: a）应仅采集和保存业务必需的用户个人信息：
+- id: REM-GENERIC-L2-23
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 23
+  priority: 低
+  problem: 个人信息保护相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议限制个人信息访问范围，防止未授权访问或披露。
+  clause: b）应禁止未授权访问和非法使用用户个人信息。
+- id: REM-GENERIC-L3-01
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 1
+  priority: 高
+  problem: 身份鉴别相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议为每个数据库账户设置唯一用户名和满足复杂度要求的口令，并启用口令有效期与登录失败处理策略。
+  clause: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换：
+- id: REM-GENERIC-L3-02
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 2
+  priority: 低
+  problem: 身份鉴别相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议启用登录失败锁定、登录超时自动退出等登录失败处理措施。
+  clause: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施：
+- id: REM-GENERIC-L3-03
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 3
+  priority: 高
+  problem: 身份鉴别相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议仅启用加密的远程管理方式，关闭明文管理协议。
+  clause: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听：
+- id: REM-GENERIC-L3-04
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 4
+  priority: 高
+  problem: 身份鉴别相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议按指导书要求完善数据库安全配置。
+  clause: d）应采用口令、密码技术、生物技术等两种或两种以上组合的鉴别技术对用户进行身份鉴别，且其中一种鉴别技术至少应使用密码技术来实现。
+- id: REM-GENERIC-L3-05
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 5
+  priority: 高
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议按岗位分配账户和最小权限，删除匿名或共享账户。
+  clause: a）应对登录的用户分配账户和权限：
+- id: REM-GENERIC-L3-06
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 6
+  priority: 中
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议重命名或删除默认账户，并修改默认口令。
+  clause: b）应重命名或删除默认账户，修改默认账户的默认口令：
+- id: REM-GENERIC-L3-07
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 7
+  priority: 高
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议删除或禁用多余、过期账户，并定期核查账户清单。
+  clause: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在：
+- id: REM-GENERIC-L3-08
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 8
+  priority: 高
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议划分系统管理员、安全管理员和审计管理员等角色，实现权限分离。
+  clause: d）应授予管理用户所需的最小权限，实现管理用户的权限分离：
+- id: REM-GENERIC-L3-09
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 9
+  priority: 高
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议制定并落实数据库访问控制策略，按默认拒绝原则授权。
+  clause: e）应由授权主体配置访问控制策略，访问控制策略规定主体对客体的访问规则：
+- id: REM-GENERIC-L3-10
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 10
+  priority: 高
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议按最小权限细化访问控制粒度，避免过宽授权。
+  clause: f）访问控制的粒度应达到主体为用户级或进程级，客体为文件、数据库表级：
+- id: REM-GENERIC-L3-11
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 11
+  priority: 高
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对重要数据设置安全标记，并基于标记实施访问控制。
+  clause: g）应对重要主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。
+- id: REM-GENERIC-L3-12
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 12
+  priority: 低
+  problem: 安全审计相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议启用数据库审计功能，确保审计覆盖每个用户和重要安全事件。
+  clause: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计：
+- id: REM-GENERIC-L3-13
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 13
+  priority: 低
+  problem: 安全审计相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议审计记录覆盖日期时间、用户、事件类型、结果等必要内容。
+  clause: b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息：
+- id: REM-GENERIC-L3-14
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 14
+  priority: 高
+  problem: 安全审计相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议将审计记录备份至日志服务器，并限制审计记录访问。
+  clause: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等：
+- id: REM-GENERIC-L3-15
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 15
+  priority: 低
+  problem: 安全审计相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对审计记录进行保护，避免未预期的删除、修改或覆盖。
+  clause: d）应对审计进程进行保护，防止未经授权的中断。
+- id: REM-GENERIC-L3-16
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 16
+  priority: 中
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议按指导书要求完善数据库安全配置。
+  clause: a）应遵循最小安装的原则，仅安装需要的组件和应用程序：
+- id: REM-GENERIC-L3-17
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 17
+  priority: 高
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议按指导书要求完善数据库安全配置。
+  clause: b）应关闭不需要的系统服务、默认共享和高危端口：
+- id: REM-GENERIC-L3-18
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 18
+  priority: 低
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议通过地址白名单限制允许登录数据库的终端范围。
+  clause: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制：
+- id: REM-GENERIC-L3-19
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 19
+  priority: 中
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对输入数据进行有效性校验，避免注入等输入验证缺陷。
+  clause: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求：
+- id: REM-GENERIC-L3-20
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 20
+  priority: 高
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议及时修补数据库已知漏洞，并关闭不必要的组件与端口。
+  clause: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞：
+- id: REM-GENERIC-L3-21
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 21
+  priority: 中
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议部署入侵检测或防御能力，并在发生严重入侵事件时提供报警。
+  clause: f）应能够检测到对重要节点进行入侵的行为，并在发生严重入侵事件时提供报警。
+- id: REM-GENERIC-L3-22
+  title: 恶意代码防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 22
+  priority: 中
+  problem: 恶意代码防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议部署恶意代码检测与防范措施，并及时更新特征库。
+  clause: a）应采用免受恶意代码攻击的技术措施或主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。
+- id: REM-GENERIC-L3-23
+  title: 可信验证整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 23
+  priority: 中
+  problem: 可信验证相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议基于可信根对数据库程序与重要配置进行可信验证。
+  clause: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。
+- id: REM-GENERIC-L3-24
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 24
+  priority: 低
+  problem: 数据完整性相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议使用加密协议传输数据库管理数据，保证传输完整性。
+  clause: a）应采用校验技术或密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等：
+- id: REM-GENERIC-L3-25
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 25
+  priority: 低
+  problem: 数据完整性相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议账户口令以不可逆加密形式存储，重要业务数据采用校验机制。
+  clause: b）应采用校验技术或密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等。
+- id: REM-GENERIC-L3-26
+  title: 数据保密性整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 26
+  priority: 低
+  problem: 数据保密性相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议使用加密协议传输数据库管理数据。
+  clause: a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等：
+- id: REM-GENERIC-L3-27
+  title: 数据保密性整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 27
+  priority: 低
+  problem: 数据保密性相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议账户口令以不可逆加密形式存储，重要业务数据加密存储。
+  clause: b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。
+- id: REM-GENERIC-L3-28
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 28
+  priority: 高
+  problem: 数据备份恢复相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议定期备份数据库与配置，并对备份文件采取保护措施。
+  clause: a）应提供重要数据的本地数据备份与恢复功能：
+- id: REM-GENERIC-L3-29
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 29
+  priority: 高
+  problem: 数据备份恢复相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议在异地保存重要数据备份，避免单点灾难导致数据丢失。
+  clause: b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地：
+- id: REM-GENERIC-L3-30
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 30
+  priority: 中
+  problem: 数据备份恢复相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对关键数据库提供热冗余或高可用能力，避免单点故障。
+  clause: c）应提供重要数据处理系统的热冗余，保证系统的高可用性。
+- id: REM-GENERIC-L3-31
+  title: 剩余信息保护整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 31
+  priority: 低
+  problem: 剩余信息保护相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对存储介质中的临时文件进行清除或安全删除。
+  clause: a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除：
+- id: REM-GENERIC-L3-32
+  title: 剩余信息保护整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 32
+  priority: 低
+  problem: 剩余信息保护相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议在数据库退役或介质复用前彻底清除剩余信息。
+  clause: b）应保证存有敏感数据的存储空间被释放或重新分配前得到完全清除。
+- id: REM-GENERIC-L3-33
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 33
+  priority: 低
+  problem: 个人信息保护相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议仅采集业务必需的个人信息，并取得授权后处理。
+  clause: a）应仅采集和保存业务必需的用户个人信息：
+- id: REM-GENERIC-L3-34
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 34
+  priority: 低
+  problem: 个人信息保护相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议限制个人信息访问范围，防止未授权访问或披露。
+  clause: b）应禁止未授权访问和非法使用用户个人信息。
+- id: REM-GENERIC-L4-01
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 1
+  priority: 高
+  problem: 身份鉴别相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议为每个数据库账户设置唯一用户名和满足复杂度要求的口令，并启用口令有效期与登录失败处理策略。
+  clause: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换：
+- id: REM-GENERIC-L4-02
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 2
+  priority: 低
+  problem: 身份鉴别相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议启用登录失败锁定、登录超时自动退出等登录失败处理措施。
+  clause: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施：
+- id: REM-GENERIC-L4-03
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 3
+  priority: 高
+  problem: 身份鉴别相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议仅启用加密的远程管理方式，关闭明文管理协议。
+  clause: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听：
+- id: REM-GENERIC-L4-04
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 4
+  priority: 高
+  problem: 身份鉴别相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议按指导书要求完善数据库安全配置。
+  clause: d）应采用口令、密码技术、生物技术等两种或两种以上组合的鉴别技术对用户进行身份鉴别，且其中一种鉴别技术至少应使用密码技术来实现。
+- id: REM-GENERIC-L4-05
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 5
+  priority: 高
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议按岗位分配账户和最小权限，删除匿名或共享账户。
+  clause: a）应对登录的用户分配账户和权限：
+- id: REM-GENERIC-L4-06
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 6
+  priority: 中
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议重命名或删除默认账户，并修改默认口令。
+  clause: b）应重命名或删除默认账户，修改默认账户的默认口令：
+- id: REM-GENERIC-L4-07
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 7
+  priority: 高
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议删除或禁用多余、过期账户，并定期核查账户清单。
+  clause: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在：
+- id: REM-GENERIC-L4-08
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 8
+  priority: 高
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议划分系统管理员、安全管理员和审计管理员等角色，实现权限分离。
+  clause: d）应授予管理用户所需的最小权限，实现管理用户的权限分离：
+- id: REM-GENERIC-L4-09
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 9
+  priority: 高
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议制定并落实数据库访问控制策略，按默认拒绝原则授权。
+  clause: e）应由授权主体配置访问控制策略，访问控制策略规定主体对客体的访问规则：
+- id: REM-GENERIC-L4-10
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 10
+  priority: 高
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议按最小权限细化访问控制粒度，避免过宽授权。
+  clause: f）访问控制的粒度应达到主体为用户级或进程级，客体为文件、数据库表级：
+- id: REM-GENERIC-L4-11
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 11
+  priority: 高
+  problem: 访问控制相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对重要数据设置安全标记，并基于标记实施访问控制。
+  clause: g）应对重要主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。
+- id: REM-GENERIC-L4-12
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 12
+  priority: 低
+  problem: 安全审计相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议启用数据库审计功能，确保审计覆盖每个用户和重要安全事件。
+  clause: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计：
+- id: REM-GENERIC-L4-13
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 13
+  priority: 低
+  problem: 安全审计相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议审计记录覆盖日期时间、用户、事件类型、结果等必要内容。
+  clause: b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息：
+- id: REM-GENERIC-L4-14
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 14
+  priority: 高
+  problem: 安全审计相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议将审计记录备份至日志服务器，并限制审计记录访问。
+  clause: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等：
+- id: REM-GENERIC-L4-15
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 15
+  priority: 低
+  problem: 安全审计相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对审计记录进行保护，避免未预期的删除、修改或覆盖。
+  clause: d）应对审计进程进行保护，防止未经授权的中断。
+- id: REM-GENERIC-L4-16
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 16
+  priority: 中
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议按指导书要求完善数据库安全配置。
+  clause: a）应遵循最小安装的原则，仅安装需要的组件和应用程序：
+- id: REM-GENERIC-L4-17
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 17
+  priority: 高
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议按指导书要求完善数据库安全配置。
+  clause: b）应关闭不需要的系统服务、默认共享和高危端口：
+- id: REM-GENERIC-L4-18
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 18
+  priority: 低
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议通过地址白名单限制允许登录数据库的终端范围。
+  clause: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制：
+- id: REM-GENERIC-L4-19
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 19
+  priority: 中
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对输入数据进行有效性校验，避免注入等输入验证缺陷。
+  clause: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求：
+- id: REM-GENERIC-L4-20
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 20
+  priority: 高
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议及时修补数据库已知漏洞，并关闭不必要的组件与端口。
+  clause: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞：
+- id: REM-GENERIC-L4-21
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 21
+  priority: 中
+  problem: 入侵防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议部署入侵检测或防御能力，并在发生严重入侵事件时提供报警。
+  clause: f）应能够检测到对重要节点进行入侵的行为，并在发生严重入侵事件时提供报警。
+- id: REM-GENERIC-L4-22
+  title: 恶意代码防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 22
+  priority: 高
+  problem: 恶意代码防范相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议部署恶意代码检测与防范措施，并及时更新特征库。
+  clause: a）应采用免受恶意代码攻击的技术措施或主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。
+- id: REM-GENERIC-L4-23
+  title: 可信验证整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 23
+  priority: 中
+  problem: 可信验证相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议基于可信根对数据库程序与重要配置进行可信验证。
+  clause: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。
+- id: REM-GENERIC-L4-24
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 24
+  priority: 低
+  problem: 数据完整性相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议使用加密协议传输数据库管理数据，保证传输完整性。
+  clause: a）应采用校验技术或密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等：
+- id: REM-GENERIC-L4-25
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 25
+  priority: 低
+  problem: 数据完整性相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议账户口令以不可逆加密形式存储，重要业务数据采用校验机制。
+  clause: b）应采用校验技术或密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等；
+- id: REM-GENERIC-L4-26
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 26
+  priority: 低
+  problem: 数据完整性相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议通过安全审计与数字签名等手段保证重要操作不可否认。
+  clause: c)在可能涉及法律责任认定的应用中，应采用密码技术提供数据原发证据和数据接收证据，实现数据原发行为的抗抵赖和数据接收行为的抗抵赖。
+- id: REM-GENERIC-L4-27
+  title: 数据保密性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 27
+  priority: 低
+  problem: 数据保密性相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议使用加密协议传输数据库管理数据。
+  clause: a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等：
+- id: REM-GENERIC-L4-28
+  title: 数据保密性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 28
+  priority: 低
+  problem: 数据保密性相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议账户口令以不可逆加密形式存储，重要业务数据加密存储。
+  clause: b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。
+- id: REM-GENERIC-L4-29
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 29
+  priority: 高
+  problem: 数据备份恢复相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议定期备份数据库与配置，并对备份文件采取保护措施。
+  clause: a）应提供重要数据的本地数据备份与恢复功能：
+- id: REM-GENERIC-L4-30
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 30
+  priority: 高
+  problem: 数据备份恢复相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议在异地保存重要数据备份，避免单点灾难导致数据丢失。
+  clause: b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地：
+- id: REM-GENERIC-L4-31
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 31
+  priority: 中
+  problem: 数据备份恢复相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对关键数据库提供热冗余或高可用能力，避免单点故障。
+  clause: c）应提供重要数据处理系统的热冗余，保证系统的高可用性。
+- id: REM-GENERIC-L4-32
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 32
+  priority: 高
+  problem: 数据备份恢复相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议建立异地灾难备份中心，保证重要数据可在灾难后恢复。
+  clause: d）应建立异地灾难备份中心，提供业务应用的实施切换
+- id: REM-GENERIC-L4-33
+  title: 剩余信息保护整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 33
+  priority: 低
+  problem: 剩余信息保护相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对存储介质中的临时文件进行清除或安全删除。
+  clause: a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除：
+- id: REM-GENERIC-L4-34
+  title: 剩余信息保护整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 34
+  priority: 低
+  problem: 剩余信息保护相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议在数据库退役或介质复用前彻底清除剩余信息。
+  clause: b）应保证存有敏感数据的存储空间被释放或重新分配前得到完全清除。
+- id: REM-GENERIC-L4-35
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 35
+  priority: 低
+  problem: 个人信息保护相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议仅采集业务必需的个人信息，并取得授权后处理。
+  clause: a）应仅采集和保存业务必需的用户个人信息：
+- id: REM-GENERIC-L4-36
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 36
+  priority: 低
+  problem: 个人信息保护相关配置不符合指导书要求。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议限制个人信息访问范围，防止未授权访问或披露。
+  clause: b）应禁止未授权访问和非法使用用户个人信息。

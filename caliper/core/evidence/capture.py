@@ -229,6 +229,9 @@ def render_script(library: CaptureLibrary, family: str, level: int) -> str:
     ]
     if family == "server":
         parts.append("# 同时适用于 CentOS/RHEL：安装包查询按 dpkg/rpm 自动分支。\n")
+    elif any("sqlplus" in rule.command for rule in rules):
+        parts.append("# 适用于 Oracle 11g/12c/19c：只执行 SELECT/SHOW PARAMETER 与配置文件读取。\n")
+        parts.append("# 连接参数请通过环境变量 CALIPER_ORACLE_CONN 提供，建议使用只读账户。\n")
     else:
         parts.append("# 适用于 MySQL 8.x / MariaDB 10.x：只执行 SELECT/SHOW 与配置文件读取。\n")
         parts.append("# 连接参数请通过只读账户的客户端配置文件（如 ~/.my.cnf）提供。\n")

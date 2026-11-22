@@ -230,13 +230,18 @@ def _judge_package(
     return run
 
 
-def _adapter_items(items: list[Item], adapter) -> list[Item]:
+def _adapter_items(items: list[Item], adapter, level: int) -> list[Item]:
     """把厂商特有的人工核查点合并到共享测评项，不修改其他厂商的判定。"""
-    if adapter is None or not adapter.meta.manual_points:
+    if adapter is None:
+        return items
+    extra_by_item = dict(adapter.meta.manual_points)
+    for seq, points in adapter.meta.manual_points_by_level.get(level, {}).items():
+        extra_by_item[seq] = list(extra_by_item.get(seq, [])) + list(points)
+    if not extra_by_item:
         return items
     merged_items: list[Item] = []
     for item in items:
-        extra = adapter.meta.manual_points.get(item.seq)
+        extra = extra_by_item.get(item.seq)
         if not extra:
             merged_items.append(item)
             continue
@@ -259,7 +264,7 @@ def run_project(project: ProjectConfig, pack: Pack, base_dir: Path | None = None
     fingerprints: dict[str, str] = {}
     for asset in project.assets:
         adapter, matched = pack.resolve_adapter(asset.vendor)
-        items = _adapter_items(base_items, adapter)
+        items = _adapter_items(base_items, adapter, project.level)
         checks = adapter.checks if adapter else pack.checks
         ruleset = adapter.rules if adapter else pack.rules
         adapter_key = adapter.key if adapter else ""

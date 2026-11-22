@@ -1,0 +1,15 @@
+name: SQL Server
+vendor: SQL Server
+aliases:
+- sqlserver
+- sql server
+- mssql
+- sqlsever
+- sql server数据库
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 数据库
+manual_all: true

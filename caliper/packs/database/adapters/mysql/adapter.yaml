@@ -1,0 +1,14 @@
+name: MySQL
+vendor: MySQL
+aliases:
+- mysql
+- mariadb
+- percona
+- mysql数据库
+- mariadb数据库
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 数据库

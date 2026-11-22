@@ -56,6 +56,10 @@ class AdapterMeta(BaseModel):
     capture: str = "capture.yaml"
     # 厂商特有的人工核查点：同一测评项在不同厂商下可验证的证据不同。
     manual_points: dict[int, list[ManualPoint]] = Field(default_factory=dict)
+    # 测评项 seq 在不同等级会漂移时，按等级声明厂商特有人工核查点。
+    manual_points_by_level: dict[int, dict[int, list[ManualPoint]]] = Field(
+        default_factory=dict
+    )
 
     @field_validator("levels")
     @classmethod
@@ -231,6 +235,9 @@ def _load_adapter(
             meta=meta,
             checks=ChecksMap(checks=[]),
             rules=RuleSet(rules=[]),
+            texts=_load_texts(root / meta.texts)
+            if (root / meta.texts).is_file()
+            else [],
             remediation=_load_remediation(root, items),
         )
 

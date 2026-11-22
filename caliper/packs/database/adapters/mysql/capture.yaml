@@ -1,0 +1,53 @@
+version: 0.1.0
+status: active
+rules:
+- section: 账户、权限与存储
+  title: MySQL 用户账户与权限
+  command: mysql -N -B -e "SELECT User,Host,plugin,authentication_string,account_locked,password_expired,Super_priv,Grant_priv,File_priv,Process_priv FROM mysql.user ORDER BY User,Host;"
+  expect: 每个账户一行：User、Host、plugin、authentication_string、account_locked、password_expired、Super_priv、Grant_priv、File_priv、Process_priv
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - database
+- section: 账户、权限与存储
+  title: MySQL 口令策略
+  command: mysql -N -B -e "SHOW GLOBAL VARIABLES LIKE 'validate_password%'; SHOW GLOBAL VARIABLES LIKE 'default_password_lifetime';"
+  expect: validate_password_policy / validate_password_length / validate_password_*_count / default_password_lifetime
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - database
+- section: 登录控制
+  title: MySQL 登录失败与超时
+  command: mysql -N -B -e "SHOW GLOBAL VARIABLES LIKE 'connection_control%'; SHOW GLOBAL VARIABLES LIKE 'interactive_timeout'; SHOW GLOBAL VARIABLES LIKE 'wait_timeout'; SELECT PLUGIN_NAME,PLUGIN_STATUS FROM information_schema.PLUGINS WHERE PLUGIN_NAME LIKE '%connection_control%';"
+  expect: connection_control_failed_connections_threshold / connection_control_min_connection_delay / interactive_timeout / wait_timeout
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - database
+- section: 传输保护
+  title: MySQL 远程管理加密
+  command: mysql -N -B -e "SHOW GLOBAL VARIABLES LIKE '%ssl%'; SHOW GLOBAL VARIABLES LIKE 'skip_networking'; SHOW GLOBAL VARIABLES LIKE 'bind_address';"
+  expect: have_ssl=YES / have_openssl=YES，skip_networking 与 bind_address
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - database
+- section: 安全审计
+  title: MySQL 安全审计
+  command: mysql -N -B -e "SHOW GLOBAL VARIABLES LIKE 'general_log'; SHOW GLOBAL VARIABLES LIKE 'slow_query_log'; SHOW GLOBAL VARIABLES LIKE 'log_output'; SHOW GLOBAL VARIABLES LIKE 'expire_logs_days'; SHOW GLOBAL VARIABLES LIKE 'binlog_expire_logs_seconds'; SELECT PLUGIN_NAME,PLUGIN_STATUS FROM information_schema.PLUGINS WHERE PLUGIN_NAME LIKE '%audit%';"
+  expect: general_log / slow_query_log / log_output / expire_logs_days / binlog_expire_logs_seconds / audit 插件状态
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - database

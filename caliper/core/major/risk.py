@@ -47,6 +47,8 @@ class HighRiskEntry(BaseModel):
     risk: str = Field(alias="风险评价")
     remediation: str = Field(alias="整改建议")
     binds_items: list[int] = Field(default_factory=list)
+    # 测评项 seq 随等级变化时，按等级精确绑定，避免跨等级串项。
+    binds: dict[int, list[int]] = Field(default_factory=dict)
     reducible: bool = Field(alias="可降风险")
     reduction_basis: str = Field(default="", alias="降风险前提")
 
@@ -97,6 +99,11 @@ def triggers_for(
     matched: list[dict] = []
     for raw in high_risk:
         entry = as_entry_dict(raw)
+        if entry.get("binds"):
+            bounds = entry["binds"].get(level, entry["binds"].get(str(level), []))
+            if seq in bounds:
+                matched.append(entry)
+            continue
         if int(entry.get("level_min", 99)) > level:
             continue
         if seq in entry.get("binds_items", []):

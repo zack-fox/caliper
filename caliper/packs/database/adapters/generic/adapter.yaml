@@ -1,0 +1,14 @@
+name: 通用数据库
+vendor: 通用数据库
+aliases:
+- generic
+- database
+- 数据库
+- 其他数据库
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 数据库
+manual_all: true

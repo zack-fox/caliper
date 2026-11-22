@@ -1,0 +1,1523 @@
+version: 0.1.0
+status: active
+rules:
+- id: REM-SQLSERVER-L2-01
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 1
+  priority: 高
+  problem: '1、登录数据库时未对用户进行身份鉴别；
+
+    2、数据库中用户身份标识不唯一；
+
+    3、数据库口令强度不完善；
+
+    4、数据库未设置口令复杂度策略或口令更换周期策略'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: "1、建议登录数据库时必须对用户进行身份鉴别，禁用Windows身份验证方式，不允许用空口令进行登录；\n2、建议为不同用户设立不同的身份标识；\n3、建议增强当前使用账户的口令强度，使口令长度大于8位，至少包含大写字母、小写字母、数字以及特殊符号中的其中三种；\n4、建议数据库勾选“强制实施密码策略”、“强制密码过期策略”，并在数据库所在的操作系统上启用口令复杂度策略和口令更换周期策略，保证口令长度大于8位，至少包含大写字母、小写字母、数字以及特殊符号中的其中三种，且保证定期90天系统提醒更换账户口令，策略设置如下：\n密码复杂度要求：已启用       \n密码长度最小值：8个字符     \n密码最短使用周期：1天\n密码最长使用期限：90天      \n强制密码历史：3个记住的密码      \n用可还原的加密来存储密码：已禁用"
+  clause: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换：
+- id: REM-SQLSERVER-L2-02
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 2
+  priority: 低
+  problem: '1、数据库未勾选“强制实施密码策略”；
+
+    2、数据库所在的操作系统上未设置登录失败处理策略；
+
+    3、数据库未设置超时自动退出功能'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议数据库勾选“强制实施密码策略”，继承操作系统的登录失败处理功能；
+
+    2、建议启用数据库所在的操作系统的登录失败处理功能，如登录失败5次锁定30分钟，策略设置如下:
+
+    账户锁定时间：30X分钟
+
+    账户锁定阈值：5次无效登录
+
+    复位账户锁定计数器：30分钟之后；
+
+    2、建议合理设置数据库的远程查询超时值'
+  clause: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施：
+- id: REM-SQLSERVER-L2-03
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 3
+  priority: 低
+  problem: 数据库未采用加密方式进行远程管理
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议在远程管理时采用SSL等加密协议进行连接，并禁用Telnet/FTP等明文的传输管理方式
+  clause: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听：
+- id: REM-SQLSERVER-L2-04
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 4
+  priority: 低
+  problem: '1、未对需要登录使用设备的人员单独设立账户并分配权限；
+
+    2、未对匿名账户XXX进行禁用或限制'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议为需要登录使用服务器的人员单独设立账户并分配权限；
+
+    2、建议对匿名账户进行禁用'
+  clause: a）应对登录的用户分配账户和权限：
+- id: REM-SQLSERVER-L2-05
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 5
+  priority: 中
+  problem: '1、未对XXXX默认账户进行重命名
+
+    2、未修改XXX默认账户的默认口令'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议对XXX账户进行重命名；
+
+    2、建议将XXX账户的默认口令修改为强口令'
+  clause: b）应重命名或删除默认账户，修改默认账户的默认口令：
+- id: REM-SQLSERVER-L2-06
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 6
+  priority: 高
+  problem: '1、数据库中存在多余的账户；
+
+    2、数据库中存在过期账户；
+
+    3、数据库中账户与实际人员未对应，存在多人共用一个账户的情况。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议删除数据库中多余账户；
+
+    2、建议删除数据库中过期账户；
+
+    3、建议为需要使用数据库的人员单独设立账户，避免多人共用一个账户的情况。'
+  clause: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在：
+- id: REM-SQLSERVER-L2-07
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 7
+  priority: 低
+  problem: 未实现管理用户权限分离
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议授予不同用户为完成各自承担的任务所需的最小权限，将系统管理员和业务操作员权限分离，并设置独立的安全审计员账户、安全管理员账户
+  clause: d）应授予管理用户所需的最小权限，实现管理用户的权限分离：
+- id: REM-SQLSERVER-L2-08
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 8
+  priority: 低
+  problem: 数据库未启用“成功和失败的登录”、“C2审核跟踪”功能
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议启用数据库自身完善的日志功能，勾选“成功和失败的登录”、“C2审核跟踪”
+  clause: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计：
+- id: REM-SQLSERVER-L2-09
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 9
+  priority: 低
+  problem: 数据库日志记录仅包括XX，不够完善
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议将数据库日志记录内容进行完善，至少包含：日期和时间、用户、事件类型、事件是否成功等重要信息
+  clause: b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息：
+- id: REM-SQLSERVER-L2-10
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 10
+  priority: 高
+  problem: '1、数据库中存在非授权账户X可以删除/修改日志记录；
+
+    2、未定期对数据库日志记录进行备份；
+
+    3、日志记录保存时间不满足6个月'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议核查非授权用户X权限，不允许对日志记录进行删除、修改；
+
+    2、建议定期对数据库日志记录进行备份保存；
+
+    3、建议加长日志记录的保存时间，至少保存6个月'
+  clause: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等：
+- id: REM-SQLSERVER-L2-11
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 11
+  priority: 低
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: a）应遵循最小安装的原则，仅安装需要的组件和应用程序：
+- id: REM-SQLSERVER-L2-12
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 12
+  priority: 高
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: b）应关闭不需要的系统服务、默认共享和高危端口：
+- id: REM-SQLSERVER-L2-13
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 13
+  priority: 低
+  problem: '1、未对数据库接入方式或网络地址范围进行限制；
+
+    2、数据库接入方式/网络地址范围限制不合理。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议对数据库接入方式或网络地址范围进行限制（例如必须通过VPN、堡垒机等进行登录访问，限制仅特定IP地址段能够访问等）；
+
+    2、建议合理限制数据库接入方式/网络地址范围（例如必须通过VPN、堡垒机等进行登录访问，限制仅特定IP地址段能够访问等）。'
+  clause: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制：
+- id: REM-SQLSERVER-L2-14
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 14
+  priority: 低
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求：
+- id: REM-SQLSERVER-L2-15
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 15
+  priority: 高
+  problem: '1、未定期对数据库进行漏洞扫描；
+
+    2、未提供数据库漏洞扫描报告；
+
+    3、未及时对发现的数据库漏洞进行测试和修复'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议定期1-3个月对数据库进行一次漏洞扫描；
+
+    2、建议每次漏洞扫描后将扫描报告保存留档；
+
+    3、建议对扫描发现的数据库漏洞进行测试评估并修复，保留相应的修复记录。'
+  clause: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞：
+- id: REM-SQLSERVER-L2-16
+  title: 恶意代码防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 16
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: —
+  clause: a）应安装防恶意代码软件或配置具有相应功能的软件，并定期进行升级和更新防恶意代码库。
+- id: REM-SQLSERVER-L2-17
+  title: 可信验证整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 17
+  priority: 中
+  problem: '1、未基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证；
+
+    2、部署了可信验证检测的设备，但检测到可信性受到破坏时无法进行报警。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警；
+
+    2、建议对可信验证设备的配置进行检查和调整，使其发现可信性受到破坏后及时向管理员进行报警。'
+  clause: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。
+- id: REM-SQLSERVER-L2-18
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 18
+  priority: 低
+  problem: 数据库未采用密码技术或是校验技术保证重要数据在存储过程中的完整性。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议采用密码技术或是校验技术保证重要数据在存储过程中的完整性。
+  clause: a）应采用校验技术保证重要数据在传输过程中的完整性。
+- id: REM-SQLSERVER-L2-19
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 19
+  priority: 高
+  problem: '1、未定期对重要数据进行本地备份；
+
+    2、未定期进行恢复性测试。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议定期对重要数据进行本地备份；
+
+    2、建议定期对备份文件进行恢复测试，确保备份文件有效。'
+  clause: a）应提供重要数据的本地数据备份与恢复功能：
+- id: REM-SQLSERVER-L2-20
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 20
+  priority: 高
+  problem: 1、未提供异地数据备份功能。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 1、建议利用通信网络将关键数据定时批量传送至备用场地。
+  clause: b）应提供异地实时备份功能，利用通信网络将重要数据定时批量传送至备份场地。
+- id: REM-SQLSERVER-L2-21
+  title: 剩余信息保护整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 21
+  priority: 低
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除。
+- id: REM-SQLSERVER-L2-22
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 22
+  priority: 低
+  problem: 数据库保存了非业务所必须的用户个人信息
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议数据库仅保存业务必须的用户个人信息
+  clause: a）应仅采集和保存业务必需的用户个人信息：
+- id: REM-SQLSERVER-L2-23
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - database
+    item_seqs:
+    - 23
+  priority: 低
+  problem: '1、数据库未采取措施禁止未授权访问和用户个人信息
+
+    2、未采取措施防止非法使用用户个人信息'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议严格限制对用户个人信息的访问和使用，可通过对数据库表进行权限限制/其他措施
+  clause: b）应禁止未授权访问和非法使用用户个人信息。
+- id: REM-SQLSERVER-L3-01
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 1
+  priority: 高
+  problem: '1、登录数据库时未对用户进行身份鉴别；
+
+    2、数据库中用户身份标识不唯一；
+
+    3、数据库口令强度不完善；
+
+    4、数据库未设置口令复杂度策略或口令更换周期策略'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: "1、建议登录数据库时必须对用户进行身份鉴别，禁用Windows身份验证方式，不允许用空口令进行登录；\n2、建议为不同用户设立不同的身份标识；\n3、建议增强当前使用账户的口令强度，使口令长度大于8位，至少包含大写字母、小写字母、数字以及特殊符号中的其中三种；\n4、建议数据库勾选“强制实施密码策略”、“强制密码过期策略”，并在数据库所在的操作系统上启用口令复杂度策略和口令更换周期策略，保证口令长度大于8位，至少包含大写字母、小写字母、数字以及特殊符号中的其中三种，且保证定期90天系统提醒更换账户口令，策略设置如下：\n密码复杂度要求：已启用       \n密码长度最小值：8个字符     \n密码最短使用周期：1天\n密码最长使用期限：90天      \n强制密码历史：3个记住的密码      \n用可还原的加密来存储密码：已禁用"
+  clause: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换：
+- id: REM-SQLSERVER-L3-02
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 2
+  priority: 低
+  problem: '1、数据库未勾选“强制实施密码策略”；
+
+    2、数据库所在的操作系统上未设置登录失败处理策略；
+
+    3、数据库未设置超时自动退出功能'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议数据库勾选“强制实施密码策略”，继承操作系统的登录失败处理功能；
+
+    2、建议启用数据库所在的操作系统的登录失败处理功能，如登录失败5次锁定30分钟，策略设置如下:
+
+    账户锁定时间：30X分钟
+
+    账户锁定阈值：5次无效登录
+
+    复位账户锁定计数器：30分钟之后；
+
+    2、建议合理设置数据库的远程查询超时值'
+  clause: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施：
+- id: REM-SQLSERVER-L3-03
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 3
+  priority: 高
+  problem: 数据库未采用加密方式进行远程管理
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议在远程管理时采用SSL等加密协议进行连接，并禁用Telnet/FTP等明文的传输管理方式
+  clause: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听：
+- id: REM-SQLSERVER-L3-04
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 4
+  priority: 高
+  problem: '1、数据库未采用双因子鉴别技术对登录用户进行身份验证
+
+    2、数据库所使用的XX身份验证方式不为密码技术'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议登录数据库时采用双因子鉴别技术对用户进行身份鉴别，例如用户名/口令+USB-key/数字证书/令牌等；
+
+    2、建议将其中一种身份鉴别方式改为密码技术'
+  clause: d）应采用口令、密码技术、生物技术等两种或两种以上组合的鉴别技术对用户进行身份鉴别，且其中一种鉴别技术至少应使用密码技术来实现。
+- id: REM-SQLSERVER-L3-05
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 5
+  priority: 高
+  problem: '1、未对需要登录使用设备的人员单独设立账户并分配权限；
+
+    2、未对匿名账户XXX进行禁用或限制'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议为需要登录使用服务器的人员单独设立账户并分配权限；
+
+    2、建议对匿名账户进行禁用'
+  clause: a）应对登录的用户分配账户和权限：
+- id: REM-SQLSERVER-L3-06
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 6
+  priority: 中
+  problem: '1、未对XXXX默认账户进行重命名
+
+    2、未修改XXX默认账户的默认口令'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议对XXX账户进行重命名；
+
+    2、建议将XXX账户的默认口令修改为强口令'
+  clause: b）应重命名或删除默认账户，修改默认账户的默认口令：
+- id: REM-SQLSERVER-L3-07
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 7
+  priority: 高
+  problem: '1、数据库中存在多余的账户；
+
+    2、数据库中存在过期账户；
+
+    3、数据库中账户与实际人员未对应，存在多人共用一个账户的情况。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议删除数据库中多余账户；
+
+    2、建议删除数据库中过期账户；
+
+    3、建议为需要使用数据库的人员单独设立账户，避免多人共用一个账户的情况。'
+  clause: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在：
+- id: REM-SQLSERVER-L3-08
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 8
+  priority: 高
+  problem: 未实现管理用户权限分离
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议授予不同用户为完成各自承担的任务所需的最小权限，将系统管理员和业务操作员权限分离，并设置独立的安全审计员账户、安全管理员账户
+  clause: d）应授予管理用户所需的最小权限，实现管理用户的权限分离：
+- id: REM-SQLSERVER-L3-09
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 9
+  priority: 高
+  problem: '1、未指定由授权主体XXX管理员负责访问控制策略的配置；
+
+    2、数据库中存在数据库表XXXX访问权限设置不合理的情况。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议指定由授权主体XXX管理员负责对操作系统中的访问控制策略进行配置；
+
+    2、建议修改用户权限表中XXX表访问权限。'
+  clause: e）应由授权主体配置访问控制策略，访问控制策略规定主体对客体的访问规则：
+- id: REM-SQLSERVER-L3-10
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 10
+  priority: 高
+  problem: 数据库存在数据表XXXX访问权限设置不合理的情况。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议修改用户权限表中XXX表访问权限。
+  clause: f）访问控制的粒度应达到主体为用户级或进程级，客体为文件、数据库表级：
+- id: REM-SQLSERVER-L3-11
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 11
+  priority: 高
+  problem: 未提供对重要主体和客体设置安全标记的功能。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对系统重要资源增加安全标记的功能，并控制用户对已标记的重要数据信息的访问和操作。
+  clause: g）应对重要主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。
+- id: REM-SQLSERVER-L3-12
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 12
+  priority: 低
+  problem: 数据库未启用“成功和失败的登录”、“C2审核跟踪”功能
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议启用数据库自身完善的日志功能，勾选“成功和失败的登录”、“C2审核跟踪”
+  clause: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计：
+- id: REM-SQLSERVER-L3-13
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 13
+  priority: 低
+  problem: 数据库日志记录仅包括XX，不够完善
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议将数据库日志记录内容进行完善，至少包含：日期和时间、用户、事件类型、事件是否成功等重要信息
+  clause: b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息：
+- id: REM-SQLSERVER-L3-14
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 14
+  priority: 高
+  problem: '1、数据库中存在非授权账户X可以删除/修改日志记录；
+
+    2、未定期对数据库日志记录进行备份；
+
+    3、日志记录保存时间不满足6个月'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议核查非授权用户X权限，不允许对日志记录进行删除、修改；
+
+    2、建议定期对数据库日志记录进行备份保存；
+
+    3、建议加长日志记录的保存时间，至少保存6个月'
+  clause: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等：
+- id: REM-SQLSERVER-L3-15
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 15
+  priority: 低
+  problem: 数据库中存在非授权用户X可以中断审计进程
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议删除或修改X账户对审计进程的启停权限
+  clause: d）应对审计进程进行保护，防止未经授权的中断。
+- id: REM-SQLSERVER-L3-16
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 16
+  priority: 低
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: a）应遵循最小安装的原则，仅安装需要的组件和应用程序：
+- id: REM-SQLSERVER-L3-17
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 17
+  priority: 高
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: b）应关闭不需要的系统服务、默认共享和高危端口：
+- id: REM-SQLSERVER-L3-18
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 18
+  priority: 低
+  problem: '1、未对数据库接入方式或网络地址范围进行限制；
+
+    2、数据库接入方式/网络地址范围限制不合理。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议对数据库接入方式或网络地址范围进行限制（例如必须通过VPN、堡垒机等进行登录访问，限制仅特定IP地址段能够访问等）；
+
+    2、建议合理限制数据库接入方式/网络地址范围（例如必须通过VPN、堡垒机等进行登录访问，限制仅特定IP地址段能够访问等）。'
+  clause: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制：
+- id: REM-SQLSERVER-L3-19
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 19
+  priority: 低
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求：
+- id: REM-SQLSERVER-L3-20
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 20
+  priority: 高
+  problem: '1、未定期对数据库进行漏洞扫描；
+
+    2、未提供数据库漏洞扫描报告；
+
+    3、未及时对发现的数据库漏洞进行测试和修复'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议定期1-3个月对数据库进行一次漏洞扫描；
+
+    2、建议每次漏洞扫描后将扫描报告保存留档；
+
+    3、建议对扫描发现的数据库漏洞进行测试评估并修复，保留相应的修复记录。'
+  clause: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞：
+- id: REM-SQLSERVER-L3-21
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 21
+  priority: 中
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: f）应能够检测到对重要节点进行入侵的行为，并在发生严重入侵事件时提供报警。
+- id: REM-SQLSERVER-L3-22
+  title: 恶意代码防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 22
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: —
+  clause: a）应采用免受恶意代码攻击的技术措施或主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。
+- id: REM-SQLSERVER-L3-23
+  title: 可信验证整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 23
+  priority: 中
+  problem: '1、未基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证；
+
+    2、部署了可信验证检测的设备，但检测到可信性受到破坏时无法进行报警。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警；
+
+    2、建议对可信验证设备的配置进行检查和调整，使其发现可信性受到破坏后及时向管理员进行报警。'
+  clause: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。
+- id: REM-SQLSERVER-L3-24
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 24
+  priority: 低
+  problem: 数据库未采用密码技术或是校验技术保证重要数据在存储过程中的完整性。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议采用密码技术或是校验技术保证重要数据在存储过程中的完整性。
+  clause: a）应采用校验技术或密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等：
+- id: REM-SQLSERVER-L3-25
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 25
+  priority: 低
+  problem: 数据库未采用密码技术或校验技术保证重要数据在存储过程中的完整性。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议采用密码技术或是校验技术保证重要数据在存储过程中的完整性。
+  clause: b）应采用校验技术或密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等。
+- id: REM-SQLSERVER-L3-26
+  title: 数据保密性整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 26
+  priority: 低
+  problem: 数据库未采用密码技术保证重要数据在存储过程中的保密性。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议采用密码技术保证重要数据在存储过程中的保密性。
+  clause: a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等：
+- id: REM-SQLSERVER-L3-27
+  title: 数据保密性整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 27
+  priority: 低
+  problem: 数据库未采用密码技术保证重要数据在存储过程中的保密性。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议采用密码技术对重要数据进行加密存储，保证重要数据在存储过程中的保密性。
+  clause: b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。
+- id: REM-SQLSERVER-L3-28
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 28
+  priority: 高
+  problem: '1、未定期对重要数据进行本地备份；
+
+    2、未定期进行恢复性测试。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议定期对重要数据进行本地备份；
+
+    2、建议定期对备份文件进行恢复测试，确保备份文件有效。'
+  clause: a）应提供重要数据的本地数据备份与恢复功能：
+- id: REM-SQLSERVER-L3-29
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 29
+  priority: 高
+  problem: '1、未提供异地数据备份功能；
+
+    2、异地数据备份为非实时。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议利用通信网络将关键数据实时传送至备用场地；
+
+    2、建议异地为实时备份。'
+  clause: b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地：
+- id: REM-SQLSERVER-L3-30
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 30
+  priority: 中
+  problem: 数据库未采用热冗余的方式进行部署。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对数据库采用热冗余的形式进行部署，保证系统高可用性。
+  clause: c）应提供重要数据处理系统的热冗余，保证系统的高可用性。
+- id: REM-SQLSERVER-L3-31
+  title: 剩余信息保护整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 31
+  priority: 低
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除：
+- id: REM-SQLSERVER-L3-32
+  title: 剩余信息保护整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 32
+  priority: 低
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: b）应保证存有敏感数据的存储空间被释放或重新分配前得到完全清除。
+- id: REM-SQLSERVER-L3-33
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 33
+  priority: 低
+  problem: 数据库保存了非业务所必须的用户个人信息
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议数据库仅采用应用系统必要的用户个人信息。
+  clause: a）应仅采集和保存业务必需的用户个人信息：
+- id: REM-SQLSERVER-L3-34
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - database
+    item_seqs:
+    - 34
+  priority: 低
+  problem: '1、数据库未采取措施禁止未授权访问和用户个人信息
+
+    2、未采取措施防止非法使用用户个人信息'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对数据库中用户进行访问权限设置，避免受到未授权的访问。
+  clause: b）应禁止未授权访问和非法使用用户个人信息。
+- id: REM-SQLSERVER-L4-01
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 1
+  priority: 高
+  problem: '1、登录数据库时未对用户进行身份鉴别；
+
+    2、数据库中用户身份标识不唯一；
+
+    3、数据库口令强度不完善；
+
+    4、数据库未设置口令复杂度策略或口令更换周期策略'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: "1、建议登录数据库时必须对用户进行身份鉴别，禁用Windows身份验证方式，不允许用空口令进行登录；\n2、建议为不同用户设立不同的身份标识；\n3、建议增强当前使用账户的口令强度，使口令长度大于8位，至少包含大写字母、小写字母、数字以及特殊符号中的其中三种；\n4、建议数据库勾选“强制实施密码策略”、“强制密码过期策略”，并在数据库所在的操作系统上启用口令复杂度策略和口令更换周期策略，保证口令长度大于8位，至少包含大写字母、小写字母、数字以及特殊符号中的其中三种，且保证定期90天系统提醒更换账户口令，策略设置如下：\n密码复杂度要求：已启用       \n密码长度最小值：8个字符     \n密码最短使用周期：1天\n密码最长使用期限：90天      \n强制密码历史：3个记住的密码      \n用可还原的加密来存储密码：已禁用"
+  clause: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换：
+- id: REM-SQLSERVER-L4-02
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 2
+  priority: 低
+  problem: '1、数据库未勾选“强制实施密码策略”；
+
+    2、数据库所在的操作系统上未设置登录失败处理策略；
+
+    3、数据库未设置超时自动退出功能'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议数据库勾选“强制实施密码策略”，继承操作系统的登录失败处理功能；
+
+    2、建议启用数据库所在的操作系统的登录失败处理功能，如登录失败5次锁定30分钟，策略设置如下:
+
+    账户锁定时间：30X分钟
+
+    账户锁定阈值：5次无效登录
+
+    复位账户锁定计数器：30分钟之后；
+
+    2、建议合理设置数据库的远程查询超时值'
+  clause: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施：
+- id: REM-SQLSERVER-L4-03
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 3
+  priority: 高
+  problem: 数据库未采用加密方式进行远程管理
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议在远程管理时采用SSL等加密协议进行连接，并禁用Telnet/FTP等明文的传输管理方式
+  clause: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听：
+- id: REM-SQLSERVER-L4-04
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 4
+  priority: 高
+  problem: '1、数据库未采用双因子鉴别技术对登录用户进行身份验证
+
+    2、数据库所使用的XX身份验证方式不为密码技术'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议登录数据库时采用双因子鉴别技术对用户进行身份鉴别，例如用户名/口令+USB-key/数字证书/令牌等；
+
+    2、建议将其中一种身份鉴别方式改为密码技术'
+  clause: d）应采用口令、密码技术、生物技术等两种或两种以上组合的鉴别技术对用户进行身份鉴别，且其中一种鉴别技术至少应使用密码技术来实现。
+- id: REM-SQLSERVER-L4-05
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 5
+  priority: 高
+  problem: '1、未对需要登录使用设备的人员单独设立账户并分配权限；
+
+    2、未对匿名账户XXX进行禁用或限制'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议为需要登录使用服务器的人员单独设立账户并分配权限；
+
+    2、建议对匿名账户进行禁用'
+  clause: a）应对登录的用户分配账户和权限：
+- id: REM-SQLSERVER-L4-06
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 6
+  priority: 中
+  problem: '1、未对XXXX默认账户进行重命名
+
+    2、未修改XXX默认账户的默认口令'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议对XXX账户进行重命名；
+
+    2、建议将XXX账户的默认口令修改为强口令'
+  clause: b）应重命名或删除默认账户，修改默认账户的默认口令：
+- id: REM-SQLSERVER-L4-07
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 7
+  priority: 高
+  problem: '1、数据库中存在多余的账户；
+
+    2、数据库中存在过期账户；
+
+    3、数据库中账户与实际人员未对应，存在多人共用一个账户的情况。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议删除数据库中多余账户；
+
+    2、建议删除数据库中过期账户；
+
+    3、建议为需要使用数据库的人员单独设立账户，避免多人共用一个账户的情况。'
+  clause: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在：
+- id: REM-SQLSERVER-L4-08
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 8
+  priority: 高
+  problem: 未实现管理用户权限分离
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议授予不同用户为完成各自承担的任务所需的最小权限，将系统管理员和业务操作员权限分离，并设置独立的安全审计员账户、安全管理员账户
+  clause: d）应授予管理用户所需的最小权限，实现管理用户的权限分离：
+- id: REM-SQLSERVER-L4-09
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 9
+  priority: 高
+  problem: '1、未指定由授权主体XXX管理员负责访问控制策略的配置；
+
+    2、数据库中存在数据库表XXXX访问权限设置不合理的情况。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议指定由授权主体XXX管理员负责对操作系统中的访问控制策略进行配置；
+
+    2、建议修改用户权限表中XXX表访问权限。'
+  clause: e）应由授权主体配置访问控制策略，访问控制策略规定主体对客体的访问规则：
+- id: REM-SQLSERVER-L4-10
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 10
+  priority: 高
+  problem: 数据库存在数据表XXXX访问权限设置不合理的情况。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议修改用户权限表中XXX表访问权限。
+  clause: f）访问控制的粒度应达到主体为用户级或进程级，客体为文件、数据库表级：
+- id: REM-SQLSERVER-L4-11
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 11
+  priority: 高
+  problem: 未提供对主体和客体设置安全标记的功能。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对系统资源增加安全标记的功能，并控制用户对已标记的重要数据信息的访问和操作。
+  clause: g）应对主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。
+- id: REM-SQLSERVER-L4-12
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 12
+  priority: 低
+  problem: 数据库未启用“成功和失败的登录”、“C2审核跟踪”功能
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议启用数据库自身完善的日志功能，勾选“成功和失败的登录”、“C2审核跟踪”
+  clause: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计：
+- id: REM-SQLSERVER-L4-13
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 13
+  priority: 低
+  problem: 数据库日志记录仅包括XX，不够完善
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议将数据库日志记录内容进行完善，至少包含：日期和时间、用户、事件类型、事件是否成功等重要信息
+  clause: b）审计记录应包括事件的日期和时间、事件类型、事件是否成功及其他与审计相关的信息：
+- id: REM-SQLSERVER-L4-14
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 14
+  priority: 高
+  problem: '1、数据库中存在非授权账户X可以删除/修改日志记录；
+
+    2、未定期对数据库日志记录进行备份；
+
+    3、日志记录保存时间不满足6个月'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议核查非授权用户X权限，不允许对日志记录进行删除、修改；
+
+    2、建议定期对数据库日志记录进行备份保存；
+
+    3、建议加长日志记录的保存时间，至少保存6个月'
+  clause: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等：
+- id: REM-SQLSERVER-L4-15
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 15
+  priority: 低
+  problem: 数据库中存在非授权用户X可以中断审计进程
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议删除或修改X账户对审计进程的启停权限
+  clause: d）应对审计进程进行保护，防止未经授权的中断。
+- id: REM-SQLSERVER-L4-16
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 16
+  priority: 低
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: a）应遵循最小安装的原则，仅安装需要的组件和应用程序：
+- id: REM-SQLSERVER-L4-17
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 17
+  priority: 高
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: b）应关闭不需要的系统服务、默认共享和高危端口：
+- id: REM-SQLSERVER-L4-18
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 18
+  priority: 低
+  problem: '1、未对数据库接入方式或网络地址范围进行限制；
+
+    2、数据库接入方式/网络地址范围限制不合理。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议对数据库接入方式或网络地址范围进行限制（例如必须通过VPN、堡垒机等进行登录访问，限制仅特定IP地址段能够访问等）；
+
+    2、建议合理限制数据库接入方式/网络地址范围（例如必须通过VPN、堡垒机等进行登录访问，限制仅特定IP地址段能够访问等）。'
+  clause: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制：
+- id: REM-SQLSERVER-L4-19
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 19
+  priority: 低
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求：
+- id: REM-SQLSERVER-L4-20
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 20
+  priority: 高
+  problem: '1、未定期对数据库进行漏洞扫描；
+
+    2、未提供数据库漏洞扫描报告；
+
+    3、未及时对发现的数据库漏洞进行测试和修复'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议定期1-3个月对数据库进行一次漏洞扫描；
+
+    2、建议每次漏洞扫描后将扫描报告保存留档；
+
+    3、建议对扫描发现的数据库漏洞进行测试评估并修复，保留相应的修复记录。'
+  clause: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞：
+- id: REM-SQLSERVER-L4-21
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 21
+  priority: 中
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: f）应能够检测到对重要节点进行入侵的行为，并在发生严重入侵事件时提供报警。
+- id: REM-SQLSERVER-L4-23
+  title: 可信验证整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 23
+  priority: 中
+  problem: '1、服务器未基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证；
+
+    2、不能够在应用程序所有执行环节进行动态可信验证；
+
+    3、验证可信性受到破坏后未进行告警；
+
+    4、验证结果未形成审计记录送至安全管理中心
+
+    5、未进行动态关联感知'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的所有执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心，并进行动态关联感知
+  clause: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心，并进行动态关联感知。
+- id: REM-SQLSERVER-L4-24
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 24
+  priority: 低
+  problem: 数据库未采用密码技术或是校验技术保证重要数据在存储过程中的完整性。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议采用密码技术或是校验技术保证重要数据在存储过程中的完整性。
+  clause: a）应采用密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等：
+- id: REM-SQLSERVER-L4-25
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 25
+  priority: 低
+  problem: 数据库未采用密码技术或校验技术保证重要数据在存储过程中的完整性。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议采用密码技术或是校验技术保证重要数据在存储过程中的完整性。
+  clause: b）应采用密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等。
+- id: REM-SQLSERVER-L4-26
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 26
+  priority: 低
+  problem: '1、未采用密码技术保证数据发送和数据接收的不可抵赖性；
+
+    2、数据在传输过程中能够被篡改'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议采用数字签名等方式对用户的重要业务操作进行抗抵赖验证。
+  clause: c）在可能涉及法律责任认定的应用中，应采用密码技术提供数据原发证据和数据接收证据，实现数据原发行为的抗抵赖和数据接收行为的抗抵赖
+- id: REM-SQLSERVER-L4-27
+  title: 数据保密性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 27
+  priority: 低
+  problem: 数据库未采用密码技术保证重要数据在存储过程中的保密性。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议采用密码技术保证重要数据在存储过程中的保密性。
+  clause: a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等：
+- id: REM-SQLSERVER-L4-28
+  title: 数据保密性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 28
+  priority: 低
+  problem: 数据库未采用密码技术保证重要数据在存储过程中的保密性。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议采用密码技术对重要数据进行加密存储，保证重要数据在存储过程中的保密性。
+  clause: b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。
+- id: REM-SQLSERVER-L4-29
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 29
+  priority: 高
+  problem: '1、未定期对重要数据进行本地备份；
+
+    2、未定期进行恢复性测试。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议定期对重要数据进行本地备份；
+
+    2、建议定期对备份文件进行恢复测试，确保备份文件有效。'
+  clause: a）应提供重要数据的本地数据备份与恢复功能：
+- id: REM-SQLSERVER-L4-30
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 30
+  priority: 高
+  problem: '1、未提供异地数据备份功能；
+
+    2、异地数据备份为非实时。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议利用通信网络将关键数据实时传送至备用场地；
+
+    2、建议异地为实时备份。'
+  clause: b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地：
+- id: REM-SQLSERVER-L4-31
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 31
+  priority: 中
+  problem: 数据库未采用热冗余的方式进行部署。
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对数据库采用热冗余的形式进行部署，保证系统高可用性。
+  clause: c）应提供重要数据处理系统的热冗余，保证系统的高可用性。
+- id: REM-SQLSERVER-L4-32
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 32
+  priority: 高
+  problem: '1、未建立异地灾备中心；
+
+    2、未提供业务应用的实时切换功能。'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: '1、建议建立异地灾备中心，并配备相应的通信线路、网络设备及数据处理设备；
+
+    2、建议提供业务应用的实时切换功能。'
+  clause: d）应建立异地灾难备份中心，提供业务应用的实时切换。
+- id: REM-SQLSERVER-L4-33
+  title: 剩余信息保护整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 33
+  priority: 低
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除：
+- id: REM-SQLSERVER-L4-34
+  title: 剩余信息保护整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 34
+  priority: 低
+  problem: /
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: /
+  clause: b）应保证存有敏感数据的存储空间被释放或重新分配前得到完全清除。
+- id: REM-SQLSERVER-L4-35
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 35
+  priority: 低
+  problem: 数据库保存了非业务所必须的用户个人信息
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议数据库仅采用应用系统必要的用户个人信息。
+  clause: a）应仅采集和保存业务必需的用户个人信息：
+- id: REM-SQLSERVER-L4-36
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - database
+    item_seqs:
+    - 36
+  priority: 低
+  problem: '1、数据库未采取措施禁止未授权访问和用户个人信息
+
+    2、未采取措施防止非法使用用户个人信息'
+  cause: 数据库安全基线未配置或配置未落到该实例。
+  action: 建议对数据库中用户进行访问权限设置，避免受到未授权的访问。
+  clause: b）应禁止未授权访问和非法使用用户个人信息。

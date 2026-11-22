@@ -12,6 +12,9 @@ from core.model.entities import CheckBlock, CheckStatus, DerivedFact, EvidenceAn
 _TIMESTAMP_RE = re.compile(r"^\[\d{4}/\d{1,2}/\d{1,2}\s+\d{1,2}:\d{2}:\d{2}\]\s?")
 _MYSQL_PROMPT_RE = re.compile(r"^mysql(?:\s+[^>]*)?>\s?(.*)$", re.I)
 _MYSQL_CONT_RE = re.compile(r"^\s*->\s?(.*)$")
+# Oracle SQL*Plus 提示符：SQL> select ...；续行显示为 “  2  ...”。
+_ORACLE_PROMPT_RE = re.compile(r"^SQL>\s?(.*)$", re.I)
+_ORACLE_CONT_RE = re.compile(r"^\s{2,}\d{1,3}\s{2,}(.*)$")
 _SHELL_PROMPTS = [
     re.compile(r"^\[[^\]\s]+@[^\]]+\][#$]\s?(.*)$"),
     re.compile(r"^[^\s@]+@[^\s:]+:[^#$]*[#$]\s?(.*)$"),
@@ -33,14 +36,16 @@ _SENSITIVE_RE = re.compile(
     re.I,
 )
 _ERROR_RE = re.compile(
-    r"command not found|permission denied|operation not permitted|access denied|no such file or directory|cannot (?:access|stat|open)\b|^\s*ERROR\s+\d+|^\s*ERROR\s*:\s*|^\s*Error:\s*|^\s*%\s*(?:Invalid|Unrecognized|Incomplete)\b|^\s*Unrecognized command\b",
+    r"command not found|permission denied|operation not permitted|access denied|no such file or directory|cannot (?:access|stat|open)\b|^\s*ERROR\s+\d+|^\s*ERROR\s*:\s*|^\s*Error:\s*|^\s*%\s*(?:Invalid|Unrecognized|Incomplete)\b|^\s*Unrecognized command\b|^\s*ORA-\d+|^\s*SP2-\d+|^\s*PLS-\d+",
     re.I,
 )
 _NETWORK_WRITE_RE = re.compile(
     r"^\s*(?:system-view|sys\b|undo\b|save\b|reset\b|reboot\b|delete\b|format\b|startup\b|shutdown\b|no\b|configure\b|conf\s+t\b|write\b|erase\b|copy\b)",
     re.I,
 )
-_EMPTY_SET_RE = re.compile(r"^\s*Empty set(?:\s*\([^)]*\))?\s*$", re.I)
+_EMPTY_SET_RE = re.compile(
+    r"^\s*(?:Empty set(?:\s*\([^)]*\))?|no\s+rows?\s+selected\.?)\s*$", re.I
+)
 _ROWS_STATUS_RE = re.compile(r"^\s*\d+\s+rows?\s+in\s+set(?:\s*\([^)]*\))?\s*$", re.I)
 
 
@@ -71,6 +76,10 @@ def _without_timestamp(line: str) -> str:
 
 
 def _prompt(line: str) -> tuple[str, str, bool] | None:
+    if match := _ORACLE_PROMPT_RE.match(line):
+        return "oracle", match.group(1).strip(), False
+    if match := _ORACLE_CONT_RE.match(line):
+        return "oracle", match.group(1).strip(), True
     if match := _MYSQL_PROMPT_RE.match(line):
         return "mysql", match.group(1).strip(), False
     if match := _MYSQL_CONT_RE.match(line):
@@ -92,6 +101,14 @@ def _read_only_mysql(command: str) -> bool:
     return bool(statements) and all(re.match(r"^(?:SELECT|SHOW)\b", part, re.I) for part in statements)
 
 
+def _read_only_oracle(command: str) -> bool:
+    """SQL*Plus 会话只允许 SELECT 与 SHOW PARAMETER，拒绝任何写操作。"""
+    statements = [part.strip() for part in command.split(";") if part.strip()]
+    return bool(statements) and all(
+        re.match(r"^(?:SELECT|SHOW\s+PARAMETER)\b", part, re.I) for part in statements
+    )
+
+
 def _read_only_network(command: str) -> bool:
     if not re.match(r"^\s*(?:display|show)\b", command, re.I):
         return False
@@ -111,7 +128,7 @@ def _command_status(command: _Command, binding: SessionBinding) -> CheckStatus:
     meaningful = _meaningful_output(command)
     if meaningful:
         return CheckStatus.COLLECTED
-    if command.kind == "mysql" and command.empty_set:
+    if command.kind in {"mysql", "oracle"} and command.empty_set:
         return CheckStatus.EMPTY
     if command.closed and binding.empty == "success":
         return CheckStatus.EMPTY
@@ -160,9 +177,19 @@ def parse_session_text(
         prompt = _prompt(line)
         if prompt:
             kind, command_text, continuation = prompt
+            if continuation and (current is None or current.kind != kind):
+                # 形似续行但当前不在对应 SQL 会话中，按普通输出处理。
+                if current is not None:
+                    if _ERROR_RE.search(line):
+                        current.failed = True
+                    if line.strip():
+                        current.output.append(
+                            OutputLine(line=number, text=line.rstrip(), snippet=original)
+                        )
+                continue
             prompt_seen = True
             if continuation:
-                if current is not None and current.kind == "mysql" and command_text:
+                if current is not None and command_text:
                     current.text = f"{current.text} {command_text}".strip()
                 continue
             if not command_text:
@@ -178,7 +205,7 @@ def parse_session_text(
             continue
         if current is None:
             continue
-        if current.kind == "mysql" and _EMPTY_SET_RE.match(line):
+        if current.kind in {"mysql", "oracle"} and _EMPTY_SET_RE.match(line):
             current.empty_set = True
         if _ERROR_RE.search(line):
             current.failed = True
@@ -200,6 +227,9 @@ def parse_session_text(
             sensitive_lines.append(command.line)
             continue
         if command.kind == "mysql" and not _read_only_mysql(command.text):
+            ignored_lines.append(command.line)
+            continue
+        if command.kind == "oracle" and not _read_only_oracle(command.text):
             ignored_lines.append(command.line)
             continue
         if command.kind == "network" and not _read_only_network(command.text):

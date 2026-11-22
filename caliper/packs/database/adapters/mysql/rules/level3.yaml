@@ -1,0 +1,195 @@
+rules:
+- rule_id: DB-MYSQL-L3-AUTH_ID-P01-01
+  level: 3
+  item: 1
+  point: 1
+  block: MySQL 用户账户与权限
+  expect:
+    contains: fact:db.mysql.users.empty_password.none=true
+  pass_reason: 未发现空口令账户，登录用户均需口令鉴别。
+  fail_reason: 存在空口令账户或无需口令即可登录的账户。
+- rule_id: DB-MYSQL-L3-AUTH_ID-P02-02
+  level: 3
+  item: 1
+  point: 2
+  block: MySQL 用户账户与权限
+  expect:
+    contains: fact:db.mysql.users.unique=true
+  pass_reason: mysql.user 中不存在 User+Host 完全相同的账户。
+  fail_reason: mysql.user 中存在 User+Host 相同的账户，身份标识不唯一。
+- rule_id: DB-MYSQL-L3-AUTH_ID-P04-03
+  level: 3
+  item: 1
+  point: 4
+  block: MySQL 口令策略
+  expect:
+    all:
+    - contains: fact:db.mysql.password_policy.enabled=true
+    - gt:
+        prefix: fact:db.mysql.password_policy.length=
+        value: 7
+    - gt:
+        prefix: fact:db.mysql.password_policy.composition_types=
+        value: 2
+    - gt:
+        prefix: fact:db.mysql.password_policy.aging_days=
+        value: 0
+    - lt:
+        prefix: fact:db.mysql.password_policy.aging_days=
+        value: 91
+  pass_reason: 已启用口令复杂度校验，长度、组成和有效期满足要求。
+  fail_reason: 未启用口令复杂度校验，或长度、组成、有效期至少一项不满足要求。
+- rule_id: DB-MYSQL-L3-LOGIN_FAIL-P01-04
+  level: 3
+  item: 2
+  point: 1
+  block: MySQL 登录失败与超时
+  expect:
+    contains: fact:db.mysql.login_fail.enabled=true
+  pass_reason: 已启用 connection_control 登录失败处理能力。
+  fail_reason: 未启用连接控制插件，缺少登录失败处理能力。
+- rule_id: DB-MYSQL-L3-LOGIN_FAIL-P02-05
+  level: 3
+  item: 2
+  point: 2
+  block: MySQL 登录失败与超时
+  expect:
+    all:
+    - gt:
+        prefix: fact:db.mysql.login_fail.attempt=
+        value: 0
+    - lt:
+        prefix: fact:db.mysql.login_fail.attempt=
+        value: 11
+    - gt:
+        prefix: fact:db.mysql.login_fail.lock_ms=
+        value: 299999
+  pass_reason: 登录失败次数和锁定时间配置合理。
+  fail_reason: 登录失败次数阈值过大或锁定时间不足。
+- rule_id: DB-MYSQL-L3-LOGIN_FAIL-P03-06
+  level: 3
+  item: 2
+  point: 3
+  block: MySQL 登录失败与超时
+  expect:
+    all:
+    - lt:
+        prefix: fact:db.mysql.timeout.interactive_seconds=
+        value: 1801
+    - lt:
+        prefix: fact:db.mysql.timeout.wait_seconds=
+        value: 1801
+  pass_reason: 交互连接和空闲连接超时时间不超过 30 分钟。
+  fail_reason: 交互连接或空闲连接超时时间超过 30 分钟。
+- rule_id: DB-MYSQL-L3-REMOTE-P02-07
+  level: 3
+  item: 3
+  point: 2
+  block: MySQL 远程管理加密
+  expect:
+    contains: fact:db.mysql.ssl.enabled=true
+  pass_reason: 已启用 SSL/TLS，远程管理数据可加密传输。
+  fail_reason: 未启用 SSL/TLS，远程管理鉴别信息可能被窃听。
+- rule_id: DB-MYSQL-L3-ACCOUNT_PERM-P02-08
+  level: 3
+  item: 5
+  point: 2
+  block: MySQL 用户账户与权限
+  expect:
+    contains: fact:db.mysql.users.anonymous.none=true
+  pass_reason: 不存在匿名账户。
+  fail_reason: 存在匿名账户，可被未授权访问。
+- rule_id: DB-MYSQL-L3-EXTRA_ACCOUNT-P02-09
+  level: 3
+  item: 7
+  point: 2
+  block: MySQL 用户账户与权限
+  expect:
+    contains: fact:db.mysql.users.expired.none=true
+  pass_reason: 未发现口令已过期仍可使用的账户。
+  fail_reason: 存在口令已过期账户，账户生命周期管理不到位。
+- rule_id: DB-MYSQL-L3-PRIV_SEP-P02-10
+  level: 3
+  item: 8
+  point: 2
+  block: MySQL 用户账户与权限
+  expect:
+    all:
+    - contains: fact:db.mysql.privileges.no_wildcard_super=true
+    - contains: fact:db.mysql.privileges.nonroot_file_priv.none=true
+  pass_reason: 未发现远端通配账户持有 SUPER 或普通账户持有 FILE 权限。
+  fail_reason: 存在远端通配账户持有 SUPER 权限，或普通账户持有 FILE 权限。
+- rule_id: DB-MYSQL-L3-AUDIT_ENABLE-P01-11
+  level: 3
+  item: 12
+  point: 1
+  block: MySQL 安全审计
+  expect:
+    contains: fact:db.mysql.audit.enabled=true
+  pass_reason: 已开启通用查询日志、慢查询日志或审计插件。
+  fail_reason: 未开启任何审计日志或审计插件。
+- rule_id: DB-MYSQL-L3-AUDIT_PROTECT-P01-12
+  level: 3
+  item: 14
+  point: 1
+  block: MySQL 用户账户与权限
+  expect:
+    contains: fact:db.mysql.privileges.nonroot_file_priv.none=true
+  pass_reason: 普通账户不具备 FILE 权限，难以直接删除或覆盖审计文件。
+  fail_reason: 普通账户具备 FILE 权限，存在删除或覆盖审计文件的风险。
+- rule_id: DB-MYSQL-L3-AUDIT_PROTECT-P03-13
+  level: 3
+  item: 14
+  point: 3
+  block: MySQL 安全审计
+  expect:
+    gt:
+      prefix: fact:db.mysql.audit.retention_days=
+      value: 179
+  pass_reason: 日志保留时间不少于 6 个月。
+  fail_reason: 日志保留时间不足 6 个月。
+- rule_id: DB-MYSQL-L3-TERMINAL-P01-14
+  level: 3
+  item: 18
+  point: 1
+  block: MySQL 用户账户与权限
+  expect:
+    contains: fact:db.mysql.terminal.restricted=true
+  pass_reason: 不存在 Host 为 % 的账户，登录来源受到限制。
+  fail_reason: 存在 Host 为 % 的账户，任意地址均可尝试登录。
+- rule_id: DB-MYSQL-L3-INTEGRITY_TRANSFER-P02-15
+  level: 3
+  item: 24
+  point: 2
+  block: MySQL 远程管理加密
+  expect:
+    contains: fact:db.mysql.ssl.enabled=true
+  pass_reason: 已启用 SSL/TLS，传输完整性受到保护。
+  fail_reason: 未启用 SSL/TLS，传输完整性无法保证。
+- rule_id: DB-MYSQL-L3-INTEGRITY_STORE-P01-16
+  level: 3
+  item: 25
+  point: 1
+  block: MySQL 用户账户与权限
+  expect:
+    contains: fact:db.mysql.secret.hashed=true
+  pass_reason: 账户鉴别信息以哈希形式存储。
+  fail_reason: 存在明文或可还原形式存储的账户鉴别信息。
+- rule_id: DB-MYSQL-L3-CONF_TRANSFER-P02-17
+  level: 3
+  item: 26
+  point: 2
+  block: MySQL 远程管理加密
+  expect:
+    contains: fact:db.mysql.ssl.enabled=true
+  pass_reason: 已启用 SSL/TLS，传输数据可加密保护。
+  fail_reason: 未启用 SSL/TLS，传输数据可能被窃听。
+- rule_id: DB-MYSQL-L3-CONF_STORE-P01-18
+  level: 3
+  item: 27
+  point: 1
+  block: MySQL 用户账户与权限
+  expect:
+    contains: fact:db.mysql.secret.hashed=true
+  pass_reason: 账户鉴别信息以哈希形式存储，未发现明文口令。
+  fail_reason: 存在明文或可还原形式存储的账户鉴别信息。

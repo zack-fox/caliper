@@ -1,0 +1,104 @@
+name: Oracle
+vendor: Oracle
+aliases:
+- oracle
+- 甲骨文
+- oracle db
+- oracle数据库
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 数据库
+manual_points_by_level:
+  2:
+    1:
+    - point: 1
+      reason: Oracle 不允许空口令账户，但仍需现场确认不存在免口令登录方式
+    2:
+    - point: 1
+      reason: 登录失败处理功能是否可用需结合测试确认
+    4:
+    - point: 2
+      reason: 是否存在匿名或共享账户需结合用户清单访谈确认
+    10:
+    - point: 1
+      reason: 普通权限用户能否删除审计记录需现场测试
+    - point: 3
+      reason: 审计记录备份与保留时间需访谈并查看备份记录
+    13:
+    - point: 1
+      reason: 是否限制允许登录的地址范围需查看 sqlnet.ora 或访谈确认
+    3:
+    - point: 2
+      reason: 远程管理是否启用加密需查看 sqlnet.ora 的加密配置
+    18:
+    - point: 2
+      reason: 远程管理传输完整性保护需查看 sqlnet.ora 配置
+  3:
+    1:
+    - point: 1
+      reason: Oracle 不允许空口令账户，但仍需现场确认不存在免口令登录方式
+    2:
+    - point: 1
+      reason: 登录失败处理功能是否可用需结合测试确认
+    5:
+    - point: 2
+      reason: 是否存在匿名或共享账户需结合用户清单访谈确认
+    14:
+    - point: 1
+      reason: 普通权限用户能否删除审计记录需现场测试
+    - point: 3
+      reason: 审计记录备份与保留时间需访谈并查看备份记录
+    18:
+    - point: 1
+      reason: 是否限制允许登录的地址范围需查看 sqlnet.ora 或访谈确认
+    3:
+    - point: 2
+      reason: 远程管理是否启用加密需查看 sqlnet.ora 的加密配置
+    24:
+    - point: 2
+      reason: 远程管理传输完整性保护需查看 sqlnet.ora 配置
+    25:
+    - point: 1
+      reason: 业务数据是否加密存储需结合表空间和文件核查
+    26:
+    - point: 2
+      reason: 远程管理传输保密性保护需查看 sqlnet.ora 配置
+    27:
+    - point: 1
+      reason: 业务数据是否加密存储需结合表空间和文件核查
+  4:
+    1:
+    - point: 1
+      reason: Oracle 不允许空口令账户，但仍需现场确认不存在免口令登录方式
+    2:
+    - point: 1
+      reason: 登录失败处理功能是否可用需结合测试确认
+    5:
+    - point: 2
+      reason: 是否存在匿名或共享账户需结合用户清单访谈确认
+    14:
+    - point: 1
+      reason: 普通权限用户能否删除审计记录需现场测试
+    - point: 3
+      reason: 审计记录备份与保留时间需访谈并查看备份记录
+    18:
+    - point: 1
+      reason: 是否限制允许登录的地址范围需查看 sqlnet.ora 或访谈确认
+    3:
+    - point: 2
+      reason: 远程管理是否启用加密需查看 sqlnet.ora 的加密配置
+    24:
+    - point: 2
+      reason: 远程管理传输完整性保护需查看 sqlnet.ora 配置
+    25:
+    - point: 1
+      reason: 业务数据是否加密存储需结合表空间和文件核查
+    27:
+    - point: 2
+      reason: 远程管理传输保密性保护需查看 sqlnet.ora 配置
+    28:
+    - point: 1
+      reason: 业务数据是否加密存储需结合表空间和文件核查

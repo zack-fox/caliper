@@ -1,0 +1,42 @@
+version: 0.1.0
+libraries:
+  capture:
+    title: 数据采集命令库
+    status: active
+    paths:
+    - adapters/mysql/capture.yaml
+    - adapters/oracle/capture.yaml
+  record:
+    title: 记录表生成规则库
+    status: active
+    path: record.yaml
+  judge:
+    title: 记录表判定规则库
+    status: active
+    paths:
+    - adapters/mysql/rules/level2.yaml
+    - adapters/mysql/rules/level3.yaml
+    - adapters/mysql/rules/level4.yaml
+    - adapters/oracle/rules/level2.yaml
+    - adapters/oracle/rules/level3.yaml
+    - adapters/oracle/rules/level4.yaml
+  remediation:
+    title: 风险分析与整改建议库
+    status: active
+    paths:
+    - adapters/mysql/remediation.yaml
+    - adapters/oracle/remediation.yaml
+    - adapters/sqlserver/remediation.yaml
+    - adapters/generic/remediation.yaml
+  high_risk:
+    title: 高风险判定规则库
+    status: active
+    paths:
+    - adapters/mysql/high_risk.yaml
+    - adapters/oracle/high_risk.yaml
+  major:
+    title: 重大风险隐患规则库
+    status: active
+    paths:
+    - adapters/mysql/major.yaml
+    - adapters/oracle/major.yaml

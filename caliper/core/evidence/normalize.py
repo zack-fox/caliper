@@ -38,6 +38,12 @@ _NORMALIZERS = {
     "mysql_audit",
     "mysql_remote_access",
     "mysql_backup",
+    "db_mysql_accounts",
+    "db_mysql_password_policy",
+    "db_mysql_login_control",
+    "db_mysql_remote",
+    "db_mysql_audit",
+    "oracle_sql",
     "h3c_config",
     "huawei_config",
     "cisco_config",
@@ -50,11 +56,26 @@ _MYSQL_VARIABLES = {
     "skip_networking",
     "log_bin",
     "expire_logs_days",
+    "binlog_expire_logs_seconds",
     "max_connect_errors",
     "version",
     "version_comment",
     "validate_password_policy",
     "validate_password_length",
+    "validate_password_mixed_case_count",
+    "validate_password_number_count",
+    "validate_password_special_char_count",
+    "default_password_lifetime",
+    "connection_control_failed_connections_threshold",
+    "connection_control_min_connection_delay",
+    "connection_control_max_connection_delay",
+    "interactive_timeout",
+    "wait_timeout",
+    "have_ssl",
+    "have_openssl",
+    "log_output",
+    "slow_query_log",
+    "log_error",
 }
 _MYSQL_PLUGINS = {"validate_password", "connection_control", "audit_log", "server_audit"}
 _AGENT_RE = re.compile(r"aegis|yunjing|sangfor|falcon|clamd|osquery|wazuh|suricata|snort|edr|antivirus", re.I)
@@ -433,7 +454,7 @@ def _mysql_common_facts(block: CheckBlock) -> tuple[list[DerivedFact], dict[str,
                 variables["version"] = value
                 _add(facts, _fact(block, f"fact:mysql.variable.version={value}", [line]))
             continue
-        name = cells[0].strip().strip("`").lower()
+        name = cells[0].strip().strip("`").lower().replace(".", "_")
         value = cells[1].strip()
         if name in _MYSQL_VARIABLES:
             variables[name] = value
@@ -559,6 +580,458 @@ def _normalize_mysql_backup(block: CheckBlock) -> list[DerivedFact]:
     if facts:
         _add(facts, _fact(block, "fact:mysql.backup.context_only=true"))
     return facts
+
+
+_DB_MYSQL_DEFAULT_ACCOUNTS = {
+    "root",
+    "admin",
+    "administrator",
+    "test",
+    "guest",
+    "public",
+    "mysql",
+    "sa",
+}
+_DB_MYSQL_LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1", ""}
+_DB_MYSQL_NO_PASSWORD_PLUGINS = {"auth_socket", "unix_socket", "socket"}
+
+
+def _selected_columns(commands: list[str], table: str) -> list[str]:
+    """解析 ``SELECT a,b FROM table`` 的列顺序；用于按列下标读取查询结果。"""
+    for command in commands:
+        match = re.search(
+            rf"\bselect\s+(.+?)\s+from\s+{re.escape(table)}\b", command, re.I | re.S
+        )
+        if match:
+            return [part.strip().strip("`").lower() for part in match.group(1).split(",")]
+    return []
+
+
+def _column_index(columns: list[str], name: str) -> int | None:
+    try:
+        return columns.index(name)
+    except ValueError:
+        return None
+
+
+def _hashed_password(value: str, plugin: str) -> bool:
+    text = value.strip()
+    if not text or text.upper() in {"NULL", "NONE"}:
+        return True
+    if re.fullmatch(r"\*[0-9A-Fa-f]{40}", text):
+        return True
+    if text.startswith(("$A$", "$B$", "$2a$", "$2b$", "$2y$", "$6$")):
+        return True
+    return plugin.strip().lower() in {"caching_sha2_password", "sha256_password"}
+
+
+def _db_mysql_account_facts(block: CheckBlock) -> list[DerivedFact]:
+    """账户、权限与口令存储事实，全部来自 mysql.user 的同一条只读查询。"""
+    columns = _selected_columns(block.commands, "mysql.user")
+    if "user" not in columns or "host" not in columns:
+        return []
+    if block.status not in {CheckStatus.COLLECTED, CheckStatus.EMPTY}:
+        return []
+    if _has_failed_output(block) or block.status is CheckStatus.FAILED:
+        return []
+    rows = [cells for cells, _ in _mysql_rows(block) if len(cells) == len(columns)]
+
+    user_i = _column_index(columns, "user")
+    host_i = _column_index(columns, "host")
+    plugin_i = _column_index(columns, "plugin")
+    auth_i = _column_index(columns, "authentication_string")
+    locked_i = _column_index(columns, "account_locked")
+    expired_i = _column_index(columns, "password_expired")
+    super_i = _column_index(columns, "super_priv")
+    file_i = _column_index(columns, "file_priv")
+
+    facts: list[DerivedFact] = []
+    pairs = [(cells[user_i], cells[host_i]) for cells in rows]
+    unique = len(pairs) == len(set(pairs))
+    _add(facts, _fact(block, f"fact:db.mysql.users.unique={str(unique).lower()}"))
+    _add(facts, _fact(block, "fact:db.mysql.users.observed=true"))
+
+    anonymous = any(user.strip() == "" for user, _ in pairs)
+    _add(facts, _fact(block, f"fact:db.mysql.users.anonymous.none={str(not anonymous).lower()}"))
+    default_enabled = any(
+        user.strip().lower() in _DB_MYSQL_DEFAULT_ACCOUNTS for user, _ in pairs
+    )
+    _add(
+        facts,
+        _fact(
+            block,
+            f"fact:db.mysql.users.default.enabled={str(default_enabled).lower()}",
+        ),
+    )
+    remote_hosts = [host for _, host in pairs if host.strip().lower() not in _DB_MYSQL_LOCAL_HOSTS]
+    _add(facts, _fact(block, f"fact:db.mysql.remote.enabled={str(bool(remote_hosts)).lower()}"))
+    wildcard_host = any(host.strip() == "%" for _, host in pairs)
+    _add(
+        facts,
+        _fact(
+            block,
+            f"fact:db.mysql.terminal.restricted={str(not wildcard_host).lower()}",
+        ),
+    )
+
+    if auth_i is not None:
+        empty = False
+        hashed = True
+        for cells in rows:
+            plugin = cells[plugin_i] if plugin_i is not None else ""
+            value = cells[auth_i]
+            if value.strip() == "" and plugin.strip().lower() not in _DB_MYSQL_NO_PASSWORD_PLUGINS:
+                empty = True
+            if not _hashed_password(value, plugin):
+                hashed = False
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:db.mysql.users.empty_password.none={str(not empty).lower()}",
+            ),
+        )
+        _add(facts, _fact(block, f"fact:db.mysql.secret.hashed={str(hashed).lower()}"))
+
+    if expired_i is not None:
+        expired = any(cells[expired_i].strip().upper() == "Y" for cells in rows)
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:db.mysql.users.expired.none={str(not expired).lower()}",
+            ),
+        )
+    if locked_i is not None:
+        locked = any(cells[locked_i].strip().upper() == "Y" for cells in rows)
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:db.mysql.users.locked.none={str(not locked).lower()}",
+            ),
+        )
+    if super_i is not None and host_i is not None:
+        wildcard_super = any(
+            cells[host_i].strip() == "%" and cells[super_i].strip().upper() == "Y"
+            for cells in rows
+        )
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:db.mysql.privileges.no_wildcard_super={str(not wildcard_super).lower()}",
+            ),
+        )
+    if file_i is not None and user_i is not None:
+        nonroot_file = any(
+            cells[user_i].strip().lower() != "root"
+            and cells[file_i].strip().upper() == "Y"
+            for cells in rows
+        )
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:db.mysql.privileges.nonroot_file_priv.none={str(not nonroot_file).lower()}",
+            ),
+        )
+    return facts
+
+
+def _int_value(value: str) -> int | None:
+    match = re.search(r"-?\d+", str(value))
+    return int(match.group(0)) if match else None
+
+
+def _db_mysql_password_facts(block: CheckBlock) -> list[DerivedFact]:
+    facts, variables, plugins = _mysql_common_facts(block)
+    command = "\n".join(block.commands)
+    plugin_active = plugins.get("validate_password") == "ACTIVE"
+    policy_keys = [name for name in variables if name.startswith("validate_password")]
+    enabled = plugin_active or bool(policy_keys)
+    if variables or plugins or block.status is CheckStatus.EMPTY:
+        _add(
+            facts,
+            _fact(block, f"fact:db.mysql.password_policy.enabled={str(enabled).lower()}"),
+        )
+    if (length := _int_value(variables.get("validate_password_length", ""))) is not None:
+        _add(
+            facts,
+            _fact(block, f"fact:db.mysql.password_policy.length={length}"),
+        )
+    composition = 0
+    for name in (
+        "validate_password_mixed_case_count",
+        "validate_password_number_count",
+        "validate_password_special_char_count",
+    ):
+        value = _int_value(variables.get(name, "0"))
+        if value is not None and value > 0:
+            composition += 1
+    if policy_keys:
+        _add(
+            facts,
+            _fact(block, f"fact:db.mysql.password_policy.composition_types={composition}"),
+        )
+    if (aging := _int_value(variables.get("default_password_lifetime", ""))) is not None:
+        _add(
+            facts,
+            _fact(block, f"fact:db.mysql.password_policy.aging_days={aging}"),
+        )
+    if (
+        block.status is CheckStatus.EMPTY
+        and re.search(r"\bvalidate_password", command, re.I)
+        and not plugin_active
+    ):
+        _add(facts, _fact(block, "fact:db.mysql.password_policy.plugin.none=true"))
+    return facts
+
+
+def _db_mysql_login_facts(block: CheckBlock) -> list[DerivedFact]:
+    facts, variables, plugins = _mysql_common_facts(block)
+    if not variables and not plugins:
+        return facts
+    status = plugins.get("connection_control")
+    enabled = status == "ACTIVE" or (
+        status is None and "connection_control_failed_connections_threshold" in variables
+    )
+    _add(facts, _fact(block, f"fact:db.mysql.login_fail.enabled={str(enabled).lower()}"))
+    if (attempt := _int_value(variables.get("connection_control_failed_connections_threshold", ""))) is not None:
+        _add(facts, _fact(block, f"fact:db.mysql.login_fail.attempt={attempt}"))
+    if (delay := _int_value(variables.get("connection_control_min_connection_delay", ""))) is not None:
+        _add(facts, _fact(block, f"fact:db.mysql.login_fail.lock_ms={delay}"))
+    for name in ("interactive_timeout", "wait_timeout"):
+        if (seconds := _int_value(variables.get(name, ""))) is not None:
+            _add(
+                facts,
+                _fact(block, f"fact:db.mysql.timeout.{name.removesuffix('_timeout')}_seconds={seconds}"),
+            )
+    if plugins.get("connection_control") in {None, "INACTIVE", "DISABLED", "NOT INSTALLED", "DELETED"}:
+        if "connection_control" not in plugins and "connection_control" in "\n".join(block.commands).lower():
+            _add(facts, _fact(block, "fact:db.mysql.login_fail.plugin.none=true"))
+    return facts
+
+
+def _db_mysql_remote_facts(block: CheckBlock) -> list[DerivedFact]:
+    facts, variables, _ = _mysql_common_facts(block)
+    if not variables:
+        return facts
+    ssl = (
+        variables.get("have_ssl", "").strip().upper() == "YES"
+        or variables.get("have_openssl", "").strip().upper() == "YES"
+    )
+    _add(facts, _fact(block, f"fact:db.mysql.ssl.enabled={str(ssl).lower()}"))
+    skip = variables.get("skip_networking", "").strip().upper()
+    bind = variables.get("bind_address", "").strip()
+    if skip or bind:
+        restricted = skip == "ON" or bind.lower() in _DB_MYSQL_LOCAL_HOSTS
+        _add(
+            facts,
+            _fact(block, f"fact:db.mysql.remote_access.restricted={str(restricted).lower()}"),
+        )
+    return facts
+
+
+def _db_mysql_audit_facts(block: CheckBlock) -> list[DerivedFact]:
+    facts, variables, plugins = _mysql_common_facts(block)
+    command = "\n".join(block.commands)
+    plugin_active = any(
+        plugins.get(plugin) == "ACTIVE" for plugin in ("audit_log", "server_audit")
+    )
+    general = variables.get("general_log", "").strip().upper() == "ON"
+    slow = variables.get("slow_query_log", "").strip().upper() == "ON"
+    if variables or plugins or block.status is CheckStatus.EMPTY:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:db.mysql.audit.enabled={str(plugin_active or general or slow).lower()}",
+            ),
+        )
+    retention = _int_value(variables.get("expire_logs_days", ""))
+    if retention is None and (seconds := _int_value(variables.get("binlog_expire_logs_seconds", ""))) is not None:
+        retention = seconds // 86400
+    if retention is not None:
+        _add(facts, _fact(block, f"fact:db.mysql.audit.retention_days={retention}"))
+    output = variables.get("log_output", "").strip().upper()
+    if output:
+        _add(facts, _fact(block, f"fact:db.mysql.audit.output={output}"))
+    if (
+        block.status is CheckStatus.EMPTY
+        and re.search(r"\bplugin", command, re.I)
+        and re.search(r"\baudit", command, re.I)
+    ):
+        for plugin in ("audit_log", "server_audit"):
+            _add(facts, _fact(block, f"fact:db.mysql.plugin.{plugin}.none=true"))
+    return facts
+
+
+def _oracle_output_lines(block: CheckBlock) -> list[str]:
+    lines: list[str] = []
+    for line in block.output:
+        text = line.text.strip()
+        if not text:
+            continue
+        if re.match(r"^\d+\s+rows?\s+selected\.?$", text, re.I):
+            continue
+        if re.match(r"^no\s+rows?\s+selected\.?$", text, re.I):
+            continue
+        if re.match(r"^(?:ORA|SP2|PLS)-\d+", text, re.I):
+            continue
+        lines.append(text)
+    return lines
+
+
+def _oracle_user_facts(block: CheckBlock) -> list[DerivedFact]:
+    facts: list[DerivedFact] = []
+    users: list[str] = []
+    expired: list[str] = []
+    default_open: list[str] = []
+    for text in _oracle_output_lines(block):
+        if re.search(r"USERNAME|^-----", text, re.I):
+            continue
+        match = re.match(r"^([A-Za-z0-9_$#]+)\s{1,}(.+)$", text)
+        if not match:
+            continue
+        name, status = match.group(1), match.group(2).strip().upper()
+        users.append(name.upper())
+        if status.startswith("EXPIRED"):
+            expired.append(name)
+        if name.upper() in {"SYS", "SYSTEM", "TEST", "SYSMAN", "DBSNMP", "MGMT_VIEW"} and status == "OPEN":
+            default_open.append(name)
+    if not users and block.status is not CheckStatus.EMPTY:
+        return []
+    _add(facts, _fact(block, "fact:db.oracle.users.observed=true"))
+    _add(
+        facts,
+        _fact(
+            block,
+            f"fact:db.oracle.users.unique={str(len(users) == len(set(users))).lower()}",
+        ),
+    )
+    _add(
+        facts,
+        _fact(
+            block,
+            f"fact:db.oracle.users.expired.none={str(not expired).lower()}",
+        ),
+    )
+    _add(
+        facts,
+        _fact(
+            block,
+            f"fact:db.oracle.users.default.enabled={str(bool(default_open)).lower()}",
+        ),
+    )
+    return facts
+
+
+_ORACLE_PROFILE_RE = re.compile(
+    r"^\s*(?:\S+\s+)?"
+    r"(PASSWORD_LIFE_TIME|FAILED_LOGIN_ATTEMPTS|PASSWORD_LOCK_TIME|"
+    r"IDLE_TIME|PASSWORD_VERIFY_FUNCTION|PASSWORD_REUSE_MAX|PASSWORD_REUSE_TIME)\s+(\S+)\s*$",
+    re.I,
+)
+
+
+def _oracle_profile_facts(block: CheckBlock) -> list[DerivedFact]:
+    limits: dict[str, str] = {}
+    for text in _oracle_output_lines(block):
+        match = _ORACLE_PROFILE_RE.match(text)
+        if match:
+            limits[match.group(1).upper()] = match.group(2).strip()
+    if not limits:
+        return []
+    facts: list[DerivedFact] = []
+    verify = limits.get("PASSWORD_VERIFY_FUNCTION", "").strip().upper()
+    _add(
+        facts,
+        _fact(
+            block,
+            f"fact:db.oracle.password_policy.verify_function={str(verify not in {'', 'NULL', 'NONE'}).lower()}",
+        ),
+    )
+    if (life := _int_value(limits.get("PASSWORD_LIFE_TIME", ""))) is not None:
+        _add(
+            facts,
+            _fact(block, f"fact:db.oracle.password_policy.life_days={life}"),
+        )
+    if (attempt := _int_value(limits.get("FAILED_LOGIN_ATTEMPTS", ""))) is not None:
+        _add(facts, _fact(block, f"fact:db.oracle.login_fail.attempt={attempt}"))
+    lock = limits.get("PASSWORD_LOCK_TIME", "").strip().upper()
+    if lock == "UNLIMITED":
+        _add(facts, _fact(block, "fact:db.oracle.login_fail.locked=true"))
+    elif (days := _int_value(lock)) is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:db.oracle.login_fail.locked={str(days > 0).lower()}",
+            ),
+        )
+    if (idle := _int_value(limits.get("IDLE_TIME", ""))) is not None:
+        _add(facts, _fact(block, f"fact:db.oracle.timeout.idle_minutes={idle}"))
+    return facts
+
+
+_ORACLE_PARAM_RE = re.compile(
+    r"^\s*(audit_trail|audit_sys_operations|o7_dictionary_accessibility)\s+\S+\s+(\S+)",
+    re.I,
+)
+
+
+def _oracle_parameter_facts(block: CheckBlock) -> list[DerivedFact]:
+    facts: list[DerivedFact] = []
+    params: dict[str, str] = {}
+    audit_rows = 0
+    for text in _oracle_output_lines(block):
+        if match := _ORACLE_PARAM_RE.match(text):
+            params[match.group(1).lower()] = match.group(2).strip().upper()
+            continue
+        if re.search(r"AUDIT_OPTION|POLICY_NAME|USER_NAME|^-----", text, re.I):
+            continue
+        if re.match(r"^[- ]+$", text):
+            continue
+        audit_rows += 1
+    if "audit_trail" in params:
+        trail = params["audit_trail"].split(",")[0]
+        _add(
+            facts,
+            _fact(block, f"fact:db.oracle.audit.enabled={str(trail in {'DB', 'TRUE', 'ON'}).lower()}"),
+        )
+    if "audit_sys_operations" in params:
+        value = params["audit_sys_operations"]
+        _add(
+            facts,
+            _fact(block, f"fact:db.oracle.audit.sys_operations={str(value == 'TRUE').lower()}"),
+        )
+    if "o7_dictionary_accessibility" in params:
+        value = params["o7_dictionary_accessibility"]
+        _add(
+            facts,
+            _fact(block, f"fact:db.oracle.privileges.o7_dictionary={str(value == 'TRUE').lower()}"),
+        )
+    if any("audit_opts" in command.lower() for command in block.commands):
+        configured = audit_rows > 0 and block.status is not CheckStatus.EMPTY
+        _add(
+            facts,
+            _fact(block, f"fact:db.oracle.audit.policies={'configured' if configured else 'none'}"),
+        )
+    return facts
+
+
+def _oracle_sql_facts(block: CheckBlock) -> list[DerivedFact]:
+    command = "\n".join(block.commands).lower()
+    facts: list[DerivedFact] = []
+    if "dba_users" in command:
+        facts.extend(_oracle_user_facts(block))
+    if "dba_profiles" in command:
+        facts.extend(_oracle_profile_facts(block))
+    if "show parameter" in command or "audit_opts" in command:
+        facts.extend(_oracle_parameter_facts(block))
+    return facts
+
 
 
 _H3C_DEFAULT_ACCOUNTS = {
@@ -1662,6 +2135,18 @@ def _dispatch(normalize: str, block: CheckBlock) -> list[DerivedFact]:
         return _mysql_remote_facts(block)
     if normalize == "mysql_backup":
         return _normalize_mysql_backup(block)
+    if normalize == "db_mysql_accounts":
+        return _db_mysql_account_facts(block)
+    if normalize == "db_mysql_password_policy":
+        return _db_mysql_password_facts(block)
+    if normalize == "db_mysql_login_control":
+        return _db_mysql_login_facts(block)
+    if normalize == "db_mysql_remote":
+        return _db_mysql_remote_facts(block)
+    if normalize == "db_mysql_audit":
+        return _db_mysql_audit_facts(block)
+    if normalize == "oracle_sql":
+        return _oracle_sql_facts(block)
     if normalize == "h3c_config":
         return _normalize_h3c_config(block)
     if normalize == "huawei_config":
@@ -1689,6 +2174,15 @@ def _sufficient(normalize: str, facts: list[DerivedFact]) -> bool:
         "mysql_password_policy": ({"fact:mysql.plugin.validate_password.none=true"},),
         "mysql_audit": ({"fact:mysql.audit.enabled=true", "fact:mysql.audit.enabled=false"},),
         "mysql_remote_access": ({"fact:mysql.remote_access.restricted=true", "fact:mysql.remote_access.restricted=false"},),
+        "db_mysql_accounts": (
+            {"fact:db.mysql.users.observed=true"},
+            {"fact:db.mysql.users.unique=true", "fact:db.mysql.users.unique=false"},
+            {"fact:db.mysql.users.empty_password.none=true", "fact:db.mysql.users.empty_password.none=false"},
+        ),
+        "db_mysql_password_policy": ({"fact:db.mysql.password_policy.enabled=true", "fact:db.mysql.password_policy.enabled=false"},),
+        "db_mysql_login_control": ({"fact:db.mysql.login_fail.enabled=true", "fact:db.mysql.login_fail.enabled=false"},),
+        "db_mysql_remote": ({"fact:db.mysql.ssl.enabled=true", "fact:db.mysql.ssl.enabled=false"},),
+        "db_mysql_audit": ({"fact:db.mysql.audit.enabled=true", "fact:db.mysql.audit.enabled=false"},),
         "selinux": ({"fact:security_labels.configured=true"},),
     }
     if normalize in {"mysql_connection_control", "mysql_password_policy"}:

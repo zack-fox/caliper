@@ -1,0 +1,53 @@
+version: 0.1.0
+status: active
+rules:
+- section: 账户与权限
+  title: Oracle 用户账户
+  command: printf "set pagesize 200\nset linesize 200\nselect username,account_status from dba_users order by username;\nexit\n" | sqlplus -S "$CALIPER_ORACLE_CONN"
+  expect: USERNAME、ACCOUNT_STATUS，例如 OPEN / EXPIRED / EXPIRED & LOCKED
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - database
+- section: 账户与权限
+  title: Oracle 口令与登录策略
+  command: printf "set pagesize 200\nset linesize 200\nselect resource_name,limit from dba_profiles where profile='DEFAULT';\nexit\n" | sqlplus -S "$CALIPER_ORACLE_CONN"
+  expect: DEFAULT 概要文件的 PASSWORD_LIFE_TIME、FAILED_LOGIN_ATTEMPTS、PASSWORD_LOCK_TIME、IDLE_TIME、PASSWORD_VERIFY_FUNCTION
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - database
+- section: 安全审计
+  title: Oracle 审计参数
+  command: printf "set pagesize 200\nshow parameter audit\nshow parameter audit_sys_operations\nexit\n" | sqlplus -S "$CALIPER_ORACLE_CONN"
+  expect: audit_trail=DB、audit_sys_operations=TRUE
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - database
+- section: 安全审计
+  title: Oracle 审计策略
+  command: printf "set pagesize 200\nset linesize 300\nselect * from dba_stmt_audit_opts;\nselect * from dba_priv_audit_opts;\nexit\n" | sqlplus -S "$CALIPER_ORACLE_CONN"
+  expect: dba_stmt_audit_opts / dba_priv_audit_opts 返回已配置的审计策略
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - database
+- section: 访问控制
+  title: Oracle 权限分离
+  command: printf "set pagesize 200\nshow parameter o7_dictionary_accessibility\nexit\n" | sqlplus -S "$CALIPER_ORACLE_CONN"
+  expect: o7_dictionary_accessibility=FALSE
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - database
