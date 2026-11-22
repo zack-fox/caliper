@@ -76,7 +76,7 @@ def validate_expect(expression: Any, depth: int = 1, path: str = "expect") -> No
 
 def _numbers(block: CheckBlock, prefix: str) -> list[float]:
     values: list[float] = []
-    for line in block.text_lines:
+    for line in block.rule_lines:
         stripped = line.strip()
         if not stripped.startswith(prefix):
             continue
@@ -89,7 +89,12 @@ def _numbers(block: CheckBlock, prefix: str) -> list[float]:
 
 def evaluate(expression: dict, block: CheckBlock) -> tuple[bool, list[EvidenceAnchor]]:
     """返回 (是否满足, 支撑证据)。"""
-    if block.status in {CheckStatus.FAILED, CheckStatus.SKIPPED} or not block.output:
+    usable = bool(
+        block.output
+        or block.facts
+        or (block.status is CheckStatus.EMPTY and block.command_anchors)
+    )
+    if block.status in {CheckStatus.FAILED, CheckStatus.SKIPPED} or not usable:
         return False, []
     key, value = next(iter(expression.items()))
 
@@ -110,7 +115,7 @@ def evaluate(expression: dict, block: CheckBlock) -> tuple[bool, list[EvidenceAn
             anchors.extend(child_anchors)
         return False, anchors[:3]
 
-    lines = block.text_lines
+    lines = block.rule_lines
     stripped = [line.strip() for line in lines]
 
     if key in {"contains", "exists"}:

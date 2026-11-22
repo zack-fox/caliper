@@ -1,16 +1,16 @@
-"""① 证据与资产：项目信息、证据拖入解析、设备资产清单、核查入口。"""
+"""② 材料与资产：项目信息、材料拖入解析、设备资产清单与核查入口。"""
 
 from __future__ import annotations
 
 from pathlib import Path
 
 from PySide6.QtCore import QDate, Qt, Signal
-from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QComboBox,
     QDateEdit,
     QDialog,
     QFileDialog,
+    QFrame,
     QGridLayout,
     QHBoxLayout,
     QHeaderView,
@@ -18,6 +18,8 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QSplitter,
+    QStackedWidget,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -26,20 +28,33 @@ from PySide6.QtWidgets import (
 
 from app.controller import AppController, ControllerError
 from app.screens.dialogs import AssetDialog, EvidenceReviewDialog
-from app.widgets import Card, DropZone, PageHeader, StatCard, divider, hbox, vbox
+from app.widgets import Badge, Card, DropZone, EmptyState, PageHeader, Toolbar, scrollable
 from core.model.entities import Asset
 
-ASSET_COLUMNS = ("设备名称", "IP 地址", "重要程度", "作业指导书", "资产类型", "证据目录", "证据识别")
+ASSET_COLUMNS = (
+    "设备名称",
+    "IP 地址",
+    "重要程度",
+    "等级 / 指南",
+    "证据包",
+    "材料数",
+    "证据识别",
+    "操作",
+)
 
-# 表格单元格状态色（与 design tokens 语义色一致）
-OK_COLOR = "#12a76a"
-ERROR_COLOR = "#d94040"
-WARN_COLOR = "#d98300"
-MUTED_COLOR = "#6b7a90"
+EVIDENCE_COLUMN = 6
+ACTION_COLUMN = 7
+
+# 左列宽度：在 1280 窗口下仍给右侧表格留出可读空间。
+LEFT_MIN_WIDTH = 360
+LEFT_MAX_WIDTH = 420
+LEFT_START_WIDTH = 400
+
+PENDING_LIMIT = 5
 
 
 class EvidenceScreen(QWidget):
-    """证据与资产页：把"上传 → 解析 → 资产清单"串成一条主线。"""
+    """材料与资产页：左侧项目与拖拽，右侧设备清单，顶部材料就绪度。"""
 
     project_loaded = Signal()
     assets_changed = Signal()
@@ -49,14 +64,16 @@ class EvidenceScreen(QWidget):
         super().__init__(parent)
         self.controller = controller
         self.setObjectName("page")
+        self._asset_rows: list[tuple[Asset, str, str, str, str, str]] = []
+        self._visible_assets: list[Asset] = []
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 16, 20, 16)
-        layout.setSpacing(14)
+        layout.setSpacing(12)
 
         self.header = PageHeader(
-            "项目与材料",
-            "导入现场日志，检查识别结果并维护设备信息；解析完成后即可生成记录草稿。",
+            "材料与资产",
+            "导入现场采集材料，确认设备与证据识别状态。",
         )
         refresh_button = QPushButton("刷新")
         refresh_button.setObjectName("subtle")
@@ -64,24 +81,45 @@ class EvidenceScreen(QWidget):
         self.header.add_action(refresh_button)
         layout.addWidget(self.header)
 
-        # ---- 统计卡 ----
-        self.stat_assets = StatCard("设备总数", "0", "已纳入本次核查")
-        self.stat_linked = StatCard("已关联材料", "0", "可生成记录草稿")
-        self.stat_blocks = StatCard("可核查块", "0", "解析出的检查块")
-        self.stat_warn = StatCard("需处理", "0", "仅附件 / 不可用")
-        stat_row = QHBoxLayout()
-        stat_row.setSpacing(12)
-        for card in (self.stat_assets, self.stat_linked, self.stat_blocks, self.stat_warn):
-            stat_row.addWidget(card, 1)
-        layout.addLayout(stat_row)
+        # ---- 双栏主体 ----
+        self.body = QSplitter(Qt.Horizontal)
+        self.body.setObjectName("workbench_splitter")
+        self.body.setChildrenCollapsible(False)
+        self.body.setHandleWidth(1)
 
-        # ---- 项目信息 ----
+        self.left_panel = scrollable(self._build_left_column())
+        self.left_panel.setMinimumWidth(LEFT_MIN_WIDTH)
+        self.left_panel.setMaximumWidth(LEFT_MAX_WIDTH)
+        self.left_panel.setWidgetResizable(True)
+        self.left_panel.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.body.addWidget(self.left_panel)
+
+        self.right_panel = self._build_right_column()
+        self.right_panel.setMinimumWidth(0)
+        self.body.addWidget(self.right_panel)
+
+        self.body.setStretchFactor(0, 0)
+        self.body.setStretchFactor(1, 1)
+        self.body.setSizes([LEFT_START_WIDTH, 900])
+        layout.addWidget(self.body, 1)
+
+        self.refresh()
+
+    # ---- 左列 ----
+    def _build_left_column(self) -> QWidget:
+        host = QWidget()
+        host.setObjectName("page")
+        column = QVBoxLayout(host)
+        column.setContentsMargins(0, 0, 4, 0)
+        column.setSpacing(12)
+
         project_card = Card("项目信息", "决定规则包与指导书")
-        grid_host = QWidget()
-        grid = QGridLayout(grid_host)
+        grid = QGridLayout()
         grid.setContentsMargins(0, 2, 0, 0)
-        grid.setHorizontalSpacing(12)
-        grid.setVerticalSpacing(10)
+        grid.setHorizontalSpacing(10)
+        grid.setVerticalSpacing(6)
+        grid.setColumnStretch(1, 1)
+
         self.project_code = QLineEdit()
         self.project_code.setPlaceholderText("可留空")
         self.system_name = QLineEdit()
@@ -90,31 +128,50 @@ class EvidenceScreen(QWidget):
         self.level.addItems(["三级", "二级"])
         self.check_date = QDateEdit(QDate.currentDate())
         self.check_date.setCalendarPopup(True)
-        self.output_dir = QLabel("—")
-        self.output_dir.setObjectName("mono")
-        self.pack_dir = QLabel("—")
-        self.pack_dir.setObjectName("mono")
-        for column, (caption, widget) in enumerate(
-            (
-                ("项目编号", self.project_code),
-                ("系统名称", self.system_name),
-                ("等级", self.level),
-                ("核查日期", self.check_date),
-            )
-        ):
-            grid.addWidget(self._caption(caption), 0, column * 2)
-            grid.addWidget(widget, 0, column * 2 + 1)
-        grid.addWidget(self._caption("输出目录"), 1, 0)
-        grid.addWidget(self.output_dir, 1, 1, 1, 3)
-        grid.addWidget(self._caption("规则包"), 1, 4)
-        grid.addWidget(self.pack_dir, 1, 5, 1, 3)
-        for column in (1, 3, 5, 7):
-            grid.setColumnStretch(column, 1)
-        project_card.add(grid_host)
-        layout.addWidget(project_card)
+        self.evidence_root = self._path_label()
+        self.evidence_root_button = QPushButton("选择…")
+        self.evidence_root_button.setObjectName("subtle")
+        self.evidence_root_button.clicked.connect(self._pick_evidence_root)
 
-        # ---- 拖拽上传 ----
+        evidence_row = QWidget()
+        evidence_layout = QHBoxLayout(evidence_row)
+        evidence_layout.setContentsMargins(0, 0, 0, 0)
+        evidence_layout.setSpacing(6)
+        evidence_layout.addWidget(self.evidence_root, 1)
+        evidence_layout.addWidget(self.evidence_root_button, 0)
+
+        rows = (
+            ("项目编号", self.project_code),
+            ("系统名称", self.system_name),
+            ("等保等级", self.level),
+            ("检查日期", self.check_date),
+            ("证据根目录", evidence_row),
+        )
+        for row, (caption, widget) in enumerate(rows):
+            grid.addWidget(self._caption(caption), row, 0)
+            grid.addWidget(widget, row, 1)
+        project_card.add(self._grid_host(grid))
+
+        project_actions = QHBoxLayout()
+        project_actions.setSpacing(8)
+        self.save_button = QPushButton("保存项目")
+        self.save_button.setObjectName("primary")
+        self.save_button.clicked.connect(self.save_project)
+        self.load_button = QPushButton("加载项目")
+        self.load_button.setObjectName("subtle")
+        self.load_button.clicked.connect(self.load_project)
+        project_actions.addWidget(self.save_button)
+        project_actions.addWidget(self.load_button)
+        project_actions.addStretch(1)
+        project_card.body.addLayout(project_actions)
+        column.addWidget(project_card)
+
+        import_card = Card("材料导入", "拖入采集目录或单个日志")
         self.dropzone = DropZone()
+        self.dropzone.title.setText("拖入采集目录或单个日志文件")
+        self.dropzone.title.setWordWrap(True)
+        self.dropzone.hint.setWordWrap(True)
+        self.dropzone.hint.setMinimumWidth(0)
         pick_dir = QPushButton("选择采集目录…")
         pick_dir.clicked.connect(lambda: self._add_asset(pick_directory=True))
         pick_log = QPushButton("选择日志文件…")
@@ -122,48 +179,84 @@ class EvidenceScreen(QWidget):
         self.dropzone.add_action(pick_dir)
         self.dropzone.add_action(pick_log)
         self.dropzone.path_dropped.connect(self._on_dropped)
-        layout.addWidget(self.dropzone)
+        import_card.add(self.dropzone)
+        column.addWidget(import_card)
 
-        # ---- 资产表 ----
-        asset_card = Card("设备与证据包", "双击行可编辑")
-        import_button = QPushButton("导入设备证据")
-        import_button.setObjectName("primary")
-        import_button.clicked.connect(lambda: self._add_asset())
-        self.edit_button = QPushButton("编辑选中")
-        self.edit_button.clicked.connect(self._edit_asset)
-        self.review_button = QPushButton("查看材料")
-        self.review_button.clicked.connect(self._review_evidence)
-        self.remove_button = QPushButton("删除设备")
-        self.remove_button.setObjectName("danger")
-        self.remove_button.clicked.connect(self._remove_asset)
+        readiness_card = Card("材料就绪度", f"需处理项最多显示 {PENDING_LIMIT} 条")
+        readiness_row = QHBoxLayout()
+        readiness_row.setSpacing(8)
+        self.readiness_badge = Badge("待导入", "neutral")
+        self.readiness_summary = QLabel("")
+        self.readiness_summary.setObjectName("secondary")
+        self.readiness_summary.setWordWrap(True)
+        readiness_row.addWidget(self.readiness_badge)
+        readiness_row.addWidget(self.readiness_summary, 1)
+        readiness_card.body.addLayout(readiness_row)
+        self.readiness_pending = QLabel("")
+        self.readiness_pending.setObjectName("muted")
+        self.readiness_pending.setWordWrap(True)
+        readiness_card.body.addWidget(self.readiness_pending)
+        column.addWidget(readiness_card)
+
+        column.addStretch(1)
+        return host
+
+    # ---- 右列 ----
+    def _build_right_column(self) -> QWidget:
+        asset_card = Card("设备与材料表", "证据识别列显示可核查块数或不可用原因")
+
+        self.toolbar = Toolbar()
+        self.search = self.toolbar.add_search("搜索设备名称或 IP…")
+        self.search.textChanged.connect(self._apply_filter)
+
+        self.add_button = QPushButton("新增设备")
+        self.add_button.setObjectName("subtle")
+        self.add_button.clicked.connect(lambda: self._add_asset())
+        self.import_button = QPushButton("导入材料")
+        self.import_button.setObjectName("subtle")
+        self.import_button.clicked.connect(lambda: self._add_asset(pick_directory=True))
         self.run_button = QPushButton("生成记录草稿")
         self.run_button.setObjectName("primary")
         self.run_button.clicked.connect(self.run_requested.emit)
-        asset_card.add_action(import_button)
-        asset_card.add_action(self.edit_button)
-        asset_card.add_action(self.review_button)
-        asset_card.add_action(self.remove_button)
-        asset_card.add_action(self.run_button)
+        for button in (self.add_button, self.import_button, self.run_button):
+            self.toolbar.add_right(button)
+        asset_card.add(self.toolbar)
+
+        self.table_hint = QLabel("")
+        self.table_hint.setObjectName("muted")
+        self.table_hint.setWordWrap(True)
+        asset_card.add(self.table_hint)
 
         self.table = QTableWidget(0, len(ASSET_COLUMNS))
+        self.table.setObjectName("records_table")
         self.table.setHorizontalHeaderLabels(ASSET_COLUMNS)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.setSelectionMode(QTableWidget.SingleSelection)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.setAlternatingRowColors(True)
+        self.table.setWordWrap(False)
         self.table.verticalHeader().setVisible(False)
         self.table.setShowGrid(False)
+        self.table.setMinimumWidth(0)
         header = self.table.horizontalHeader()
         header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        header.setSectionResizeMode(0, QHeaderView.Stretch)
-        for column in range(1, len(ASSET_COLUMNS) - 1):
-            header.setSectionResizeMode(column, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(len(ASSET_COLUMNS) - 1, QHeaderView.Stretch)
-        self.table.cellDoubleClicked.connect(self._edit_asset)
-        asset_card.add(self.table, 1)
-        layout.addWidget(asset_card, 1)
+        header.setMinimumSectionSize(60)
+        widths = (130, 110, 76, 120, 110, 66, 150, 204)
+        for column, width in enumerate(widths):
+            header.setSectionResizeMode(column, QHeaderView.Interactive)
+            self.table.setColumnWidth(column, width)
+        self.table.setHorizontalScrollMode(QTableWidget.ScrollPerPixel)
+        self.table.cellDoubleClicked.connect(self._on_row_double_clicked)
 
-        self.refresh()
+        self.empty_state = EmptyState(
+            "尚未添加设备",
+            "拖入采集目录或单个日志文件，或点击「新增设备」开始。",
+        )
+        self.table_stack = QStackedWidget()
+        self.table_stack.addWidget(self.table)
+        self.table_stack.addWidget(self.empty_state)
+        asset_card.add(self.table_stack, 1)
+        return asset_card
 
     # ---- 小工具 ----
     @staticmethod
@@ -172,11 +265,74 @@ class EvidenceScreen(QWidget):
         label.setObjectName("secondary")
         return label
 
+    @staticmethod
+    def _path_label() -> QLabel:
+        label = QLabel("—")
+        label.setObjectName("mono")
+        label.setWordWrap(True)
+        label.setMinimumWidth(0)
+        return label
+
+    @staticmethod
+    def _grid_host(grid: QGridLayout) -> QWidget:
+        host = QWidget()
+        host.setLayout(grid)
+        return host
+
+    @staticmethod
+    def _status_cell(text: str, tone: str, tooltip: str = "") -> QWidget:
+        host = QWidget()
+        host.setToolTip(tooltip)
+        row = QHBoxLayout(host)
+        row.setContentsMargins(8, 0, 8, 0)
+        row.setSpacing(0)
+        badge = Badge(text, tone)
+        badge.setToolTip(tooltip)
+        row.addWidget(badge)
+        row.addStretch(1)
+        return host
+
+    def _action_cell(self, asset: Asset) -> QWidget:
+        host = QWidget()
+        row = QHBoxLayout(host)
+        row.setContentsMargins(4, 0, 4, 0)
+        row.setSpacing(2)
+        for text, handler in (
+            ("查看材料", self._review_evidence),
+            ("编辑", self._edit_asset),
+            ("删除", self._remove_asset),
+        ):
+            button = QPushButton(text)
+            button.setObjectName("ghost")
+            button.setToolTip(f"{text}：{asset.device_name}")
+            button.clicked.connect(
+                lambda _checked=False, name=asset.device_name, action=handler: self._row_action(
+                    name, action
+                )
+            )
+            row.addWidget(button)
+        row.addStretch(1)
+        return host
+
+    def _row_action(self, device_name: str, handler) -> None:
+        self._select_asset(device_name)
+        handler()
+
+    def _select_asset(self, device_name: str) -> None:
+        for row, asset in enumerate(self._visible_assets):
+            if asset.device_name == device_name:
+                self.table.selectRow(row)
+                return
+
+    def _on_row_double_clicked(self, row: int, _column: int = 0) -> None:
+        self.table.selectRow(row)
+        self._edit_asset()
+
     def _current_asset(self) -> Asset | None:
         row = self.table.currentRow()
-        if row < 0 or row >= len(self.controller.project.assets):
+        if row < 0 or row >= len(self._visible_assets):
             return None
-        return self.controller.project.assets[row]
+        return self._visible_assets[row]
 
     # ---- 表单 / 刷新 ----
     def apply_form(self):
@@ -201,54 +357,127 @@ class EvidenceScreen(QWidget):
         self.check_date.setDate(
             QDate(project.check_date.year, project.check_date.month, project.check_date.day)
         )
-        self.output_dir.setText(str(self.controller.export_dir()))
-        self.pack_dir.setText(str(self.controller.project.pack_dir or "默认规则包"))
+        evidence_root = str(self.controller.evidence_root_path())
+        self.evidence_root.setText(evidence_root)
+        self.evidence_root.setToolTip(evidence_root)
 
-        self.table.setRowCount(0)
+        self._asset_rows = []
         linked = 0
-        blocks = 0
-        warnings = 0
+        pending: list[str] = []
         for asset in project.assets:
+            package = asset.evidence_package or ""
+            preview = self.controller.inspect_evidence(package or None, asset.device_name)
+            material_count = "—"
+            if not package:
+                text, tone = "未关联证据", "neutral"
+                pending.append(f"{asset.device_name}（未关联证据）")
+            elif preview.ok:
+                text, tone = f"可核查：{preview.blocks} 块", "ok"
+                material_count = str(preview.files)
+                linked += 1
+            elif preview.images:
+                text, tone = f"仅附件：{preview.images} 张图片", "warn"
+                material_count = str(preview.files)
+                pending.append(f"{asset.device_name}（仅附件）")
+            else:
+                text, tone = "不可用", "bad"
+                material_count = str(preview.files)
+                pending.append(f"{asset.device_name}（材料不可用）")
+            self._asset_rows.append(
+                (asset, package, text, tone, preview.message, material_count)
+            )
+
+        self._update_readiness(len(project.assets), linked, pending)
+        self._apply_filter()
+
+    def _update_readiness(self, total: int, linked: int, pending: list[str]) -> None:
+        if total == 0:
+            self.readiness_badge.set_text("待导入", "neutral")
+            self.readiness_summary.setText("尚未导入设备材料")
+            self.readiness_pending.setText("拖入采集目录或选择日志后开始识别。")
+            self.table_hint.setText(
+                "尚未导入设备；拖入材料或点击「新增设备」建立第一条记录。"
+            )
+            return
+
+        warning_count = total - linked
+        if warning_count == 0:
+            self.readiness_badge.set_text("材料就绪", "ok")
+        else:
+            self.readiness_badge.set_text(f"{warning_count} 台需处理", "warn")
+        self.readiness_summary.setText(
+            f"设备 {total} 台 / 已识别材料 {linked} 台 / 需处理 {warning_count} 台"
+        )
+        if pending:
+            shown = "；".join(pending[:PENDING_LIMIT])
+            suffix = f" 等 {len(pending)} 台" if len(pending) > PENDING_LIMIT else ""
+            self.readiness_pending.setText(f"需处理：{shown}{suffix}")
+        else:
+            self.readiness_pending.setText("")
+        self.table_hint.setText("双击行可编辑；操作列可查看材料、编辑或删除设备。")
+
+    def _apply_filter(self, *_args) -> None:
+        needle = self.search.text().strip().lower()
+        visible = [
+            row
+            for row in self._asset_rows
+            if not needle
+            or needle in row[0].device_name.lower()
+            or needle in (row[0].ip or "").lower()
+        ]
+        self.table.setRowCount(0)
+        self._visible_assets = []
+        for asset, package, text, tone, tooltip, material_count in visible:
             row = self.table.rowCount()
             self.table.insertRow(row)
-            package = asset.evidence_package or ""
             values = (
                 asset.device_name,
                 asset.ip,
                 asset.importance.value,
                 asset.guide,
-                asset.asset_type.value,
                 Path(package).name if package else "",
+                material_count,
             )
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                item.setToolTip(package if column == 5 else value)
+                item.setToolTip(package if column == 4 else value)
                 self.table.setItem(row, column, item)
 
-            preview = self.controller.inspect_evidence(package or None, asset.device_name)
-            if not package:
-                text, colour = "未关联证据", MUTED_COLOR
-            elif preview.ok:
-                text, colour = f"可核查：{preview.blocks} 块", OK_COLOR
-                linked += 1
-                blocks += preview.blocks
-            elif preview.images:
-                text, colour = f"仅附件：{preview.images} 张图片", WARN_COLOR
-                warnings += 1
-            else:
-                text, colour = "不可用", ERROR_COLOR
-                warnings += 1
             status = QTableWidgetItem(text)
-            status.setForeground(QColor(colour))
-            status.setToolTip(preview.message)
-            self.table.setItem(row, len(ASSET_COLUMNS) - 1, status)
+            status.setToolTip(tooltip)
+            self.table.setItem(row, EVIDENCE_COLUMN, status)
+            self.table.setCellWidget(
+                row, EVIDENCE_COLUMN, self._status_cell(text, tone, tooltip)
+            )
+            self.table.setCellWidget(row, ACTION_COLUMN, self._action_cell(asset))
+            self._visible_assets.append(asset)
 
-        self.stat_assets.set_value(str(len(project.assets)))
-        self.stat_linked.set_value(str(linked))
-        self.stat_blocks.set_value(str(blocks))
-        self.stat_warn.set_value(str(warnings))
+        if not self._asset_rows:
+            self.empty_state.set_text(
+                "尚未添加设备",
+                "拖入采集目录或单个日志文件，或点击「新增设备」开始。",
+            )
+            self.table_stack.setCurrentWidget(self.empty_state)
+        elif not visible:
+            self.empty_state.set_text(
+                "没有匹配的设备",
+                "调整搜索关键词，或清空搜索框查看全部设备。",
+            )
+            self.table_stack.setCurrentWidget(self.empty_state)
+        else:
+            self.table_stack.setCurrentWidget(self.table)
 
     # ---- 设备动作 ----
+    def _pick_evidence_root(self) -> None:
+        start = str(self.controller.evidence_root_path())
+        path = QFileDialog.getExistingDirectory(self, "选择证据根目录", start)
+        if not path:
+            return
+        self.controller.project = self.controller.project.model_copy(
+            update={"evidence_root": Path(path)}
+        )
+        self.refresh()
+
     def _on_dropped(self, path: str) -> None:
         relative = self.controller.display_package_path(Path(path))
         self._add_asset(initial_evidence=relative)

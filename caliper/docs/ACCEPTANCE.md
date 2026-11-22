@@ -22,9 +22,9 @@ make library-lint
 可观察结果：
 
 - 输出 6 行，键为 `capture / record / judge / remediation / high_risk / major`，六个库均为 `active`；
-- `active` 的库条数均大于 0（当前 capture 54、record 5、judge 79、remediation 18、high_risk 16、major 16）；
+- `active` 的库条数均大于 0（当前 capture 54、record 5、judge 78、remediation 18、high_risk 16、major 16）；
 - 任一 `active` 库条数为 0 时，命令必须非零退出；
-- 末行 `六库校验通过：6 个库，共 188 条规则`，退出码 0。
+- 末行 `六库校验通过：6 个库，共 187 条规则`，退出码 0。
 
 ## 2. 两族采集脚本与无真实信息
 

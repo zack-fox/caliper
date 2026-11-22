@@ -340,7 +340,7 @@
   检查内容: 应核查相关配置信息或系统设计文档，用户的鉴别信息所在的存储空间被释放或重新分配前是否得到完全清除。
   判断标准: 如果以上测评实施内容为肯定，则符合本测评单元指标要求，否则不符合本测评单元指标要求。
   policy: binary
-  mode: auto
+  mode: manual
   binary: true
   optional_clause: false
 - item_id: L2-CES1-22

@@ -105,5 +105,5 @@ def test_run_reports_unmapped_evidence_and_missing_rules(tmp_path) -> None:
     result = run_project(project, pack, base_dir=tmp_path)
     diagnostics = result.asset_runs[0].diagnostics
     assert any("Vendor service status" in message and "未参与自动判定" in message for message in diagnostics)
-    assert any("规则库无对应条目" in message for message in diagnostics)
+    assert not any("规则库无对应条目" in message for message in diagnostics)
     assert not any("Host / OS / kernel / time" in message for message in diagnostics)

@@ -417,6 +417,142 @@ QLabel#status_text {
     font-size: 11px;
 }
 
+/* ============================ 工作台：工具栏 ============================ */
+QFrame#workspace_toolbar {
+    background: @surface@;
+    border: none;
+    border-bottom: 1px solid @border@;
+    min-height: 48px;
+}
+QLineEdit#toolbar_search {
+    background: @surface_sunken@;
+    border: 1px solid @border@;
+    border-radius: 6px;
+    padding: 5px 10px;
+    min-width: 220px;
+}
+QPushButton#filter_chip {
+    background: @surface@;
+    color: @text_secondary@;
+    border: 1px solid @border_strong@;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 12px;
+}
+QPushButton#filter_chip:hover { border-color: @primary@; color: @primary@; }
+QPushButton#filter_chip:checked {
+    background: @primary_soft@;
+    color: @primary_ink@;
+    border-color: @primary@;
+    font-weight: 600;
+}
+QFrame#metric_pill, QLabel#metric_pill {
+    background: @surface_sunken@;
+    color: @text_secondary@;
+    border: 1px solid @border@;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 12px;
+}
+QLabel#metric_pill_label { color: @muted@; font-size: 12px; background: transparent; }
+QLabel#metric_pill_value {
+    color: @text@;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: @font_mono@;
+    background: transparent;
+}
+
+/* ============================ 工作台：安全域页签 ============================ */
+QTabBar#domain_tabs { background: transparent; }
+QTabBar#domain_tabs::tab {
+    background: transparent;
+    color: @text_secondary@;
+    padding: 7px 14px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: 13px;
+}
+QTabBar#domain_tabs::tab:hover { color: @primary@; }
+QTabBar#domain_tabs::tab:selected {
+    color: @primary@;
+    border-bottom: 2px solid @primary@;
+    font-weight: 600;
+}
+
+/* ============================ 工作台：记录表 ============================ */
+QTableWidget#records_table QHeaderView::section {
+    background: @table_header_bg@;
+    color: @text_secondary@;
+    border: none;
+    border-bottom: 1px solid @border@;
+    border-right: 1px solid @line_soft@;
+    padding: 0 10px;
+    height: 32px;
+    font-weight: 600;
+    font-size: 12px;
+}
+QTableWidget#records_table::item {
+    height: 34px;
+    padding: 0 10px;
+    border: none;
+}
+QTableWidget#records_table::item:hover { background: @table_row_hover@; }
+QTableWidget#records_table::item:selected {
+    background: @table_row_selected@;
+    color: @text@;
+}
+
+/* ============================ 工作台：步骤条 ============================ */
+QFrame#stepbar {
+    background: @stepbar_bg@;
+    border: none;
+    border-bottom: 1px solid @border@;
+    min-height: 46px;
+}
+#step_item { background: transparent; border: none; color: @step_todo@; }
+#step_item[state="done"] { color: @step_done@; }
+#step_item[state="todo"] { color: @step_todo@; }
+#step_item[state="blocked"] { color: @step_blocked@; }
+
+/* ============================ 工作台：侧边检查器 ============================ */
+QFrame#inspector {
+    background: @inspector_bg@;
+    border: none;
+    border-left: 1px solid @inspector_border@;
+}
+QFrame#inspector_header {
+    background: @inspector_bg@;
+    border: none;
+    border-bottom: 1px solid @inspector_border@;
+    min-height: 44px;
+}
+QLabel#inspector_title { color: @text@; font-size: 13px; font-weight: 600; background: transparent; }
+QPushButton#inspector_close {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: @text_secondary@;
+    padding: 2px 8px;
+    font-size: 13px;
+}
+QPushButton#inspector_close:hover { background: @surface_alt@; color: @text@; }
+
+/* ============================ 工作台：状态栏 ============================ */
+QFrame#statusbar {
+    background: @statusbar_bg@;
+    border: none;
+    border-top: 1px solid @border@;
+    min-height: 26px;
+}
+QLabel#status_segment {
+    color: @statusbar_text@;
+    font-family: @font_mono@;
+    font-size: 11px;
+    background: transparent;
+    padding: 0 8px;
+}
+
 /* ============================ 滚动条 ============================ */
 QScrollBar:vertical { background: transparent; width: 10px; margin: 2px; }
 QScrollBar::handle:vertical { background: @border_strong@; border-radius: 4px; min-height: 30px; }

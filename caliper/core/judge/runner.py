@@ -93,7 +93,7 @@ def _judge_package(
     level: int,
     assessment_fingerprint: str,
 ) -> AssetRun:
-    package = load_evidence(package_root, host=asset.device_name, level=level)
+    package = load_evidence(package_root, host=asset.device_name, level=level, checks=checks)
     blocks: dict[str, CheckBlock] = index_blocks(
         package.blocks, checks, package.manifest.os_family
     )

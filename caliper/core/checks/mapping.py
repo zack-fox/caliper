@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from core.model.entities import CheckBlock
 
@@ -20,6 +21,35 @@ class PointBinding(BaseModel):
     points: list[int] = Field(default_factory=list)
 
 
+class SessionBinding(BaseModel):
+    kind: str
+    pattern: str
+    empty: str = "failed"
+
+    @field_validator("kind")
+    @classmethod
+    def _check_kind(cls, value: str) -> str:
+        if value not in {"shell", "mysql"}:
+            raise ValueError("session.kind 只支持 shell/mysql")
+        return value
+
+    @field_validator("pattern")
+    @classmethod
+    def _check_pattern(cls, value: str) -> str:
+        try:
+            re.compile(value)
+        except re.error as exc:
+            raise ValueError(f"session.pattern 正则非法：{exc}") from exc
+        return value
+
+    @field_validator("empty")
+    @classmethod
+    def _check_empty(cls, value: str) -> str:
+        if value not in {"success", "failed"}:
+            raise ValueError("session.empty 只支持 success/failed")
+        return value
+
+
 class CheckBinding(BaseModel):
     os_family: list[str] = Field(default_factory=list)
     section: str = ""
@@ -27,6 +57,26 @@ class CheckBinding(BaseModel):
     block_index: int
     kind: str = "judge"
     binds: list[PointBinding] = Field(default_factory=list)
+    session: list[SessionBinding] = Field(default_factory=list)
+    normalize: str = ""
+
+    @field_validator("os_family")
+    @classmethod
+    def _check_families(cls, value: list[str]) -> list[str]:
+        invalid = set(value) - {"debian", "rhel", "unknown"}
+        if invalid:
+            raise ValueError(f"os_family 含未知类型：{sorted(invalid)}")
+        return value
+
+    @field_validator("normalize")
+    @classmethod
+    def _check_normalize(cls, value: str) -> str:
+        if value:
+            from core.evidence.normalize import normalize_names
+
+            if value not in normalize_names():
+                raise ValueError(f"未知 normalize 标识：{value}")
+        return value
 
 
 def _load_yaml(path: Path) -> object:
@@ -102,25 +152,29 @@ class ChecksMap(BaseModel):
             for check in candidates:
                 if block.os_family in check.os_family:
                     return check
+            if any(check.os_family for check in candidates):
+                return None
         return candidates[0]
 
 
 def index_blocks(blocks: list[CheckBlock], checks: ChecksMap, os_family: str | None) -> dict[str, CheckBlock]:
-    """按标题归并检查块：优先取与资产系统类型一致的会话。
-
-    os_family 已知时，若该标题只存在于其它系统类型的会话（例如 Ubuntu 资产里的
-    SELinux 块），直接不绑定，避免拿错证据。
-    """
+    """按标题选择证据，并同时执行会话系统类型和映射白名单约束。"""
     index: dict[str, CheckBlock] = {}
     for title in checks.titles():
         candidates = [block for block in blocks if block.title == title]
-        if not candidates:
-            continue
-        if os_family:
-            preferred = [block for block in candidates if block.os_family == os_family]
-            if not preferred:
+        compatible: list[CheckBlock] = []
+        for block in candidates:
+            allowed = checks.allowed_families(title)
+            if allowed and block.os_family and block.os_family not in allowed:
                 continue
-            index[title] = preferred[0]
-        else:
-            index[title] = candidates[0]
+            if os_family and os_family != "unknown" and block.os_family:
+                if block.os_family != os_family and block.os_family != "unknown":
+                    continue
+                if block.os_family == "unknown" and "unknown" not in allowed:
+                    continue
+            if os_family == "unknown" and block.os_family not in {None, "unknown"}:
+                continue
+            compatible.append(block)
+        if compatible:
+            index[title] = compatible[0]
     return index

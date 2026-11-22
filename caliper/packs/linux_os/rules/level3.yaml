@@ -12,28 +12,28 @@ rules:
   - item: 1
     point: 1
     block: Duplicate UID / UID=0 accounts
-    expect: {contains: "no duplicate uid"}
+    expect: {contains: "fact:duplicate_uid.none=true"}
     pass_reason: 未发现重复 UID
     fail_reason: 存在重复 UID，身份标识不唯一
 
   - item: 1
     point: 2
     block: Duplicate UID / UID=0 accounts
-    expect: {eq: "UID=0: root"}
+    expect: {contains: "fact:uid0.only_root=true"}
     pass_reason: UID=0 账户仅 root
     fail_reason: 除 root 外还存在 UID=0 账户
 
   - item: 1
     point: 3
     block: Empty / expired password
-    expect: {contains: "no empty-password account"}
+    expect: {contains: "fact:empty_password.none=true"}
     pass_reason: 未发现空口令账户
     fail_reason: 存在空口令账户
 
   - item: 1
     point: 4
     block: Password complexity
-    expect: {contains: "minlen="}
+    expect: {contains: "fact:pam.password_complexity.enabled=true"}
     pass_reason: 已配置口令复杂度策略
     fail_reason: 未配置口令复杂度策略
 
@@ -47,24 +47,21 @@ rules:
   - item: 2
     point: 1
     block: Login failure lockout (faillock)
-    expect: {contains: "pam_faillock"}
+    expect: {contains: "fact:faillock.module=true"}
     pass_reason: 已启用登录失败处理模块
     fail_reason: 未启用登录失败处理模块
 
   - item: 2
     point: 2
     block: Login failure lockout (faillock)
-    expect:
-      all:
-        - {contains: "deny="}
-        - {contains: "unlock_time="}
+    expect: {contains: "fact:faillock.policy=true"}
     pass_reason: 已配置失败次数与锁定时间
     fail_reason: 未配置失败次数或锁定时间
 
   - item: 2
     point: 3
     block: Session timeout TMOUT
-    expect: {contains: "TMOUT="}
+    expect: {contains: "fact:session.tmout.valid=true"}
     pass_reason: 已配置登录连接超时退出
     fail_reason: 未配置登录连接超时退出
 
@@ -81,10 +78,17 @@ rules:
     block: Key file permissions
     expect:
       all:
-        - {contains: "644 root:root /etc/passwd"}
-        - {contains: "640 root:shadow /etc/shadow"}
+        - {contains: "fact:file_permissions.passwd.secure=true"}
+        - {contains: "fact:file_permissions.shadow.secure=true"}
     pass_reason: 账户与鉴别信息文件权限符合要求
     fail_reason: 账户或鉴别信息文件权限不符合要求
+
+  - item: 7
+    point: 1
+    block: Accounts and last password change
+    expect: {contains: "fact:account.expired.none=true"}
+    pass_reason: 未发现过期账户
+    fail_reason: 存在过期账户或无法确认账户过期状态
 
   - item: 10
     point: 1
@@ -100,21 +104,28 @@ rules:
     pass_reason: 默认 umask 未放开其他用户写权限
     fail_reason: 默认 umask 允许其他用户写，访问控制粒度不足
 
+  - item: 11
+    point: 1
+    block: SELinux status
+    expect: {contains: "fact:security_labels.configured=true"}
+    pass_reason: 已配置主体、客体安全标记
+    fail_reason: 未配置主体、客体安全标记
+
   # ---- 安全审计 ----
   - item: 12
     point: 1
     block: auditd status and rules
     expect:
       all:
-        - {contains: "service active"}
-        - {not_contains: "no rule loaded"}
+        - {contains: "fact:auditd.active=true"}
+        - {contains: "fact:auditd.rules_loaded=true"}
     pass_reason: 审计服务已启用且已加载审计规则
     fail_reason: 审计服务未启用或未加载审计规则
 
   - item: 12
     point: 3
     block: Log forwarding
-    expect: {not_contains: "none"}
+    expect: {contains: "fact:log.forwarding.enabled=true"}
     pass_reason: 审计记录已转发至集中日志
     fail_reason: 未配置日志转发
 
@@ -128,9 +139,9 @@ rules:
   - item: 14
     point: 1
     block: Log retention
-    expect: {gt: {prefix: "rotate", value: 26}}
-    pass_reason: 日志轮转保留数量满足半年留存
-    fail_reason: 日志轮转保留数量不足半年
+    expect: {contains: "fact:log.retention.six_months=true"}
+    pass_reason: 日志留存周期满足半年要求
+    fail_reason: 日志留存周期不足半年
 
   - item: 14
     point: 1
@@ -142,9 +153,9 @@ rules:
   - item: 14
     point: 2
     block: Log archives on disk
-    expect: {contains: "compressed"}
-    pass_reason: 历史日志已压缩归档
-    fail_reason: 历史日志未压缩归档
+    expect: {contains: "fact:log.archives.present=true"}
+    pass_reason: 历史日志已归档
+    fail_reason: 历史日志未归档
 
   # ---- 入侵防范 ----
   - item: 17
@@ -195,7 +206,7 @@ rules:
   - item: 22
     point: 1
     block: Security agent (EDR / AV / IDS)
-    expect: {not_contains: "no security agent process"}
+    expect: {contains: "fact:security_agent.process.present=true"}
     pass_reason: 已部署主机安全防护进程
     fail_reason: 未发现主机安全防护进程
 
@@ -216,24 +227,6 @@ rules:
   # ---- 数据保密性 ----
   # item 27 的口径是 manual（需访谈确认加密范围），初版不自动判定，留给人工。
 
-  # ---- 剩余信息保护 ----
-  - item: 31
-    point: 1
-    block: History setting (HISTSIZE)
-    expect: {not_contains: "no HISTSIZE"}
-    pass_reason: 已配置命令历史清理
-    fail_reason: 未配置命令历史清理，鉴别信息可能残留
-
-  - item: 32
-    point: 1
-    block: History setting (HISTSIZE)
-    expect:
-      all:
-        - {not_contains: "no HISTSIZE"}
-        - {not_contains: "HISTSIZE=0"}
-    pass_reason: 已限制敏感数据残留
-    fail_reason: 未限制敏感数据残留
-
   # ---- 中间件与数据库补充 ----
   # 中间件/数据库块只在对应组件或资产族部署时出现。optional_block 让规则在块缺失时
   # 跳过该实施点，避免把“未部署”误判为未采集；块存在但输出 not detected/skipped 时按不适用通过。
@@ -242,8 +235,7 @@ rules:
     block: MySQL 口令复杂度策略
     expect:
       any:
-        - {all: [{contains: "validate_password"}, {contains: "ACTIVE"}]}
-        - {all: [{contains: "VALIDATE_PASSWORD"}, {contains: "ACTIVE"}]}
+        - {contains: "fact:mysql.plugin.validate_password.status=ACTIVE"}
         - {contains: "not detected"}
         - {contains: "skipped"}
     pass_reason: 数据库已启用口令复杂度插件或未部署数据库
@@ -255,8 +247,7 @@ rules:
     block: MySQL 登录失败处理
     expect:
       any:
-        - {all: [{contains: "connection_control"}, {contains: "ACTIVE"}]}
-        - {all: [{contains: "CONNECTION_CONTROL"}, {contains: "ACTIVE"}]}
+        - {contains: "fact:mysql.plugin.connection_control.status=ACTIVE"}
         - {contains: "not detected"}
         - {contains: "skipped"}
     pass_reason: 数据库已启用登录失败控制或未部署数据库
@@ -268,8 +259,7 @@ rules:
     block: MySQL 空口令与匿名账户
     expect:
       any:
-        - {contains: "no anonymous"}
-        - {contains: "anonymous: none"}
+        - {contains: "fact:mysql.account.anonymous.none=true"}
         - {contains: "not detected"}
         - {contains: "skipped"}
     pass_reason: 未发现匿名账户或未部署数据库
@@ -281,8 +271,7 @@ rules:
     block: MySQL 空口令与匿名账户
     expect:
       any:
-        - {contains: "no empty-password"}
-        - {contains: "empty-password: none"}
+        - {contains: "fact:mysql.account.empty_password.none=true"}
         - {contains: "not detected"}
         - {contains: "skipped"}
     pass_reason: 未发现空口令账户或未部署数据库
@@ -323,10 +312,10 @@ rules:
     block: MySQL 账户权限与最小化
     expect:
       all:
-        - {contains: "root"}
-        - {not_contains: "\t%\tY"}
-    pass_reason: 账户权限清单可核查，且未发现对任意来源开放的超级权限账户
-    fail_reason: 无法读取账户权限清单，或存在对任意来源开放的超级权限账户
+        - {contains: "fact:mysql.privileges.complete=true"}
+        - {contains: "fact:mysql.privileges.no_wildcard_super=true"}
+    pass_reason: 账户权限清单完整，且未发现对任意来源开放的超级权限账户
+    fail_reason: 账户权限清单不完整，或存在对任意来源开放的超级权限账户
     optional_block: true
 
   - item: 12
@@ -346,8 +335,7 @@ rules:
     block: MySQL 审计日志
     expect:
       any:
-        - {contains: "general_log\tON"}
-        - {contains: "ACTIVE"}
+        - {contains: "fact:mysql.audit.enabled=true"}
         - {contains: "not detected"}
         - {contains: "skipped"}
     pass_reason: 数据库已开启审计日志或未部署数据库
@@ -371,11 +359,11 @@ rules:
     block: Nginx log retention
     expect:
       any:
-        - {gt: {prefix: "rotate", value: 26}}
+        - {contains: "fact:log.retention.six_months=true"}
         - {contains: "not detected"}
         - {contains: "skipped"}
-    pass_reason: 中间件日志轮转满足半年留存或未部署
-    fail_reason: 中间件日志轮转不足半年
+    pass_reason: 中间件日志留存满足半年要求或未部署
+    fail_reason: 中间件日志留存不足半年
     optional_block: true
 
   - item: 16
@@ -451,11 +439,9 @@ rules:
     block: MySQL 远程访问限制
     expect:
       any:
-        - {contains: "bind_address\t127.0.0.1"}
-        - {contains: "bind_address\tlocalhost"}
-        - {contains: "skip_networking\tON"}
+        - {contains: "fact:mysql.remote_access.restricted=true"}
         - {contains: "not detected"}
         - {contains: "skipped"}
-    pass_reason: 数据库监听地址受限或未部署数据库
-    fail_reason: 数据库监听地址未受限
+    pass_reason: 数据库远程访问已受限或未部署数据库
+    fail_reason: 数据库远程访问未受限
     optional_block: true

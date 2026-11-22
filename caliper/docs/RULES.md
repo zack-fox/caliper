@@ -14,7 +14,7 @@
 |---|---|---|---|---|
 | capture | `capture.yaml` | active | 54 | 生成 server / database 两族采集脚本 |
 | record | `record.yaml` | active | 5 | 公司记录表的符合情况文案与 9 列口径 |
-| judge | `rules/level2.yaml`、`rules/level3.yaml` | active | 79 | 把证据块判定到测评项实施点 |
+| judge | `rules/level2.yaml`、`rules/level3.yaml` | active | 78 | 把证据块判定到测评项实施点 |
 | remediation | `remediation.yaml` | active | 18 | 不符合 / 部分符合项的整改建议 |
 | high_risk | `high_risk.yaml` | active | 16 | 高风险判例与降风险前提 |
 | major | `major.yaml` | active | 16 | 高风险命中后的三维评分与候选阈值 |

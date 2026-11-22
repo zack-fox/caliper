@@ -72,6 +72,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     parse = sub.add_parser("parse", help="解析证据包，输出检查块与锚点")
     parse.add_argument("--pkg", required=True, type=Path, help="证据包目录")
+    parse.add_argument("--pack", type=Path, help="交互会话日志使用的规则包目录")
     parse.add_argument("--samples", type=int, default=3, help="抽样展示块数")
 
     run = sub.add_parser("run", help="按项目配置跑判定并导出结果记录表")
@@ -143,8 +144,9 @@ def _load(args) -> tuple[ProjectConfig, Path, Pack]:
 
 def _cmd_parse(args) -> int:
     try:
-        package = load_evidence(args.pkg)
-    except EvidenceError as exc:
+        checks = load_pack(args.pack).checks if args.pack else None
+        package = load_evidence(args.pkg, checks=checks)
+    except (EvidenceError, PackError, RulesError, RuleError) as exc:
         raise CliError(str(exc)) from exc
 
     blocks = package.blocks
@@ -476,7 +478,9 @@ def _cmd_records(args) -> int:
     project, result, pack, out_dir, _ = _run(args, render=False)
     items_by_level = {project.level: pack.items_for_level(project.level)}
     try:
-        target = write_record_book(project, result, items_by_level, out_dir)
+        target = write_record_book(
+            project, result, items_by_level, out_dir, pack_root=pack.root
+        )
     except RecordError as exc:
         raise CliError(str(exc)) from exc
     print(f"记录表：{target}")

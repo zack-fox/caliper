@@ -63,17 +63,21 @@ def write_record_book(
     run_result: RunResult,
     items_by_level: dict[int, list[Item]],
     out_dir: Path | None = None,
+    pack_root: Path | None = None,
 ) -> Path:
-    """把一次跑批结果写成公司格式记录表，返回生成文件路径。"""
+    """把一次跑批结果写成公司格式记录表，返回生成文件路径。
+
+    pack_root 用于 CLI 传入已解析的绝对规则包目录；省略时沿用 project.pack_dir。
+    """
     if not run_result.asset_runs:
         raise RecordError("没有可导出的资产判定结果")
-    if project.pack_dir is None:
+    if pack_root is None and project.pack_dir is None:
         raise RecordError("项目未配置 pack_dir，无法加载记录表规则库")
 
     items = items_by_level.get(project.level)
     if items is None:
         raise RecordError(f"缺少 {project.level} 级测评项，无法生成记录表")
-    profile = load_profile(Path(project.pack_dir))
+    profile = load_profile(Path(pack_root or project.pack_dir))
 
     workbook = openpyxl.Workbook()
     base = workbook.active

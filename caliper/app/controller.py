@@ -195,10 +195,11 @@ class AppController:
         if not root.exists():
             return EvidencePreview(False, f"证据目录不存在：{root}")
         try:
+            pack = self.pack or self.load_pack()
             loaded = load_evidence(
-                root, host=device_name, level=self.project.level
+                root, host=device_name, level=self.project.level, checks=pack.checks
             )
-        except (EvidenceError, OSError) as exc:
+        except (EvidenceError, OSError, ControllerError) as exc:
             return EvidencePreview(False, str(exc))
         images = len(media_files(root))
         counts = summarize(loaded.blocks)
@@ -246,8 +247,9 @@ class AppController:
         """为材料审阅窗口提供经同一装载器校验的证据清单。"""
         root = self.evidence_path(package)
         try:
-            return load_evidence(root, host=device_name, level=self.project.level)
-        except (EvidenceError, OSError) as exc:
+            pack = self.pack or self.load_pack()
+            return load_evidence(root, host=device_name, level=self.project.level, checks=pack.checks)
+        except (EvidenceError, OSError, ControllerError) as exc:
             raise ControllerError(str(exc)) from exc
 
     # ---- 跑批 ----

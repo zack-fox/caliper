@@ -42,7 +42,11 @@ def build_result_text(points: list[PointResult]) -> str:
         return ""
     rows = []
     for point in points:
-        label = "未采集" if point.passed is None else "通过" if point.passed else "未通过"
+        label = (
+            "人工核查"
+            if point.manual
+            else "未采集" if point.passed is None else "通过" if point.passed else "未通过"
+        )
         rows.append(f"{point.point}) {label}：{point.reason}{_anchor_text(point)}")
     return "\n".join(rows)
 
@@ -70,23 +74,42 @@ def judge_item(
         base.note = f"{UNCOLLECTED_PREFIX}需人工核查（访谈或外部证据）"
         return base
 
-    item_rules = ruleset.for_item(item.seq, item.level)
+    manual_points = [
+        PointResult(point=entry.point, passed=None, reason=entry.reason, manual=True)
+        for entry in item.manual_points
+    ]
+    manual_numbers = {point.point for point in manual_points}
+    item_rules = [
+        rule for rule in ruleset.for_item(item.seq, item.level)
+        if rule.point not in manual_numbers
+    ]
+    automatic_expected = (expected_points or set()) - manual_numbers
     if not item_rules:
-        reason = f"{UNCOVERED_PREFIX}规则库无对应条目"
+        if not manual_points:
+            reason = f"{UNCOVERED_PREFIX}规则库无对应条目"
+        elif automatic_expected:
+            reason = (
+                f"{UNCOVERED_PREFIX}规则库缺少实施点 "
+                f"{', '.join(map(str, sorted(automatic_expected)))} 的对应条目"
+            )
+        elif manual_points:
+            reason = f"{UNCOLLECTED_PREFIX}需完成人工实施点核查"
+        else:
+            reason = f"{UNCOVERED_PREFIX}规则库无对应条目"
         base.note = reason
-        base.warnings = [reason]
+        base.warnings = [reason] if reason.startswith(UNCOVERED_PREFIX) else []
+        base.points = sorted(manual_points, key=lambda point: point.point)
+        base.result_text = build_result_text(base.points)
         return base
 
-    if expected_points:
-        uncovered = sorted(expected_points - {rule.point for rule in item_rules})
+    coverage_reason = ""
+    if automatic_expected:
+        uncovered = sorted(automatic_expected - {rule.point for rule in item_rules})
         if uncovered:
-            reason = (
+            coverage_reason = (
                 f"{UNCOVERED_PREFIX}规则库缺少实施点 "
                 f"{', '.join(map(str, uncovered))} 的对应条目"
             )
-            base.note = reason
-            base.warnings = [reason]
-            return base
 
     points: list[PointResult] = []
     missing: list[str] = []
@@ -143,17 +166,31 @@ def judge_item(
             )
         )
 
+    points.extend(manual_points)
+    points.sort(key=lambda point: point.point)
     base.points = points
     if not points:
         titles = "、".join(dict.fromkeys(rule.block for rule in item_rules))
         base.note = f"{UNCOLLECTED_PREFIX}条件证据块未部署（{titles}）"
         return base
+    if coverage_reason:
+        base.note = coverage_reason
+        base.warnings = [coverage_reason]
+        base.result_text = build_result_text(points)
+        return base
     if missing:
         base.note = f"{UNCOLLECTED_PREFIX}{'；'.join(dict.fromkeys(missing))}"
         base.result_text = build_result_text(points)
         return base
+    if manual_points:
+        base.note = (
+            f"{UNCOLLECTED_PREFIX}实施点 "
+            f"{', '.join(map(str, sorted(manual_numbers)))} 需人工核查，复核前不生成整项分数"
+        )
+        base.result_text = build_result_text(points)
+        return base
 
-    values = [bool(point.passed) for point in points]
+    values = [bool(point.passed) for point in points if not point.manual]
     verdict = _synthesize(item.policy, values)
     warnings: list[str] = []
     if item.binary and verdict is Verdict.PARTIAL:

@@ -1,6 +1,7 @@
 PY ?= .venv/bin/python
 PROJECT ?= fixtures/samples/project.yaml
 PKG ?= fixtures/evidence/pkg-A01
+PACK ?= packs/linux_os
 ASSETS ?= fixtures/samples/asset_record.xlsx
 OUT ?=
 FAMILY ?= server
@@ -34,7 +35,7 @@ test:
 check: syntax lint library-lint contracts test
 
 parse:
-	$(PY) -m core.cli parse --pkg $(PKG)
+	$(PY) -m core.cli parse --pkg $(PKG) --pack $(PACK)
 
 capture:
 	$(PY) -m core.cli capture --pack packs/linux_os --family $(FAMILY) --level $(LEVEL)

@@ -7,7 +7,7 @@ import pytest
 from core.checks.mapping import CheckBinding, ChecksMap, PointBinding
 from core.contracts.verdict import Verdict
 from core.judge.synth import judge_item
-from core.model.entities import CheckBlock, CheckStatus, EvidenceAnchor, Item, OutputLine
+from core.model.entities import CheckBlock, CheckStatus, DerivedFact, EvidenceAnchor, Item, OutputLine
 from core.rules.dsl import RuleError, evaluate, validate_expect
 from core.rules.engine import Rule, RuleSet
 
@@ -106,6 +106,22 @@ def test_evaluate_anchors_are_objects() -> None:
         passed, anchors = evaluate(expression, block)
         assert passed is True
         assert anchors and all(isinstance(anchor, EvidenceAnchor) for anchor in anchors)
+
+
+def test_derived_fact_rules_keep_raw_output_and_real_anchors() -> None:
+    block = _block("Session timeout", ["unrelated raw output"])
+    block.facts = [
+        DerivedFact(
+            text="fact:session.tmout.valid=true",
+            anchors=[EvidenceAnchor(file="session.log", line=27, snippet="TMOUT=600")],
+        )
+    ]
+
+    passed, anchors = evaluate({"contains": "fact:session.tmout.valid=true"}, block)
+
+    assert passed is True
+    assert anchors[0].line == 27
+    assert block.text_lines == ["unrelated raw output"]
 
 
 def test_judge_binary_never_partial() -> None:

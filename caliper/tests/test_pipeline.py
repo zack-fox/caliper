@@ -168,6 +168,27 @@ def test_parses_synthetic_log_without_unmapped_blocks(pipeline) -> None:
     assert set(SELECTED_TITLES) <= mapped_titles
 
 
+def test_runner_uses_pack_checks_for_mysql_session(pipeline) -> None:
+    mysql_log = """\
+mysql> SELECT VERSION();
++--------------------+
+| VERSION()          |
++--------------------+
+| 8.0.0-0ubuntu0.1   |
++--------------------+
+1 row in set (0.00 sec)
+mysql>
+"""
+    (pipeline["package_root"] / "raw" / "uniterm.log").write_text(mysql_log, encoding="utf-8")
+
+    result = run_project(pipeline["project"], pipeline["pack"], base_dir=pipeline["tmp"])
+    run = result.asset_runs[0]
+
+    assert run.os_family == "unknown"
+    assert any("按交互会话解析 1 个检查块" in line for line in run.diagnostics)
+    assert run.item_by_seq(6).verdict is Verdict.UNCOLLECTED
+
+
 def test_judge_produces_verdicts(pipeline) -> None:
     run = pipeline["run"]
     assert len(run.items) == len(pipeline["items"]) == 34

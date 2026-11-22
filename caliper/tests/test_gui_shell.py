@@ -1,4 +1,4 @@
-"""界面骨架自检：离屏装配外壳、切换五个页面、切换主题。"""
+"""界面骨架自检：离屏装配七页工作台、切换导航、步骤状态与主题。"""
 
 from __future__ import annotations
 
@@ -8,16 +8,27 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest  # noqa: E402
 from PySide6.QtGui import QColor, QPixmap  # noqa: E402
-from PySide6.QtWidgets import QApplication  # noqa: E402
+from PySide6.QtWidgets import QApplication, QLabel  # noqa: E402
 
 from app.controller import AppController  # noqa: E402
 from app.screens.dialogs import EvidenceReviewDialog  # noqa: E402
 from app.screens.results import ResultsScreen  # noqa: E402
 from app.shell.app_shell import AppShell  # noqa: E402
-from app.shell.navigation import NAV_STEPS  # noqa: E402
+from app.shell.navigation import NAV_STEPS, workflow_steps  # noqa: E402
 from app.theme.theme import ThemeManager  # noqa: E402
+from app.theme.tokens import SIDEBAR_EXPANDED_WIDTH, SIDEBAR_WIDTH  # noqa: E402
 from core.model.entities import Asset, AssetRun, ItemResult, RunResult  # noqa: E402
 from core.contracts.verdict import Verdict  # noqa: E402
+
+EXPECTED_KEYS = [
+    "overview",
+    "evidence",
+    "results",
+    "issues",
+    "risk",
+    "export",
+    "rules",
+]
 
 
 @pytest.fixture(scope="module")
@@ -40,14 +51,55 @@ def shell(qapp):
 
 
 def test_shell_has_all_pages(shell):
+    assert [step.key for step in NAV_STEPS] == EXPECTED_KEYS
     assert [step.key for step in NAV_STEPS] == list(shell.pages.keys())
-    assert shell.stack.count() == len(NAV_STEPS)
+    assert shell.stack.count() == 7
+
+
+def test_workflow_steps_are_six_projects(shell):
+    assert [step.key for step in workflow_steps()] == EXPECTED_KEYS[:6]
+    assert all(step.section == "项目" for step in workflow_steps())
 
 
 def test_navigation_switches_page(shell):
     for step in NAV_STEPS:
-        shell.go(step.key)
+        assert shell.go(step.key) is True
         assert shell.stack.currentWidget() is shell.pages[step.key]
+
+
+def test_unknown_route_keeps_current_page(shell):
+    assert shell.go("results") is True
+    current = shell.stack.currentWidget()
+    assert shell.go("nope") is False
+    assert shell.stack.currentWidget() is current
+    assert shell.go("risk") is True
+
+
+def test_sidebar_groups_and_collapse(shell):
+    sections = [
+        label.text()
+        for label in shell.sidebar.findChildren(QLabel)
+        if label.objectName() == "nav_section"
+    ]
+    assert "项目" in sections
+    assert "工具" in sections
+    assert len(shell.sidebar._buttons) == 7
+
+    shell.sidebar.set_collapsed(True)
+    assert shell.sidebar.is_collapsed() is True
+    assert shell.sidebar.width() == SIDEBAR_WIDTH
+    shell.sidebar.set_collapsed(False)
+    assert shell.sidebar.is_collapsed() is False
+    assert shell.sidebar.width() == SIDEBAR_EXPANDED_WIDTH
+
+
+def test_stepbar_states_apply_property(shell):
+    shell.stepbar.set_states({"overview": "done", "risk": "blocked"})
+    assert shell.stepbar._buttons["overview"].property("state") == "done"
+    assert shell.stepbar._buttons["risk"].property("state") == "blocked"
+    assert shell.stepbar._buttons["export"].property("state") == "todo"
+    assert shell.go("risk") is True
+    assert shell.stepbar._buttons["risk"].isChecked()
 
 
 def test_theme_toggle_roundtrip(shell):

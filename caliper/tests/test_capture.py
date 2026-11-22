@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from core.checks.mapping import ChecksMap
 from core.evidence.capture import CaptureError, load_capture, render_script
 from core.evidence.package import load_evidence
 
@@ -60,6 +61,11 @@ def test_server_titles_stay_mappable() -> None:
     mapped = {check["title"] for check in checks}
     server_titles = {rule.title for rule in library.rules if "server" in rule.families}
     assert server_titles <= mapped
+
+
+def test_mysql_session_blocks_accept_unknown_host_os() -> None:
+    checks = ChecksMap.load(PACK / "checks_map.yaml")
+    assert all("unknown" in checks.allowed_families(title) for title in MYSQL_TITLES)
 
 
 @pytest.mark.parametrize("family", ["server", "database"])

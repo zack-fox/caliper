@@ -1,4 +1,4 @@
-"""导航模型：工作流五步（四步主流程 + 规则库）。"""
+"""导航模型：七页工作台（六个项目步骤 + 规则库工具）。"""
 
 from __future__ import annotations
 
@@ -15,19 +15,23 @@ class NavStep:
 
 
 NAV_STEPS: tuple[NavStep, ...] = (
-    NavStep("evidence", "项目与材料", "1", "工作流", "管理项目资料并导入现场材料"),
-    NavStep("results", "测评记录", "2", "工作流", "编辑记录表内容并核对证据依据"),
-    NavStep("issues", "问题与重大", "", "后续", "汇总问题清单，确认重大安全隐患"),
-    NavStep("export", "导出记录表", "3", "工作流", "校验并导出公司格式的测评记录表"),
-    NavStep("rules", "规则库", "", "后续", "浏览控制项、判例与采集脚本映射"),
+    NavStep("overview", "项目概述", "", "项目", "项目上下文、设备与核查进度总览"),
+    NavStep("evidence", "材料与资产", "", "项目", "导入现场材料并维护设备资产"),
+    NavStep("results", "现场核查", "", "项目", "逐项核对记录并确认证据依据"),
+    NavStep("issues", "问题与整改", "", "项目", "汇总问题清单与整改建议"),
+    NavStep("risk", "风险与结论", "", "项目", "确认高风险候选与重大隐患"),
+    NavStep("export", "导出交付", "", "项目", "校验导出门禁并交付成果物"),
+    NavStep("rules", "规则库", "", "工具", "浏览控制项、判例与采集脚本映射"),
 )
 
 STEP_BY_KEY: dict[str, NavStep] = {step.key: step for step in NAV_STEPS}
 
 
 def workflow_steps() -> tuple[NavStep, ...]:
-    return tuple(step for step in NAV_STEPS if step.section == "工作流")
+    """项目分组的六个步骤，供步骤条与状态统计使用。"""
+    return tuple(step for step in NAV_STEPS if step.section == "项目")
 
 
 def rule_steps() -> tuple[NavStep, ...]:
-    return tuple(step for step in NAV_STEPS if step.section == "规则")
+    """工具分组的导航项（规则库）。"""
+    return tuple(step for step in NAV_STEPS if step.section == "工具")

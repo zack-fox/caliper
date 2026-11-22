@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import ipaddress
+import re
 from datetime import date, datetime
 from enum import Enum
 from pathlib import Path
@@ -29,6 +30,8 @@ class CheckStatus(str, Enum):
 class OutputLine(BaseModel):
     line: int
     text: str
+    # 会话日志可去掉时间戳用于识别，但锚点仍引用未改写的原文。
+    snippet: str = ""
 
 
 class EvidenceAnchor(BaseModel):
@@ -37,6 +40,13 @@ class EvidenceAnchor(BaseModel):
     file: str
     line: int
     snippet: str
+
+
+class DerivedFact(BaseModel):
+    """由原始输出规范化得到的事实；引用始终回到真实原始行。"""
+
+    text: str
+    anchors: list[EvidenceAnchor] = Field(default_factory=list)
 
 
 class EvidenceFile(BaseModel):
@@ -57,13 +67,19 @@ class CheckBlock(BaseModel):
     os_family: str | None = None
     status: CheckStatus = CheckStatus.COLLECTED
     commands: list[str] = Field(default_factory=list)
+    command_anchors: list[EvidenceAnchor] = Field(default_factory=list)
     file_refs: list[str] = Field(default_factory=list)
     output: list[OutputLine] = Field(default_factory=list)
+    facts: list[DerivedFact] = Field(default_factory=list)
     source: str = ""
 
     @model_validator(mode="after")
     def _empty_output_is_not_collected(self) -> "CheckBlock":
-        if not self.output and self.status in {CheckStatus.COLLECTED, CheckStatus.EMPTY}:
+        if self.output:
+            return self
+        if self.status is CheckStatus.EMPTY and self.command_anchors:
+            return self
+        if self.status in {CheckStatus.COLLECTED, CheckStatus.EMPTY}:
             self.status = CheckStatus.FAILED
         return self
 
@@ -76,23 +92,35 @@ class CheckBlock(BaseModel):
         return [line.text for line in self.output]
 
     @property
+    def rule_lines(self) -> list[str]:
+        """规则读取原始行和派生事实；原始输出属性保持不变。"""
+        return [*self.text_lines, *(fact.text for fact in self.facts)]
+
+    @property
     def text(self) -> str:
         return "\n".join(self.text_lines)
 
     def contains(self, needle: str) -> bool:
-        return any(needle in line for line in self.text_lines)
+        return any(needle in line for line in self.rule_lines)
 
     def anchors(self, limit: int = 3) -> list[EvidenceAnchor]:
         anchors = [
-            EvidenceAnchor(file=self.source, line=line.line, snippet=line.text.strip())
+            EvidenceAnchor(file=self.source, line=line.line, snippet=(line.snippet or line.text).strip())
             for line in self.output
         ]
+        if not anchors:
+            anchors.extend(self.command_anchors)
+        for fact in self.facts:
+            anchors.extend(fact.anchors)
         return anchors[:limit]
 
     def first_anchor(self, needle: str) -> EvidenceAnchor | None:
         for line in self.output:
             if needle in line.text:
-                return EvidenceAnchor(file=self.source, line=line.line, snippet=line.text.strip())
+                return EvidenceAnchor(file=self.source, line=line.line, snippet=(line.snippet or line.text).strip())
+        for fact in self.facts:
+            if needle in fact.text and fact.anchors:
+                return fact.anchors[0]
         return None
 
 
@@ -111,8 +139,8 @@ class PackageManifest(BaseModel):
     @field_validator("os_family")
     @classmethod
     def _check_os_family(cls, value: str) -> str:
-        if value not in {"debian", "rhel"}:
-            raise ValueError(f"os_family 只支持 debian/rhel，实际 {value!r}")
+        if value not in {"debian", "rhel", "unknown"}:
+            raise ValueError(f"os_family 只支持 debian/rhel/unknown，实际 {value!r}")
         return value
 
     @field_validator("level")
@@ -213,6 +241,25 @@ class ProjectConfig(BaseModel):
         return None
 
 
+class ManualPoint(BaseModel):
+    point: int
+    reason: str
+
+    @field_validator("point")
+    @classmethod
+    def _check_point(cls, value: int) -> int:
+        if value < 1:
+            raise ValueError("人工实施点序号必须大于 0")
+        return value
+
+    @field_validator("reason")
+    @classmethod
+    def _check_reason(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("人工实施点必须说明核查原因")
+        return value.strip()
+
+
 class Item(BaseModel):
     """pack 里的测评项，字段名与 items_*.yaml 的中文键对应。"""
 
@@ -231,6 +278,19 @@ class Item(BaseModel):
     mode: str
     binary: bool
     optional_clause: bool = False
+    manual_points: list[ManualPoint] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _check_manual_points(self) -> "Item":
+        points = [entry.point for entry in self.manual_points]
+        if len(points) != len(set(points)):
+            raise ValueError("manual_points 实施点序号不得重复")
+        numbered = [int(value) for value in re.findall(r"(?:^|\n)\s*(\d+)[)）]", self.check_content)]
+        available = set(numbered) if numbered else {1}
+        invalid = sorted(set(points) - available)
+        if invalid:
+            raise ValueError(f"manual_points 包含该测评项不存在的实施点：{invalid}")
+        return self
 
     @field_validator("mode")
     @classmethod
@@ -252,6 +312,7 @@ class PointResult(BaseModel):
     block_title: str = ""
     anchors: list[EvidenceAnchor] = Field(default_factory=list)
     rule_refs: list[str] = Field(default_factory=list)
+    manual: bool = False
 
 
 class ItemResult(BaseModel):

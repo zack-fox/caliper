@@ -177,3 +177,24 @@ def test_sheet_name_is_sanitized_and_deduplicated(tmp_path: Path) -> None:
 
     workbook = openpyxl.load_workbook(target)
     assert workbook.sheetnames == ["示例_服务器1", "示例_服务器1~2"]
+
+
+def test_pack_root_overrides_relative_project_pack_dir(tmp_path: Path) -> None:
+    pack = _pack(tmp_path)
+    project = _project(pack, [_asset()]).model_copy(
+        update={"pack_dir": Path("stale/relative")}
+    )
+    run_result = RunResult(
+        project=project,
+        asset_runs=[AssetRun(asset=project.assets[0], items=_results())],
+    )
+
+    target = write_record_book(
+        project,
+        run_result,
+        {3: [_item(seq) for seq in range(1, 6)]},
+        tmp_path / "out",
+        pack_root=pack,
+    )
+
+    assert target.is_file()

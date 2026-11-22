@@ -59,6 +59,27 @@ PALETTE_LIGHT: dict[str, str] = {
     "code_text": "#7fd9c0",
     "upload_border": "#b9cdfa",
     "status_text": "#5d6b7e",
+    # 工作台：侧栏（语义名映射自 nav_*，避免出现两套色值）
+    "sidebar_bg": "#131d2b",  # = nav
+    "sidebar_group": "#7c8798",  # = nav_section
+    "sidebar_item_hover": "#1b2738",  # = nav_alt
+    "sidebar_item_active": "#22304a",
+    "sidebar_item_text": "#c3cddd",  # = nav_text
+    "sidebar_item_text_active": "#ffffff",  # = nav_text_strong
+    # 工作台：步骤条
+    "stepbar_bg": "#fafbfd",  # = surface_alt
+    "step_done": "#12a76a",  # = success
+    "step_todo": "#8a96a8",  # = muted
+    "step_blocked": "#d94040",  # = danger
+    # 工作台：记录表
+    "table_header_bg": "#fafbfd",  # = header_bg
+    "table_row_hover": "#f2f6fd",
+    "table_row_selected": "#eaf0ff",  # = selection
+    # 工作台：侧边检查器 / 状态栏
+    "inspector_bg": "#ffffff",  # = surface
+    "inspector_border": "#e5e9f0",  # = border
+    "statusbar_bg": "#fafbfd",  # = surface_alt
+    "statusbar_text": "#5d6b7e",  # = status_text
 }
 # 说明：upload_border / status_text / code_* 仅用于浅色；深色下使用同值以保持一致。
 
@@ -108,6 +129,27 @@ PALETTE_DARK: dict[str, str] = {
     "code_text": "#7fd9c0",
     "upload_border": "#35507f",
     "status_text": "#7b8794",
+    # 工作台：侧栏（语义名映射自 nav_*，避免出现两套色值）
+    "sidebar_bg": "#0b0f16",  # = nav
+    "sidebar_group": "#66717f",  # = nav_section
+    "sidebar_item_hover": "#161d29",  # = nav_alt
+    "sidebar_item_active": "#1d2837",
+    "sidebar_item_text": "#a9b4c6",  # = nav_text
+    "sidebar_item_text_active": "#ffffff",  # = nav_text_strong
+    # 工作台：步骤条
+    "stepbar_bg": "#20242d",  # = surface_alt
+    "step_done": "#34d399",  # = success
+    "step_todo": "#6b7280",  # = muted
+    "step_blocked": "#f87171",  # = danger
+    # 工作台：记录表
+    "table_header_bg": "#14171c",  # = header_bg
+    "table_row_hover": "#1d222b",
+    "table_row_selected": "#1e2a45",  # = selection
+    # 工作台：侧边检查器 / 状态栏
+    "inspector_bg": "#181b22",  # = surface
+    "inspector_border": "#2a2f3a",  # = border
+    "statusbar_bg": "#20242d",  # = surface_alt
+    "statusbar_text": "#7b8794",  # = status_text
 }
 
 PALETTES: dict[str, dict[str, str]] = {"light": PALETTE_LIGHT, "dark": PALETTE_DARK}
@@ -141,10 +183,15 @@ RADIUS: dict[str, int] = {"xs": 4, "sm": 6, "md": 8, "lg": 10, "pill": 999}
 
 # 窗口默认尺寸
 WINDOW_SIZE = (1680, 1000)
-SIDEBAR_WIDTH = 58
+SIDEBAR_WIDTH = 58  # 折叠宽度
+SIDEBAR_EXPANDED_WIDTH = 208
 TOPBAR_HEIGHT = 54
 STATUS_HEIGHT = 26
 CONTENT_MARGIN = 20
+STEPBAR_HEIGHT = 46
+TABLE_HEADER_HEIGHT = 32
+TABLE_ROW_HEIGHT = 34
+INSPECTOR_WIDTH = 360
 
 # ---------------------------------------------------------------------------
 # 业务常量

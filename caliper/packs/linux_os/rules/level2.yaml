@@ -18,21 +18,21 @@ rules:
   - item: 1
     point: 2
     block: Duplicate UID / UID=0 accounts
-    expect: {contains: "no duplicate uid"}
+    expect: {contains: "fact:duplicate_uid.none=true"}
     pass_reason: 未发现重复 UID，身份标识唯一
     fail_reason: 存在重复 UID，身份标识不唯一
 
   - item: 1
     point: 3
     block: Empty / expired password
-    expect: {contains: "no empty-password account"}
+    expect: {contains: "fact:empty_password.none=true"}
     pass_reason: 未发现空口令账户
     fail_reason: 存在空口令账户
 
   - item: 1
     point: 4
     block: Password complexity
-    expect: {contains: "minlen="}
+    expect: {contains: "fact:pam.password_complexity.enabled=true"}
     pass_reason: 已配置口令复杂度策略
     fail_reason: 未配置口令复杂度策略
 
@@ -46,24 +46,21 @@ rules:
   - item: 2
     point: 1
     block: Login failure lockout (faillock)
-    expect: {contains: "pam_faillock"}
+    expect: {contains: "fact:faillock.module=true"}
     pass_reason: 已启用登录失败处理模块
     fail_reason: 未启用登录失败处理模块
 
   - item: 2
     point: 2
     block: Login failure lockout (faillock)
-    expect:
-      all:
-        - {contains: "deny="}
-        - {contains: "unlock_time="}
+    expect: {contains: "fact:faillock.policy=true"}
     pass_reason: 已配置非法登录次数限制与锁定时间
     fail_reason: 未配置非法登录次数限制或锁定时间
 
   - item: 2
     point: 3
     block: Session timeout TMOUT
-    expect: {contains: "TMOUT="}
+    expect: {contains: "fact:session.tmout.valid=true"}
     pass_reason: 已配置登录连接超时自动退出
     fail_reason: 未配置登录连接超时自动退出
 
@@ -120,7 +117,7 @@ rules:
   - item: 8
     point: 1
     block: Log service
-    expect: {contains: "active"}
+    expect: {contains: "fact:log_service.active=true"}
     pass_reason: 已启用系统日志服务
     fail_reason: 未启用系统日志服务
 
@@ -129,8 +126,8 @@ rules:
     block: auditd status and rules
     expect:
       all:
-        - {contains: "service active"}
-        - {not_contains: "no rule loaded"}
+        - {contains: "fact:auditd.active=true"}
+        - {contains: "fact:auditd.rules_loaded=true"}
     pass_reason: 审计服务已启用且审计规则覆盖系统用户
     fail_reason: 审计服务未启用或审计规则未覆盖系统用户
 
@@ -139,8 +136,8 @@ rules:
     block: auditd status and rules
     expect:
       all:
-        - {contains: "service active"}
-        - {not_contains: "no rule loaded"}
+        - {contains: "fact:auditd.active=true"}
+        - {contains: "fact:auditd.rules_loaded=true"}
     pass_reason: 已对重要用户行为和重要安全事件配置审计规则
     fail_reason: 未对重要用户行为或重要安全事件配置审计规则
 
@@ -149,8 +146,8 @@ rules:
     block: auditd status and rules
     expect:
       all:
-        - {contains: "service active"}
-        - {not_contains: "no rule loaded"}
+        - {contains: "fact:auditd.active=true"}
+        - {contains: "fact:auditd.rules_loaded=true"}
     pass_reason: 审计服务已启用并加载审计规则
     fail_reason: 审计未启用或未加载规则，审计记录字段无法核查
 
@@ -171,16 +168,16 @@ rules:
   - item: 10
     point: 2
     block: Log retention
-    expect: {gt: {prefix: "rotate", value: 26}}
-    pass_reason: 日志轮转保留数量满足六个月留存
-    fail_reason: 日志轮转保留数量不足六个月
+    expect: {contains: "fact:log.retention.six_months=true"}
+    pass_reason: 日志留存周期满足六个月要求
+    fail_reason: 日志留存周期不足六个月
 
   - item: 10
     point: 2
     block: Log archives on disk
-    expect: {contains: "compressed"}
-    pass_reason: 历史日志已压缩备份
-    fail_reason: 历史日志未压缩备份
+    expect: {contains: "fact:log.archives.present=true"}
+    pass_reason: 历史日志已归档备份
+    fail_reason: 历史日志未归档备份
 
   # ---- 入侵防范 ----
   - item: 11
@@ -254,21 +251,13 @@ rules:
   - item: 16
     point: 1
     block: Security agent (EDR / AV / IDS)
-    expect: {not_contains: "no security agent process"}
+    expect: {contains: "fact:security_agent.process.present=true"}
     pass_reason: 已部署防恶意代码软件
     fail_reason: 未部署防恶意代码软件
 
   - item: 16
     point: 2
     block: Security agent (EDR / AV / IDS)
-    expect: {not_contains: "no security package"}
+    expect: {contains: "fact:security_agent.package.present=true"}
     pass_reason: 已安装防恶意代码组件，可定期更新病毒库
     fail_reason: 未安装防恶意代码组件，病毒库无法更新
-
-  # ---- 剩余信息保护 ----
-  - item: 21
-    point: 1
-    block: History setting (HISTSIZE)
-    expect: {not_contains: "no HISTSIZE"}
-    pass_reason: 已配置命令历史限制，降低鉴别信息残留风险
-    fail_reason: 未配置命令历史限制，鉴别信息可能残留

@@ -6,10 +6,15 @@ import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
-from core.evidence.logparse import ParseError, ParseOutcome, parse_log_text
+from core.evidence.logparse import ParseError, ParseOutcome, parse_log_text, read_evidence_text
+from core.evidence.normalize import normalize_blocks
+
+if TYPE_CHECKING:
+    from core.checks.mapping import ChecksMap
 from core.model.entities import (
     CheckBlock,
     CheckStatus,
@@ -79,7 +84,9 @@ def _verify_files(root: Path, manifest: PackageManifest) -> None:
             )
 
 
-def _json_blocks(root: Path, warnings: list[str]) -> list[CheckBlock]:
+def _json_blocks(
+    root: Path, warnings: list[str], checks: "ChecksMap | None" = None
+) -> list[CheckBlock]:
     blocks: list[CheckBlock] = []
     session = 1
     for path in sorted((root / "checks").glob("*.json")):
@@ -90,7 +97,11 @@ def _json_blocks(root: Path, warnings: list[str]) -> list[CheckBlock]:
         for record in records:
             try:
                 output = [
-                    OutputLine(line=int(item.get("line", index)), text=str(item["text"]))
+                    OutputLine(
+                        line=int(item.get("line", index)),
+                        text=str(item["text"]),
+                        snippet=str(item.get("snippet", "")),
+                    )
                     if isinstance(item, dict)
                     else OutputLine(line=index, text=str(item))
                     for index, item in enumerate(record.get("output", []), 1)
@@ -102,9 +113,11 @@ def _json_blocks(root: Path, warnings: list[str]) -> list[CheckBlock]:
                     title=str(record["title"]),
                     os_family=record.get("os_family"),
                     status=CheckStatus(record.get("status", "collected")),
-                    commands=list(record.get("cmd", [])),
-                    file_refs=list(record.get("file", [])),
+                    commands=list(record.get("cmd", record.get("commands", []))),
+                    command_anchors=list(record.get("command_anchors", [])),
+                    file_refs=list(record.get("file", record.get("file_refs", []))),
                     output=output,
+                    facts=list(record.get("facts", [])),
                     source=path.relative_to(root).as_posix(),
                 )
             except (KeyError, ValueError) as exc:
@@ -112,10 +125,11 @@ def _json_blocks(root: Path, warnings: list[str]) -> list[CheckBlock]:
             blocks.append(block)
             session += 1
     warnings.append(f"{root}：使用 checks/*.json（推荐路径）")
+    normalize_blocks(blocks, checks, warnings)
     return blocks
 
 
-def _log_blocks(root: Path, warnings: list[str]) -> list[CheckBlock]:
+def _log_blocks(root: Path, warnings: list[str], checks: "ChecksMap | None" = None) -> list[CheckBlock]:
     logs = sorted((root / "raw").glob("*.log"))
     if not logs:
         raise EvidenceError(f"{root}：既没有 checks/*.json，也没有 raw/*.log")
@@ -123,9 +137,10 @@ def _log_blocks(root: Path, warnings: list[str]) -> list[CheckBlock]:
     session = 0
     for path in logs:
         outcome: ParseOutcome = parse_log_text(
-            path.read_text(encoding="utf-8", errors="replace"),
+            read_evidence_text(path),
             path.relative_to(root).as_posix(),
             session_start=session,
+            checks=checks,
         )
         blocks.extend(outcome.blocks)
         warnings.extend(outcome.warnings)
@@ -133,7 +148,7 @@ def _log_blocks(root: Path, warnings: list[str]) -> list[CheckBlock]:
     return blocks
 
 
-def load_package(root: Path) -> EvidencePackage:
+def load_package(root: Path, checks: "ChecksMap | None" = None) -> EvidencePackage:
     """按 manifest → checks/*.json → raw/*.log 的顺序装载。任何结构问题都抛错。"""
     root = Path(root)
     if not root.is_dir():
@@ -150,9 +165,9 @@ def load_package(root: Path) -> EvidencePackage:
                 warnings.append(f"{root}：文件未在 manifest 登记：{relative}")
 
     if (root / "checks").is_dir() and any((root / "checks").glob("*.json")):
-        blocks = _json_blocks(root, warnings)
+        blocks = _json_blocks(root, warnings, checks=checks)
     else:
-        blocks = _log_blocks(root, warnings)
+        blocks = _log_blocks(root, warnings, checks=checks)
 
     if manifest.status not in {"ok", "collected"}:
         warnings.append(f"{manifest.package_id}：采集状态为 {manifest.status}，全部检查块按未采集处理")
@@ -231,7 +246,12 @@ def media_files(root: Path) -> list[Path]:
     )
 
 
-def load_evidence(root: Path, host: str = "", level: int = 3) -> EvidencePackage:
+def load_evidence(
+    root: Path,
+    host: str = "",
+    level: int = 3,
+    checks: "ChecksMap | None" = None,
+) -> EvidencePackage:
     """装载证据：有 manifest.json 走结构化校验，没有则按原始证据目录解析。
 
     原始证据可以是单个 .log/.txt 文件，也可以是包含任意日志、命令输出、
@@ -242,7 +262,7 @@ def load_evidence(root: Path, host: str = "", level: int = 3) -> EvidencePackage
         raise EvidenceError(f"证据目录不存在：{root}")
     if root.is_dir() and (root / "manifest.json").is_file():
         try:
-            return load_package(root)
+            return load_package(root, checks=checks)
         except EvidenceError as exc:
             warnings = [f"manifest 校验失败，改按原始证据解析：{exc}"]
     else:
@@ -254,9 +274,10 @@ def load_evidence(root: Path, host: str = "", level: int = 3) -> EvidencePackage
         try:
             source = path.name if root.is_file() else path.relative_to(root).as_posix()
             outcome: ParseOutcome = parse_log_text(
-                path.read_text(encoding="utf-8", errors="replace"),
+                read_evidence_text(path),
                 source,
                 session_start=session,
+                checks=checks,
             )
         except ParseError as exc:
             warnings.append(f"{path.name}：{exc}")
@@ -273,7 +294,10 @@ def load_evidence(root: Path, host: str = "", level: int = 3) -> EvidencePackage
     if not blocks:
         warnings.append("未识别到检查块，全部测评项将按未采集处理")
 
-    os_family = next((block.os_family for block in blocks if block.os_family), "debian")
+    os_family = next(
+        (block.os_family for block in blocks if block.os_family in {"debian", "rhel"}),
+        "unknown",
+    )
     manifest = PackageManifest(
         package_id=root.name,
         asset_id="",

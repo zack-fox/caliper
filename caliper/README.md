@@ -11,7 +11,7 @@ V2.0.0 持续开发版：以「设备与证据包」为主入口——导入设�
 （manifest）与原始日志目录/单个日志文件两种方式，截图照片作为附件；
 设备支持添加、编辑、删除，双击表格行即可修改；证据根目录、输出目录、规则包目录收进「设置…」。
 macOS 开发工作区根目录的 `Caliper.app` 使用本机 `.venv` 启动；面向使用者的自包含安装包通过 `make package-macos` 构建。大模型、报告合成、验收材料只预留端口。
-规则库是初版（三级 14 项、二级 14 项自动判定），按现场反馈继续迭代。
+规则库是初版（三级 18 项、二级 13 项自动判定），按现场反馈继续迭代。
 
 六库现状：`capture`、`record`、`judge`、`remediation`、`high_risk`、`major` 均为 active；
 `record` 以 5 条规则给出符合情况文案。公司格式记录表是主产物，平台四表为附带导出。
@@ -49,10 +49,8 @@ make check       # 语法 + 静态自检 + 六库清单 + 契约比对 + 测试
 make capture FAMILY=server LEVEL=3 > /tmp/caliper-server.sh
 make capture FAMILY=database LEVEL=3 > /tmp/caliper-mysql.sh
 
-# 生成公司格式记录表（主产物，每资产一张 sheet，9 列版式；pack_dir 建议绝对路径）
+# 生成公司格式记录表（主产物，每资产一张 sheet，9 列版式）
 make records PROJECT=/path/to/project.yaml
-# 样例项目的 pack_dir 是相对路径，需从项目文件所在目录运行：
-(cd fixtures/samples && PYTHONPATH=../.. ../../.venv/bin/python -m core.cli records --project project.yaml)
 
 # 解析证据（结构化证据包或原始日志目录/单个日志文件）
 make parse

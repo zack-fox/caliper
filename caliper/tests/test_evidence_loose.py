@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+from core.checks.mapping import ChecksMap
 from core.evidence.package import load_evidence, media_files, text_evidence_files
 
 SAMPLE_LOG = """\
@@ -107,3 +110,24 @@ def test_broken_manifest_falls_back_to_raw_logs(tmp_path: Path) -> None:
     package = load_evidence(package_dir)
     assert len(package.blocks) == 3
     assert any("manifest 校验失败" in text for text in package.diagnostics)
+
+
+@pytest.mark.parametrize("encoding", ["utf-16", "utf-16-le", "utf-16-be", "utf-32"])
+def test_utf16_and_utf32_session_logs_are_decoded(tmp_path: Path, encoding: str) -> None:
+    text = """\
+[2026/11/03 09:00:00] [demo@example ~]# cat /etc/os-release
+[2026/11/03 09:00:01] PRETTY_NAME="Rocky Linux"
+[2026/11/03 09:00:02] [demo@example ~]#
+"""
+    log = tmp_path / f"session-{encoding}.log"
+    log.write_bytes(text.encode(encoding))
+    checks = ChecksMap.load(
+        Path(__file__).resolve().parents[1] / "packs" / "linux_os" / "checks_map.yaml"
+    )
+
+    package = load_evidence(log, checks=checks)
+
+    assert len(package.blocks) == 1
+    assert package.blocks[0].status.value == "collected"
+    assert package.blocks[0].os_family == "rhel"
+    assert package.blocks[0].facts[0].anchors[0].line == 2

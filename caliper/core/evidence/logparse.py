@@ -7,8 +7,14 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import TYPE_CHECKING
 
-from core.model.entities import CheckBlock, CheckStatus, OutputLine
+from core.evidence.normalize import normalize_blocks
+from core.model.entities import CheckBlock, CheckStatus, EvidenceAnchor, OutputLine
+
+if TYPE_CHECKING:
+    from core.checks.mapping import ChecksMap
 
 RESULTS_MARKER = "===== RESULTS (collected) ====="
 END_MARKER = "===== END OF REPORT ====="
@@ -47,7 +53,12 @@ def classify_output(lines: list[str]) -> CheckStatus:
     return CheckStatus.COLLECTED
 
 
-def parse_log_text(text: str, filename: str, session_start: int = 0) -> ParseOutcome:
+def parse_log_text(
+    text: str,
+    filename: str,
+    session_start: int = 0,
+    checks: "ChecksMap | None" = None,
+) -> ParseOutcome:
     outcome = ParseOutcome()
     lines = text.splitlines()
 
@@ -116,6 +127,9 @@ def parse_log_text(text: str, filename: str, session_start: int = 0) -> ParseOut
 
         if line.startswith("  cmd:"):
             current.commands.append(line[len("  cmd:") :].strip())
+            current.command_anchors.append(
+                EvidenceAnchor(file=filename, line=number, snippet=line.strip())
+            )
             continue
         if line.startswith("  file:"):
             current.file_refs.append(line[len("  file:") :].strip())
@@ -127,16 +141,42 @@ def parse_log_text(text: str, filename: str, session_start: int = 0) -> ParseOut
     flush()
 
     if not seen_results:
+        if checks is not None:
+            from core.evidence.sessionparse import SessionParseError, parse_session_text
+
+            try:
+                session = parse_session_text(text, filename, checks, session_start=session_start)
+            except SessionParseError as exc:
+                raise ParseError(str(exc)) from exc
+            normalize_blocks(session.blocks, checks, session.warnings)
+            return ParseOutcome(blocks=session.blocks, warnings=session.warnings)
         raise ParseError(f"{filename}：未找到结果段 `{RESULTS_MARKER}`")
     if not outcome.blocks:
         raise ParseError(f"{filename}：结果段内没有任何 `[NN] 标题` 检查块")
 
     if os_family is None:
         outcome.warnings.append(f"{filename}：未识别系统类型，仅按标题匹配检查块")
-
+    normalize_blocks(outcome.blocks, checks, outcome.warnings)
     return outcome
 
 
-def parse_log_file(path, session_start: int = 0) -> ParseOutcome:
-    text = path.read_text(encoding="utf-8", errors="replace")
-    return parse_log_text(text, path.name, session_start=session_start)
+def read_evidence_text(path: Path) -> str:
+    """按 BOM/UTF-16 NUL 分布解码终端日志，避免 UTF-16 被替换成乱码。"""
+    data = Path(path).read_bytes()
+    if data.startswith((b"\xff\xfe\x00\x00", b"\x00\x00\xfe\xff")):
+        return data.decode("utf-32", errors="replace")
+    if data.startswith((b"\xff\xfe", b"\xfe\xff")):
+        return data.decode("utf-16", errors="replace")
+    sample = data[:65536]
+    even_nuls = sample[0::2].count(0)
+    odd_nuls = sample[1::2].count(0)
+    if odd_nuls > max(4, even_nuls * 2):
+        return data.decode("utf-16-le", errors="replace")
+    if even_nuls > max(4, odd_nuls * 2):
+        return data.decode("utf-16-be", errors="replace")
+    return data.decode("utf-8-sig", errors="replace")
+
+
+def parse_log_file(path, session_start: int = 0, checks: "ChecksMap | None" = None) -> ParseOutcome:
+    text = read_evidence_text(path)
+    return parse_log_text(text, path.name, session_start=session_start, checks=checks)
