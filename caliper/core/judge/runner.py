@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from pathlib import Path
 
 from core.checks.mapping import ChecksMap, index_blocks
@@ -17,7 +19,34 @@ class RunError(Exception):
     """跑批失败（配置或证据不可用）。"""
 
 
-def _empty_run(asset: Asset, items: list[Item], reason: str) -> AssetRun:
+def _fingerprint(payload: object) -> str:
+    raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _assessment_fingerprint(items: list[Item], checks: ChecksMap, ruleset, level: int) -> str:
+    return _fingerprint(
+        {
+            "level": level,
+            "items": [item.model_dump(mode="json") for item in items],
+            "checks": [
+                check.model_dump(mode="json")
+                for check in checks.checks
+                if any(binding.level == level for binding in check.binds)
+                or check.kind == "context"
+            ],
+            "rules": [
+                rule.model_dump(mode="json")
+                for rule in ruleset.rules
+                if rule.level == level
+            ],
+        }
+    )
+
+
+def _empty_run(
+    asset: Asset, items: list[Item], reason: str, assessment_fingerprint: str
+) -> AssetRun:
     results = []
     for item in items:
         if item.policy is Policy.NA:
@@ -42,7 +71,17 @@ def _empty_run(asset: Asset, items: list[Item], reason: str) -> AssetRun:
                     note=f"未采集：{reason}",
                 )
             )
-    return AssetRun(asset=asset, items=results)
+    return AssetRun(
+        asset=asset,
+        items=results,
+        basis_fingerprint=_fingerprint(
+            {
+                "assessment": assessment_fingerprint,
+                "asset": asset.model_dump(mode="json", exclude={"evidence_package"}),
+                "reason": reason,
+            }
+        ),
+    )
 
 
 def _judge_package(
@@ -52,6 +91,7 @@ def _judge_package(
     ruleset,
     package_root: Path,
     level: int,
+    assessment_fingerprint: str,
 ) -> AssetRun:
     package = load_evidence(package_root, host=asset.device_name, level=level)
     blocks: dict[str, CheckBlock] = index_blocks(
@@ -62,6 +102,21 @@ def _judge_package(
         package_id=package.manifest.package_id,
         os_family=package.manifest.os_family,
         diagnostics=list(package.diagnostics),
+        basis_fingerprint=_fingerprint(
+            {
+                "assessment": assessment_fingerprint,
+                "asset": asset.model_dump(mode="json", exclude={"evidence_package"}),
+                "manifest": {
+                    "os_family": package.manifest.os_family,
+                    "level": package.manifest.level,
+                    "host": package.manifest.host,
+                },
+                "files": [
+                    {"path": entry.path, "sha256": entry.sha256}
+                    for entry in package.evidence_files
+                ],
+            }
+        ),
     )
     if package.manifest.level != level:
         run.diagnostics.append(
@@ -168,19 +223,30 @@ def run_project(project: ProjectConfig, pack: Pack, base_dir: Path | None = None
     base = Path(base_dir) if base_dir else Path.cwd()
     evidence_root = project.evidence_root if project.evidence_root.is_absolute() else base / project.evidence_root
     items = pack.items_for_level(project.level)
+    assessment_fingerprint = _assessment_fingerprint(
+        items, pack.checks, pack.rules, project.level
+    )
     if not project.assets:
         raise RunError("项目没有任何资产")
 
     result = RunResult(project=project)
     for asset in project.assets:
         if not asset.evidence_package:
-            result.asset_runs.append(_empty_run(asset, items, "未关联证据包"))
+            result.asset_runs.append(
+                _empty_run(asset, items, "未关联证据包", assessment_fingerprint)
+            )
             continue
         package_root = evidence_root / asset.evidence_package
         try:
             result.asset_runs.append(
                 _judge_package(
-                    asset, items, pack.checks, pack.rules, package_root, project.level
+                    asset,
+                    items,
+                    pack.checks,
+                    pack.rules,
+                    package_root,
+                    project.level,
+                    assessment_fingerprint,
                 )
             )
         except EvidenceError as exc:

@@ -267,6 +267,7 @@ class ItemResult(BaseModel):
     override_reason: str = ""
     reviewed: bool = False
     reviewed_at: str = ""
+    review_basis: str = ""
 
     @property
     def verdict_text(self) -> str:
@@ -281,6 +282,7 @@ class AssetRun(BaseModel):
     os_family: str | None = None
     items: list[ItemResult] = Field(default_factory=list)
     diagnostics: list[str] = Field(default_factory=list)
+    basis_fingerprint: str = ""
 
     def item_by_seq(self, seq: int) -> ItemResult | None:
         for item in self.items:
