@@ -1,0 +1,184 @@
+rules:
+- rule_id: HUAWEI-L4-AUTH_ID-P02-01
+  level: 4
+  item: 1
+  point: 2
+  block: HUAWEI 账户与权限配置
+  expect:
+    contains: fact:huawei.users.unique=true
+  pass_reason: 用户列表中的用户名唯一，未发现相同用户名账户。
+  fail_reason: 用户列表存在相同用户名，身份标识不满足唯一性。
+- rule_id: HUAWEI-L4-AUTH_ID-P03-02
+  level: 4
+  item: 1
+  point: 3
+  block: HUAWEI 账户与权限配置
+  expect:
+    contains: fact:huawei.users.empty_password=none
+  pass_reason: 本地用户均配置了口令，未发现空口令账户。
+  fail_reason: 存在未配置口令或空口令的本地用户。
+- rule_id: HUAWEI-L4-AUTH_ID-P04-03
+  level: 4
+  item: 1
+  point: 4
+  block: HUAWEI 口令与登录控制
+  expect:
+    all:
+    - contains: fact:huawei.password_control.enabled=true
+    - gt:
+        prefix: fact:huawei.password_control.length=
+        value: 7
+    - gt:
+        prefix: fact:huawei.password_control.composition_types=
+        value: 2
+  pass_reason: 已启用的口令策略满足长度、组成复杂度及有效期要求。
+  fail_reason: 未启用的口令策略，或长度、组成复杂度、有效期至少一项不满足要求。
+- rule_id: HUAWEI-L4-LOGIN_FAIL-P01-01
+  level: 4
+  item: 2
+  point: 1
+  block: HUAWEI 口令与登录控制
+  expect:
+    all:
+    - contains: fact:huawei.password_control.enabled=true
+    - gt:
+        prefix: fact:huawei.password_control.login_attempt=
+        value: 0
+  pass_reason: 已启用登录失败次数限制。
+  fail_reason: 未启用登录失败次数限制。
+- rule_id: HUAWEI-L4-LOGIN_FAIL-P02-02
+  level: 4
+  item: 2
+  point: 2
+  block: HUAWEI 口令与登录控制
+  expect:
+    all:
+    - lt:
+        prefix: fact:huawei.password_control.login_attempt=
+        value: 11
+    - gt:
+        prefix: fact:huawei.password_control.lock_minutes=
+        value: 4
+  pass_reason: 登录失败次数阈值不超过 10 次，且锁定时间不少于 5 分钟。
+  fail_reason: 登录失败次数阈值过大或未配置足够的锁定时间。
+- rule_id: HUAWEI-L4-LOGIN_FAIL-P03-03
+  level: 4
+  item: 2
+  point: 3
+  block: HUAWEI 账户与权限配置
+  expect:
+    lt:
+      prefix: fact:huawei.timeout.idle_minutes=
+      value: 31
+  pass_reason: 管理终端空闲超时时间不超过 30 分钟。
+  fail_reason: 未配置空闲超时或超时时间超过 30 分钟。
+- rule_id: HUAWEI-L4-REMOTE-P02-01
+  level: 4
+  item: 3
+  point: 2
+  block: HUAWEI 远程管理加密
+  expect:
+    contains: fact:huawei.remote.encrypted=true
+  pass_reason: 远程管理使用 SSH/HTTPS 加密，未启用 Telnet/HTTP 明文管理。
+  fail_reason: 远程管理仍启用 Telnet/HTTP 等明文协议，鉴别信息可能被窃听。
+- rule_id: HUAWEI-L4-ACCOUNT_PERM-P02-01
+  level: 4
+  item: 5
+  point: 2
+  block: HUAWEI 账户与权限配置
+  expect:
+    contains: fact:huawei.users.anonymous=none
+  pass_reason: 未发现匿名或公共账户。
+  fail_reason: 存在匿名、guest 或 public 等可登录账户。
+- rule_id: HUAWEI-L4-DEFAULT-P01-01
+  level: 4
+  item: 6
+  point: 1
+  block: HUAWEI 账户与权限配置
+  expect:
+    contains: fact:huawei.users.default_account=none
+  pass_reason: 未发现使用默认名称的可登录账户。
+  fail_reason: 存在 admin、厂商名等默认名称账户且未被禁用或重命名。
+- rule_id: HUAWEI-L4-PRIV_SEP-P02-01
+  level: 4
+  item: 8
+  point: 2
+  block: HUAWEI 账户与权限配置
+  expect:
+    contains: fact:huawei.roles.privilege_distinct=true
+  pass_reason: 不同管理用户配置了不同角色或权限级别。
+  fail_reason: 管理用户角色或权限级别未区分，存在权限过度集中。
+- rule_id: HUAWEI-L4-AUDIT_ENABLE-P01-01
+  level: 4
+  item: 12
+  point: 1
+  block: HUAWEI 安全审计
+  expect:
+    contains: fact:huawei.audit.enabled=true
+  pass_reason: 安全审计功能已启用。
+  fail_reason: 安全审计功能未启用。
+- rule_id: HUAWEI-L4-AUDIT_ENABLE-P03-02
+  level: 4
+  item: 12
+  point: 3
+  block: HUAWEI 安全审计
+  expect:
+    all:
+    - contains: fact:huawei.audit.enabled=true
+    - contains: fact:huawei.audit.buffer=true
+  pass_reason: 审计功能和日志缓冲区均已启用，可记录重要用户行为和安全事件。
+  fail_reason: 日志缓冲区未启用，无法确认重要用户行为和安全事件被审计。
+- rule_id: HUAWEI-L4-AUDIT_PROTECT-P02-01
+  level: 4
+  item: 14
+  point: 2
+  block: HUAWEI 安全审计
+  expect:
+    contains: fact:huawei.audit.forwarded=true
+  pass_reason: 已配置日志主机，审计记录可定期备份到外部系统。
+  fail_reason: 未配置日志主机，审计记录缺少外部备份。
+- rule_id: HUAWEI-L4-TERMINAL-P01-01
+  level: 4
+  item: 18
+  point: 1
+  block: HUAWEI 管理终端限制
+  expect:
+    contains: fact:huawei.acl.vty_restricted=true
+  pass_reason: 管理终端已通过 ACL 限制接入范围。
+  fail_reason: 未发现管理终端接入范围限制配置。
+- rule_id: HUAWEI-L4-INTEGRITY_TRANSFER-P01-01
+  level: 4
+  item: 23
+  point: 1
+  block: HUAWEI 远程管理加密
+  expect:
+    contains: fact:huawei.remote.encrypted=true
+  pass_reason: 数据传输采用 SSH/HTTPS 加密通道。
+  fail_reason: 数据传输使用明文协议，完整性无法保证。
+- rule_id: HUAWEI-L4-INTEGRITY_STORE-P01-01
+  level: 4
+  item: 24
+  point: 1
+  block: HUAWEI 口令密文存储
+  expect:
+    contains: fact:huawei.secret_storage.cipher=true
+  pass_reason: 口令以密文形式存储。
+  fail_reason: 口令以明文形式存储，完整性无法保证。
+- rule_id: HUAWEI-L4-CONF_TRANSFER-P01-01
+  level: 4
+  item: 26
+  point: 1
+  block: HUAWEI 远程管理加密
+  expect:
+    contains: fact:huawei.remote.encrypted=true
+  pass_reason: 数据传输采用 SSH/HTTPS 加密通道。
+  fail_reason: 数据传输使用明文协议，保密性无法保证。
+- rule_id: HUAWEI-L4-CONF_STORE-P01-01
+  level: 4
+  item: 27
+  point: 1
+  block: HUAWEI 口令密文存储
+  expect:
+    contains: fact:huawei.secret_storage.cipher=true
+  pass_reason: 口令以密文形式存储。
+  fail_reason: 口令以明文形式存储，保密性无法保证。

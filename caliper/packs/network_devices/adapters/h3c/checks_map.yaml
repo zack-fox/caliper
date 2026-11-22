@@ -6,29 +6,59 @@ checks:
   normalize: h3c_config
   binds:
   - item: 1
-    level: 3
-    points:
+    level: 2
+    points: &id001
     - 2
+    - 3
+  - item: 1
+    level: 3
+    points: *id001
+  - item: 1
+    level: 4
+    points: *id001
+  - item: 4
+    level: 2
+    points: &id002
+    - 2
+  - item: 5
+    level: 3
+    points: *id002
+  - item: 5
+    level: 4
+    points: *id002
+  - item: 5
+    level: 2
+    points: &id003
+    - 1
+  - item: 6
+    level: 3
+    points: *id003
+  - item: 6
+    level: 4
+    points: *id003
+  - item: 7
+    level: 2
+    points: &id004
+    - 2
+  - item: 8
+    level: 3
+    points: *id004
+  - item: 8
+    level: 4
+    points: *id004
+  - item: 2
+    level: 2
+    points: &id005
     - 3
   - item: 2
     level: 3
-    points:
-    - 3
-  - item: 5
-    level: 3
-    points:
-    - 2
-  - item: 6
-    level: 3
-    points:
-    - 1
-  - item: 8
-    level: 3
-    points:
-    - 2
+    points: *id005
+  - item: 2
+    level: 4
+    points: *id005
   session:
   - kind: network
-    pattern: ^\s*display\s+(?:current-configuration|local-users?)\s*$
+    pattern: ^\s*display\s+(?:current-configuration|local-users?|users?)\s*$
 - title: H3C 口令控制策略
   section: ''
   block_index: 2
@@ -36,14 +66,26 @@ checks:
   normalize: h3c_config
   binds:
   - item: 1
-    level: 3
-    points:
+    level: 2
+    points: &id006
     - 4
-  - item: 2
+  - item: 1
     level: 3
-    points:
+    points: *id006
+  - item: 1
+    level: 4
+    points: *id006
+  - item: 2
+    level: 2
+    points: &id007
     - 1
     - 2
+  - item: 2
+    level: 3
+    points: *id007
+  - item: 2
+    level: 4
+    points: *id007
   session:
   - kind: network
     pattern: ^\s*display\s+password-control\s*$
@@ -54,17 +96,32 @@ checks:
   normalize: h3c_config
   binds:
   - item: 3
-    level: 3
-    points:
+    level: 2
+    points: &id008
     - 2
+  - item: 3
+    level: 3
+    points: *id008
+  - item: 3
+    level: 4
+    points: *id008
+  - item: 17
+    level: 2
+    points: &id009
+    - 1
   - item: 23
     level: 3
-    points:
-    - 1
+    points: *id009
+  - item: 23
+    level: 4
+    points: *id009
   - item: 25
     level: 3
-    points:
+    points: &id010
     - 1
+  - item: 26
+    level: 4
+    points: *id010
   session:
   - kind: network
     pattern: ^\s*display\s+(?:ssh\s+server\s+status|telnet\s+server\s+status|ip\s+https|ip\s+http)\s*$
@@ -74,15 +131,27 @@ checks:
   kind: judge
   normalize: h3c_config
   binds:
-  - item: 12
-    level: 3
-    points:
+  - item: 8
+    level: 2
+    points: &id011
     - 1
     - 3
+  - item: 12
+    level: 3
+    points: *id011
+  - item: 12
+    level: 4
+    points: *id011
+  - item: 10
+    level: 2
+    points: &id012
+    - 2
   - item: 14
     level: 3
-    points:
-    - 2
+    points: *id012
+  - item: 14
+    level: 4
+    points: *id012
   session:
   - kind: network
     pattern: ^\s*display\s+(?:info-center|logbuffer)\s*$
@@ -92,10 +161,16 @@ checks:
   kind: judge
   normalize: h3c_config
   binds:
+  - item: 13
+    level: 2
+    points: &id013
+    - 1
   - item: 18
     level: 3
-    points:
-    - 1
+    points: *id013
+  - item: 18
+    level: 4
+    points: *id013
   session:
   - kind: network
     pattern: ^\s*display\s+acl(?:\s+all)?\s*$|^\s*display\s+current-configuration\s*\|\s*include\s+acl\b
@@ -107,12 +182,18 @@ checks:
   binds:
   - item: 24
     level: 3
-    points:
+    points: &id014
     - 1
+  - item: 24
+    level: 4
+    points: *id014
   - item: 26
     level: 3
-    points:
+    points: &id015
     - 1
+  - item: 27
+    level: 4
+    points: *id015
   session:
   - kind: network
     pattern: ^\s*display\s+current-configuration\s*\|\s*include\s+password\b

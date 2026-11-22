@@ -1,0 +1,19 @@
+name: Cisco
+vendor: Cisco
+aliases:
+- cisco
+- 思科
+- ios
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 网络设备
+- 安全设备
+checks_map: checks_map.yaml
+rules_dir: rules
+high_risk: high_risk.yaml
+major: major.yaml
+texts: texts/library.yaml
+capture: capture.yaml

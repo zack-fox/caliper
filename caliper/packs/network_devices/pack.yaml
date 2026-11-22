@@ -1,17 +1,26 @@
 name: network_devices
-version: 0.1.0
+version: 0.2.0
 levels:
+- 2
 - 3
+- 4
 os_family:
 - network
 asset_types:
 - 网络设备
 - 安全设备
 guides:
+- 二级-安全通用要求
 - 三级-安全通用要求
+- 四级-安全通用要求
 items:
+  level_2: items_L2.yaml
   level_3: items_L3.yaml
+  level_4: items_L4.yaml
 adapters:
   h3c: adapters/h3c
+  huawei: adapters/huawei
+  cisco: adapters/cisco
+  zte: adapters/zte
   generic: adapters/generic
 default_adapter: generic

@@ -19,17 +19,25 @@ from core.model.entities import Asset, ProjectConfig
 from core.remediation import RemediationLibrary, suggest
 
 PACK_DIR = Path(__file__).resolve().parents[1] / "packs" / "network_devices"
-EVIDENCE_ROOT = Path(__file__).resolve().parents[1] / "tests" / "cases" / "network_h3c_l3" / "evidence"
+CASES_DIR = Path(__file__).resolve().parents[1] / "tests" / "cases"
+EVIDENCE_ROOT = CASES_DIR / "network_h3c_l3" / "evidence"
 FIXTURE = EVIDENCE_ROOT / "pkg-h3c"
 
 
-def _project(tmp_path: Path, vendor: str, evidence: str = "pkg-h3c") -> ProjectConfig:
+def _project(
+    tmp_path: Path,
+    vendor: str,
+    evidence: str = "pkg-h3c",
+    level: int = 3,
+    case: str = "network_h3c_l3",
+) -> ProjectConfig:
+    evidence_root = CASES_DIR / case / "evidence"
     data = {
         "project_code": "示例-网络-001",
         "system_name": "示例网络系统",
-        "level": 3,
+        "level": level,
         "check_date": "2026-11-22",
-        "evidence_root": str(EVIDENCE_ROOT),
+        "evidence_root": str(evidence_root),
         "output_dir": "out",
         "pack_dir": str(PACK_DIR),
         "assets": [
@@ -37,7 +45,7 @@ def _project(tmp_path: Path, vendor: str, evidence: str = "pkg-h3c") -> ProjectC
                 "device_name": "示例核心交换机",
                 "ip": "192.0.2.1",
                 "importance": "关键",
-                "guide": "三级-安全通用要求",
+                "guide": f"{level}级-安全通用要求",
                 "asset_type": "网络设备",
                 "vendor": vendor,
                 "evidence_package": evidence,
@@ -65,12 +73,14 @@ def h3c_run(tmp_path: Path):
 def test_pack_exposes_device_rule_domains() -> None:
     pack = load_pack(PACK_DIR)
 
-    assert pack.meta.levels == [3]
-    assert set(pack.adapters) == {"h3c", "generic"}
+    assert pack.meta.levels == [2, 3, 4]
+    assert set(pack.adapters) == {"h3c", "huawei", "cisco", "zte", "generic"}
     assert pack.meta.default_adapter == "generic"
-    assert len(pack.items_for_level(3)) == 34
-    assert len(pack.adapters["h3c"].checks.checks) == 6
-    assert len(pack.adapters["h3c"].rules.rules) == 18
+    assert [len(pack.items_for_level(level)) for level in (2, 3, 4)] == [23, 34, 31]
+    for vendor in ("h3c", "huawei", "cisco", "zte"):
+        assert len(pack.adapters[vendor].checks.checks) == 6
+        assert len(pack.adapters[vendor].rules.rules) >= 48
+        assert pack.adapters[vendor].remediation is not None
     assert pack.adapters["generic"].meta.manual_all is True
     assert pack.major_library() is not None
 
@@ -107,7 +117,7 @@ def test_h3c_level3_end_to_end(h3c_run) -> None:
 
 def test_vendor_commands_are_not_shared(h3c_run, tmp_path: Path) -> None:
     pack, _, _, _, _ = h3c_run
-    project = _project(tmp_path, "HUAWEI")
+    project = _project(tmp_path, "Juniper")
     run = run_project(project, pack).asset_runs[0]
 
     assert run.adapter == "generic"
@@ -117,6 +127,116 @@ def test_vendor_commands_are_not_shared(h3c_run, tmp_path: Path) -> None:
         for item in run.items
     )
     assert not any(item.verdict is Verdict.COMPLIANT for item in run.items)
+
+
+def test_vendor_adapters_are_isolated() -> None:
+    pack = load_pack(PACK_DIR)
+    h3c = render_script(load_capture(PACK_DIR / "adapters" / "h3c"), "network", 3)
+    huawei = render_script(load_capture(PACK_DIR / "adapters" / "huawei"), "network", 3)
+    cisco = render_script(load_capture(PACK_DIR / "adapters" / "cisco"), "network", 3)
+    zte = render_script(load_capture(PACK_DIR / "adapters" / "zte"), "network", 3)
+
+    assert "display current-configuration" in h3c
+    assert "display current-configuration" in huawei
+    assert "show running-config" in cisco
+    assert "show running-config" in zte
+    assert "display current-configuration" not in cisco
+    assert "display current-configuration" not in zte
+    assert "show running-config" not in h3c
+    assert "show running-config" not in huawei
+    assert "undo user-interface password complexity-check disable" not in h3c
+    assert "password-control" not in huawei
+    for vendor in ("h3c", "huawei", "cisco", "zte"):
+        assert pack.adapters[vendor].meta.levels == [2, 3, 4]
+
+
+@pytest.mark.parametrize(
+    ("vendor", "case", "package"),
+    [
+        ("H3C", "network_h3c_l3", "pkg-h3c"),
+        ("HUAWEI", "network_huawei_l3", "pkg-huawei"),
+        ("Cisco", "network_cisco_l3", "pkg-cisco"),
+        ("中兴ZTE", "network_zte_l3", "pkg-zte"),
+    ],
+)
+def test_vendor_level3_end_to_end(tmp_path, vendor, case, package) -> None:
+    pack = load_pack(PACK_DIR)
+    project = _project(tmp_path, vendor, package, 3, case)
+    run = run_project(project, pack).asset_runs[0]
+
+    assert run.adapter in {"h3c", "huawei", "cisco", "zte"}
+    assert not any("未映射" in line for line in run.diagnostics), run.diagnostics
+    items = {item.seq: item for item in pack.items_for_level(3)}
+    for item in run.items:
+        if items[item.seq].mode != "auto":
+            continue
+        for point in item.points:
+            if point.manual:
+                continue
+            assert point.passed is True, (vendor, item.seq, point.point, point.reason)
+    assert run.item_by_seq(2).verdict is Verdict.COMPLIANT
+    assert run.item_by_seq(18).verdict is Verdict.COMPLIANT
+    for seq in (23, 24, 25, 26):
+        assert run.item_by_seq(seq).verdict is Verdict.COMPLIANT
+    remote_point = next(
+        point for point in run.item_by_seq(3).points if point.point == 2
+    )
+    assert remote_point.passed is True
+    assert run.item_by_seq(1).verdict is Verdict.UNCOLLECTED
+    assert run.item_by_seq(7).verdict is Verdict.UNCOLLECTED
+
+
+def test_vendor_cannot_consume_other_vendor_evidence(tmp_path) -> None:
+    pack = load_pack(PACK_DIR)
+    project = _project(tmp_path, "HUAWEI", "pkg-h3c", 3, "network_h3c_l3")
+    run = run_project(project, pack).asset_runs[0]
+
+    assert run.adapter == "huawei"
+    assert not any(item.verdict is Verdict.COMPLIANT for item in run.items)
+
+
+@pytest.mark.parametrize("level", [2, 4])
+def test_h3c_level2_and_level4_end_to_end(tmp_path, level) -> None:
+    pack = load_pack(PACK_DIR)
+    project = _project(tmp_path, "H3C", "pkg-h3c", level, "network_h3c_l3")
+    run = run_project(project, pack).asset_runs[0]
+
+    assert len(run.items) == {2: 23, 4: 31}[level]
+    items = {item.seq: item for item in pack.items_for_level(level)}
+    for item in run.items:
+        if items[item.seq].mode != "auto":
+            continue
+        for point in item.points:
+            if point.manual:
+                continue
+            assert point.passed is True, (level, item.seq, point.point, point.reason)
+    assert run.item_by_seq(2).verdict is Verdict.COMPLIANT
+    remote_point = next(
+        point for point in run.item_by_seq(3).points if point.point == 2
+    )
+    assert remote_point.passed is True
+    if level == 2:
+        for seq in (11, 12, 19):
+            assert run.item_by_seq(seq).verdict is Verdict.NOT_APPLICABLE
+        assert run.item_by_seq(13).verdict is Verdict.COMPLIANT
+        assert run.item_by_seq(17).verdict is Verdict.COMPLIANT
+    else:
+        for seq in (16, 17, 29):
+            assert run.item_by_seq(seq).verdict is Verdict.NOT_APPLICABLE
+        assert run.item_by_seq(18).verdict is Verdict.COMPLIANT
+        for seq in (23, 24, 26, 27):
+            assert run.item_by_seq(seq).verdict is Verdict.COMPLIANT
+
+
+def test_zte_password_complexity_remains_manual(tmp_path) -> None:
+    pack = load_pack(PACK_DIR)
+    project = _project(tmp_path, "中兴ZTE", "pkg-zte", 3, "network_zte_l3")
+    run = run_project(project, pack).asset_runs[0]
+
+    auth = run.item_by_seq(1)
+    assert auth.verdict is Verdict.UNCOLLECTED
+    assert {point.point for point in auth.points if point.passed} == {2, 3}
+    assert {point.point for point in auth.points if point.passed is None} == {1, 4}
 
 
 def test_h3c_failure_generates_issue_and_remediation(h3c_run, tmp_path: Path) -> None:

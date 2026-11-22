@@ -561,7 +561,9 @@ class AppController:
         pack = self.pack or self.load_pack()
         items = pack.items_for_level(self.project.level)
         try:
-            library = RemediationLibrary.load(pack.root, items)
+            library = pack.remediation_library(run.adapter) or RemediationLibrary.load(
+                pack.root, items
+            )
         except RemediationError as exc:
             raise ControllerError(str(exc)) from exc
         return next(

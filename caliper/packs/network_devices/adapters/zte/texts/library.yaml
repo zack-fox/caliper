@@ -1,0 +1,438 @@
+texts:
+- seq: 1
+  control_point: 身份鉴别
+  control_item: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换；
+  issue_summary: 1、登录XX设备时，未进行身份验证或身份鉴别机制不完善；
+  issue_detail: '2、用户身份标识不具有唯一性；
+
+    3、存在弱口令账户，XX账户当前所使用的口令长度、复杂度不符合要求；
+
+    4、未设置口令复杂度校验机制和口令有效期机制或口令复杂度校验机制和口令有效期机制参数设置不合理。'
+  hazard: '1、未进行身份验证或身份鉴别机制不完善，存在设备被非授权访问进行攻击或破坏的风险；
+
+    2、存在管理帐户滥用权限和恶意破坏的风险，无法准确通过审计日志对操作人员进行分析审计；
+
+    3、口令可能被恶意用户猜测获得，合法用户身份被仿冒，导致设备被非授权访问；
+
+    4、长时间不进行口令更换将增加设备被非授权登录的风险。'
+  remediation: '1、建议增加设备对登录用户的身份鉴别功能，使用账户+口令进行身份验证；
+
+    2、建议对设备账户进行梳理，使用户名具有唯一性；
+
+    3、建议加强用户口令长度与复杂度要求，使口令长度不小于8位，由大写字母、小写字母、数字、特殊符号中的任意三种组成；
+
+    4、建议定期（≤90天）更换设备的口令。'
+  threat: 身份冒用、口令猜测与暴力破解
+  inherent_risk: 高
+- seq: 2
+  control_point: 身份鉴别
+  control_item: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施；
+  issue_summary: 1、无登录失败处理功能和登录连接超时处理措施；
+  issue_detail: '2、登录失败处理功能参数设置不合理；
+
+    3、登录连接超时自动退出功能参数设置不合理。'
+  hazard: '1、无登录失败功能或参数设置不合理：
+
+    登录口令可能被恶意用户使用暴力猜解方式获得，导致系统被非授权访问；
+
+    2、无登录连接超时功能或参数设置不合理：
+
+    合法用户身份可能被仿冒，导致系统被非授权访问。'
+  remediation: 建议启用设备的登录失败处理/登录连接超时自动退出功能，如设置连续登录失败3~5次锁定账户或IP地址5~30分钟，登录后无操作10~30分钟断开连接等。
+  threat: 身份冒用、口令猜测与暴力破解
+  inherent_risk: 低
+- seq: 3
+  control_point: 身份鉴别
+  control_item: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听。
+  issue_summary: 1、远程管理设备时未采取措施防止鉴别信息在网络传输过程中被窃听；
+  issue_detail: 2、采用SSH/HTTPS方式进行远程管理，但未禁用Telnet/HTTP管理方式
+  hazard: 采用明文传输的协议管理设备时，账号、口令等重要数据可能被嗅探并盗用，导致设备被非授权访问。
+  remediation: 建议采用SSH或HTTPS的方式对设备进行远程管理，并禁用Telnet/HTTP等方式，防止鉴别信息在网络传输过程中被窃听。
+  threat: 身份冒用、口令猜测与暴力破解
+  inherent_risk: 低
+- seq: 4
+  control_point: 访问控制
+  control_item: a）应对登录的用户分配账户和权限；
+  issue_summary: 1、未对需要登录使用设备的人员单独设立账户并分配权限，与实际使用情况不一致；
+  issue_detail: 2、未对匿名账户XX进行禁用或限制
+  hazard: '1、可能出现多人共用一个账户的情况，发生误操作不利于追溯自然人；
+
+    2、存在可以通过匿名账户非授权访问设备造成风险的情况'
+  remediation: '1、建议为需要登录使用该设备的人员单独设立账户并分配权限；
+
+    2、建议对匿名账户进行禁用'
+  threat: 越权访问、权限滥用
+  inherent_risk: 低
+- seq: 5
+  control_point: 访问控制
+  control_item: b）应重命名或删除默认账户，修改默认账户的默认口令；
+  issue_summary: 1、未重命名或删除/禁用默认账户；
+  issue_detail: 2、未修改默认账户XXX的默认口令
+  hazard: '1、可能导致外部能猜测系统用户名，造成信息泄露；
+
+    2、口令被恶意用户猜测获得，合法用户身份被仿冒，导致设备被非授权访问'
+  remediation: '1、建议重命名或删除/禁用默认账户名；
+
+    2、建议修改默认账户的默认口令，口令长度修改为8位以上，由大写字母、小写字母、数字及特殊字符中的至少三种元素组成'
+  threat: 越权访问、权限滥用
+  inherent_risk: 中
+- seq: 6
+  control_point: 访问控制
+  control_item: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在；
+  issue_summary: 1、设备中存在多余或过期的账户；
+  issue_detail: 2、设备中存在共享账户
+  hazard: 发生安全事件后不便于对事件进行追溯，不易发现系统的安全隐患
+  remediation: 建议在设备中建立如：网络管理员、安全管理员、审计管理员等角色的若干账户，并且账户与使用人员一一对应，实现对特权用户的权限分离及对各登录用户身份的区分
+  threat: 越权访问、权限滥用
+  inherent_risk: 高
+- seq: 7
+  control_point: 访问控制
+  control_item: d）应授予管理用户所需的最小权限，实现管理用户的权限分离。
+  issue_summary: 未实现管理用户的权限分离
+  issue_detail: ''
+  hazard: 管理员权限过大，可能无法对管理员的行为进行监管、制约
+  remediation: 建议对设备账户权限进行梳理，建立如：网络管理员、安全管理员、审计管理员等角色的若干账户，实现管理用户的权限分离
+  threat: 越权访问、权限滥用
+  inherent_risk: 低
+- seq: 8
+  control_point: 安全审计
+  control_item: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计；
+  issue_summary: 1、设备无安全审计功能/未开启安全审计功能；
+  issue_detail: 2、设备审计范围不完善，未覆盖所有用户或所有安全事件
+  hazard: 无法对安全事件进行追溯，同时无法及时了解设备实际运行状况以及存在的安全隐患
+  remediation: '1、建议联系设备供应厂商为设备增设日志审计功能模块或启用设备的安全审计功能，对重要用户行为和重要安全事件进行记录；
+
+    2、建议将设备上的所有用户或所有安全事件纳入审计范围，对发生的安全事件进行记录'
+  threat: 审计记录被篡改或删除、行为无法追溯
+  inherent_risk: 低
+- seq: 9
+  control_point: 安全审计
+  control_item: b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息；
+  issue_summary: 设备审计记录的内容不全面
+  issue_detail: ''
+  hazard: 不便于对重要的安全事件进行追溯，同时无法及时了解设备实际运行状况以及存在的安全隐患
+  remediation: 建议完善审计记录的相关信息，审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息
+  threat: 审计记录被篡改或删除、行为无法追溯
+  inherent_risk: 低
+- seq: 10
+  control_point: 安全审计
+  control_item: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等。
+  issue_summary: 1、未对审计记录进行保护，可能会被非授权用户进行删除、修改等；
+  issue_detail: 2、未对审计记录进行备份
+  hazard: '1、日志可以被删除或篡改将导致无法对安全事件进行追溯，存在一定的安全风险；
+
+    2、审计记录未进行备份，若设备故障，将无法对安全事件进行追溯，存在一定的安全风险'
+  remediation: '1、建议对审计记录进行保护，限制非授权账户对审计功能的访问，避免审计记录受到未预期的删除、修改等；
+
+    2、建议对日志记录进行备份，定期手动导出或上传到日志服务器（日志审计系统）保存，且保存时间应达到6个月，避免审计记录受到未预期的删除、修改或覆盖等'
+  threat: 审计记录被篡改或删除、行为无法追溯
+  inherent_risk: 高
+- seq: 11
+  control_point: 入侵防范
+  control_item: a）应遵循最小安装的原则，仅安装需要的组件和应用程序；
+  issue_summary: /
+  issue_detail: ''
+  hazard: /
+  remediation: /
+  threat: —
+  inherent_risk: —
+- seq: 12
+  control_point: 入侵防范
+  control_item: b）应关闭不需要的系统服务、默认共享和高危端口；
+  issue_summary: /
+  issue_detail: ''
+  hazard: /
+  remediation: /
+  threat: —
+  inherent_risk: —
+- seq: 13
+  control_point: 入侵防范
+  control_item: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制；
+  issue_summary: 1、未对设备的接入方式进行限制/未对设备的登录地址范围进行限制；
+  issue_detail: 2、对设备的登录地址范围进行了限制，但限制范围不合理
+  hazard: 恶意用户可能使用任意终端，尝试非授权访问设备，更改设备配置
+  remediation: 建议限制可登录设备的管理终端或管理地址范围，仅允许特定的IP地址或网段可登录管理设备
+  threat: 漏洞利用、恶意代码植入、非授权外联
+  inherent_risk: 低
+- seq: 14
+  control_point: 入侵防范
+  control_item: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求；
+  issue_summary: /
+  issue_detail: ''
+  hazard: /
+  remediation: /
+  threat: —
+  inherent_risk: —
+- seq: 15
+  control_point: 入侵防范
+  control_item: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞。
+  issue_summary: 1、未定期对进行漏洞扫描；
+  issue_detail: 2、开展了漏洞扫描，但未对发现的漏洞进行评估测试和修复。
+  hazard: 设备漏洞可能被利用进行网络攻击影响正常运行，造成业务中断
+  remediation: '1、建议定期对系统内的设备进行漏洞扫描，在不影响正常业务的情况下及时更新设备补丁或版本，消除相关安全漏洞；
+
+    2、建议加强设备的管理，在不影响正常业务的情况下，依据漏洞扫描报告及时对发现的漏洞进行评估测试、修复。'
+  threat: 漏洞利用、恶意代码植入、非授权外联
+  inherent_risk: 高
+- seq: 20
+  control_point: 恶意代码防范
+  control_item: a）应安装防恶意代码软件或配置具有相应功能的软件，并定期进行升级和更新防恶意代码库。
+  issue_summary: 此类对象不涉及该控制项。
+  issue_detail: ''
+  hazard: —
+  remediation: —
+  threat: —
+  inherent_risk: —
+- seq: 16
+  control_point: 可信验证
+  control_item: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。
+  issue_summary: 1、未基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证；
+  issue_detail: 2、部署了可信验证检测的设备，但检测到可信性受到破坏时无法进行报警
+  hazard: '1、无可信链和可信验证,无法通过主动免疫可信验证技术提高系统自身安全防护能力，无法实现积极主动防御；
+
+    2、存在不能及时发现可信性受到破坏而造成系统信息泄漏或损坏的风险。'
+  remediation: '1、建议基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警；
+
+    2、建议对可信验证设备的配置进行检查和调整，使其发现可信性受到破坏后及时向管理员进行报警。'
+  threat: 系统被篡改无法发现、后门植入
+  inherent_risk: 低
+- seq: 17
+  control_point: 数据完整性
+  control_item: a）应采用校验技术保证重要数据在传输过程中的完整性。
+  issue_summary: 未采用校验技术或密码技术保证鉴别数据在传输过程中的完整性
+  issue_detail: ''
+  hazard: 可能导致鉴别数据在传输过程中被攻击者劫持、篡改
+  remediation: 建议采用校验技术或密码技术保证传输过程中鉴别数据的完整性
+  threat: 传输或存储数据被篡改
+  inherent_risk: 低
+- seq: 18
+  control_point: 数据备份恢复
+  control_item: a）应提供重要数据的本地数据备份与恢复功能；
+  issue_summary: 未对设备配置数据进行备份
+  issue_detail: ''
+  hazard: 设备若出现故障可能无法及时恢复运行，或造成重要数据丢失，影响系统的可用性
+  remediation: 建议对设备配置数据每周或每月至少完全备份一次，并将备份介质场外存放，此外，还应定期对备份文件进行恢复测试，确保备份文件有效
+  threat: 数据丢失、业务中断
+  inherent_risk: 高
+- seq: 19
+  control_point: 数据备份恢复
+  control_item: b）应提供异地数据备份功能，利用通信网络将重要数据定时批量传送至备用场地。
+  issue_summary: /
+  issue_detail: ''
+  hazard: /
+  remediation: /
+  threat: —
+  inherent_risk: —
+- seq: 21
+  control_point: 剩余信息保护
+  control_item: a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除；
+  issue_summary: 此类对象不涉及该控制项。
+  issue_detail: ''
+  hazard: —
+  remediation: —
+  threat: —
+  inherent_risk: —
+- seq: 22
+  control_point: 个人信息保护
+  control_item: a）应仅采集和保存业务必需的用户个人信息；
+  issue_summary: 此类对象不涉及该控制项。
+  issue_detail: ''
+  hazard: —
+  remediation: —
+  threat: —
+  inherent_risk: —
+- seq: 23
+  control_point: 个人信息保护
+  control_item: b）应禁止未授权访问和非法使用用户个人信息。
+  issue_summary: 此类对象不涉及该控制项。
+  issue_detail: ''
+  hazard: —
+  remediation: —
+  threat: —
+  inherent_risk: —
+- seq: 3
+  control_point: 身份鉴别
+  control_item: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听；
+  issue_summary: 1、远程管理设备时未采取措施防止鉴别信息在网络传输过程中被窃听；
+  issue_detail: 2、采用SSH/HTTPS方式进行远程管理，但未禁用Telnet/HTTP管理方式
+  hazard: 采用明文传输的协议管理设备时，账号、口令等重要数据可能被嗅探并盗用，导致设备被非授权访问。
+  remediation: 建议采用SSH或HTTPS的方式对设备进行远程管理，并禁用Telnet/HTTP等方式，防止鉴别信息在网络传输过程中被窃听。
+  threat: 身份冒用、口令猜测与暴力破解
+  inherent_risk: 高
+- seq: 4
+  control_point: 身份鉴别
+  control_item: d）应采用口令、密码技术、生物技术等两种或两种以上组合的鉴别技术对用户进行身份鉴别，且其中一种鉴别技术至少应使用密码技术来实现。
+  issue_summary: 未采用两种或两种以上组合的鉴别技术对用户进行身份鉴别
+  issue_detail: ''
+  hazard: 登录口令可能被恶意用户猜测获得，合法用户身份被仿冒，导致系统被非授权访问
+  remediation: 建议对设备采用两种或两种以上组合的鉴别技术实现用户身份鉴别，且其中一种鉴别技术为密码技术，如使用基于国密算法技术的动态口令或令牌等
+  threat: 身份冒用、口令猜测与暴力破解
+  inherent_risk: 高
+- seq: 8
+  control_point: 访问控制
+  control_item: d）应授予管理用户所需的最小权限，实现管理用户的权限分离；
+  issue_summary: 未实现管理用户的权限分离
+  issue_detail: ''
+  hazard: 管理员权限过大，可能无法对管理员的行为进行监管、制约
+  remediation: 建议对设备账户权限进行梳理，建立如：网络管理员、安全管理员、审计管理员等角色的若干账户，实现管理用户的权限分离
+  threat: 越权访问、权限滥用
+  inherent_risk: 高
+- seq: 9
+  control_point: 访问控制
+  control_item: e）应由授权主体配置访问控制策略，访问控制策略规定主体对客体的访问规则；
+  issue_summary: /
+  issue_detail: ''
+  hazard: /
+  remediation: /
+  threat: 越权访问、权限滥用
+  inherent_risk: 高
+- seq: 10
+  control_point: 访问控制
+  control_item: f）访问控制的粒度应达到主体为用户级或进程级，客体为文件、数据库表级；
+  issue_summary: /
+  issue_detail: ''
+  hazard: /
+  remediation: /
+  threat: 越权访问、权限滥用
+  inherent_risk: 高
+- seq: 11
+  control_point: 访问控制
+  control_item: g）应对重要主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。
+  issue_summary: 1、未提供设置安全标记的功能；
+  issue_detail: 2、设置的安全标记无法实现不同主体对敏感信息资源的访问控制
+  hazard: 可能导致敏感信息遭到非授权的访问或篡改
+  remediation: 建议采用设置安全标记的技术措施，实现不同主体对敏感信息资源的访问控制
+  threat: 越权访问、权限滥用
+  inherent_risk: 高
+- seq: 14
+  control_point: 安全审计
+  control_item: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等；
+  issue_summary: 1、未对审计记录进行保护，可能会被非授权用户进行删除、修改等；
+  issue_detail: 2、未对审计记录进行备份
+  hazard: '1、日志可以被删除或篡改将导致无法对安全事件进行追溯，存在一定的安全风险；
+
+    2、审计记录未进行备份，若设备故障，将无法对安全事件进行追溯，存在一定的安全风险'
+  remediation: '1、建议对审计记录进行保护，限制非授权账户对审计功能的访问，避免审计记录受到未预期的删除、修改等；
+
+    2、建议对日志记录进行备份，定期手动导出或上传到日志服务器（日志审计系统）保存，且保存时间应达到6个月，避免审计记录受到未预期的删除、修改或覆盖等'
+  threat: 审计记录被篡改或删除、行为无法追溯
+  inherent_risk: 高
+- seq: 15
+  control_point: 安全审计
+  control_item: d）应对审计进程进行保护，防止未经授权的中断。
+  issue_summary: 未对审计进程进行保护，能够受到未经授权的中断
+  issue_detail: ''
+  hazard: 可能导致审计进程中止，引起审计记录缺失，不便于安全事件的追溯，不易发现系统安全隐患
+  remediation: 建议加强对设备审计功能的控制管理，除审计管理员账户或指定账户外其余账户不能中断设备审计进程
+  threat: 审计记录被篡改或删除、行为无法追溯
+  inherent_risk: 低
+- seq: 20
+  control_point: 入侵防范
+  control_item: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞；
+  issue_summary: 1、未定期对进行漏洞扫描；
+  issue_detail: 2、开展了漏洞扫描，但未对发现的漏洞进行评估测试和修复。
+  hazard: 设备漏洞可能被利用进行网络攻击影响正常运行，造成业务中断
+  remediation: '1、建议定期对系统内的设备进行漏洞扫描，在不影响正常业务的情况下及时更新设备补丁或版本，消除相关安全漏洞；
+
+    2、建议加强设备的管理，在不影响正常业务的情况下，依据漏洞扫描报告及时对发现的漏洞进行评估测试、修复。'
+  threat: 漏洞利用、恶意代码植入、非授权外联
+  inherent_risk: 高
+- seq: 21
+  control_point: 入侵防范
+  control_item: f）应能够检测到对重要节点进行入侵的行为，并在发生严重入侵事件时提供报警。
+  issue_summary: /
+  issue_detail: ''
+  hazard: /
+  remediation: /
+  threat: —
+  inherent_risk: —
+- seq: 30
+  control_point: 恶意代码防范
+  control_item: a）应采用免受恶意代码攻击的技术措施或主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。
+  issue_summary: 此类对象不涉及该控制项。
+  issue_detail: ''
+  hazard: —
+  remediation: —
+  threat: —
+  inherent_risk: —
+- seq: 23
+  control_point: 数据完整性
+  control_item: a）应采用校验技术或密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等；
+  issue_summary: 未采用校验技术或密码技术保证鉴别数据在传输过程中的完整性
+  issue_detail: ''
+  hazard: 可能导致鉴别数据在传输过程中被攻击者劫持、篡改
+  remediation: 建议采用校验技术或密码技术保证传输过程中鉴别数据的完整性
+  threat: 传输或存储数据被篡改
+  inherent_risk: 低
+- seq: 24
+  control_point: 数据完整性
+  control_item: b）应采用校验技术或密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等。
+  issue_summary: 未对设备鉴别数据进行加密存储，无法保证鉴别数据的完整性
+  issue_detail: ''
+  hazard: 可能导致鉴别数据在存储过程中被恶意篡改
+  remediation: 建议对鉴别数据采用经国家密码主管部门认可的密码技术，保证其在存储过程中的完整性
+  threat: 传输或存储数据被篡改
+  inherent_risk: 低
+- seq: 25
+  control_point: 数据保密性
+  control_item: a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等；
+  issue_summary: 未采用密码技术保证鉴别数据在传输过程中的保密性
+  issue_detail: ''
+  hazard: 鉴别数据在传输过程中被攻击者嗅探并盗用成功的可能性增大，使私密信息遭遇泄漏，进而可能使企业的业务运营、声誉、经济利益受损
+  remediation: 建议采用密码技术保证鉴别数据在传输过程中的保密性
+  threat: 鉴别信息或敏感数据被窃听
+  inherent_risk: 低
+- seq: 26
+  control_point: 数据保密性
+  control_item: b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。
+  issue_summary: 未对设备鉴别数据进行加密存储，无法保证鉴别数据的保密性
+  issue_detail: ''
+  hazard: 鉴别数据在存储过程中被攻击者直接盗用成功的可能性增大，使私密信息遭遇泄漏
+  remediation: 建议对鉴别数据采用经国家密码主管部门认可的密码技术，保证其在存储过程中的保密性
+  threat: 鉴别信息或敏感数据被窃听
+  inherent_risk: 低
+- seq: 28
+  control_point: 数据备份恢复
+  control_item: b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地；
+  issue_summary: /
+  issue_detail: ''
+  hazard: /
+  remediation: /
+  threat: —
+  inherent_risk: —
+- seq: 29
+  control_point: 数据备份恢复
+  control_item: c）应提供重要数据处理系统的热冗余，保证系统的高可用性。
+  issue_summary: 关键设备未采取热冗余措施
+  issue_detail: ''
+  hazard: 可能造成单点故障，无法保证系统的高可用性
+  remediation: 建议对关键设备采用热冗余部署方式，保证系统的高可用性
+  threat: 数据丢失、业务中断
+  inherent_risk: 中
+- seq: 32
+  control_point: 剩余信息保护
+  control_item: b）应保证存有敏感数据的存储空间被释放或重新分配前得到完全清除。
+  issue_summary: 此类对象不涉及该控制项。
+  issue_detail: ''
+  hazard: —
+  remediation: —
+  threat: —
+  inherent_risk: —
+- seq: 25
+  control_point: 数据完整性
+  control_item: c）在可能涉及法律责任认定的应用中，应采用密码技术提供数据原发证据和数据接收证据，实现数据原发行为的抗抵赖和数据接收行为的抗抵赖。
+  issue_summary: /
+  issue_detail: ''
+  hazard: /
+  remediation: /
+  threat: —
+  inherent_risk: —
+- seq: 31
+  control_point: 数据备份恢复
+  control_item: d）应建立异地灾难备份中心，提供业务应用的实时切换。
+  issue_summary: 未建立异地灾难备份中心，未配备灾难恢复所需的通信线路、网络设备和数据处理设备
+  issue_detail: ''
+  hazard: 不利于在发生设备宕机或因自然灾害的情况下，应用系统持续对外提供业务服务
+  remediation: 建议建立异地灾难备份中心，配备灾难恢复所需的通信线路、网络设备和数据处理设备，确保其可在故障发生时及时接管生产系统的业务服务
+  threat: 数据丢失、业务中断
+  inherent_risk: 高

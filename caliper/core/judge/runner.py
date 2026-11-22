@@ -230,10 +230,28 @@ def _judge_package(
     return run
 
 
+def _adapter_items(items: list[Item], adapter) -> list[Item]:
+    """把厂商特有的人工核查点合并到共享测评项，不修改其他厂商的判定。"""
+    if adapter is None or not adapter.meta.manual_points:
+        return items
+    merged_items: list[Item] = []
+    for item in items:
+        extra = adapter.meta.manual_points.get(item.seq)
+        if not extra:
+            merged_items.append(item)
+            continue
+        existing = {point.point for point in item.manual_points}
+        merged = list(item.manual_points) + [
+            point for point in extra if point.point not in existing
+        ]
+        merged_items.append(item.model_copy(update={"manual_points": merged}))
+    return merged_items
+
+
 def run_project(project: ProjectConfig, pack: Pack, base_dir: Path | None = None) -> RunResult:
     base = Path(base_dir) if base_dir else Path.cwd()
     evidence_root = project.evidence_root if project.evidence_root.is_absolute() else base / project.evidence_root
-    items = pack.items_for_level(project.level)
+    base_items = pack.items_for_level(project.level)
     if not project.assets:
         raise RunError("项目没有任何资产")
 
@@ -241,6 +259,7 @@ def run_project(project: ProjectConfig, pack: Pack, base_dir: Path | None = None
     fingerprints: dict[str, str] = {}
     for asset in project.assets:
         adapter, matched = pack.resolve_adapter(asset.vendor)
+        items = _adapter_items(base_items, adapter)
         checks = adapter.checks if adapter else pack.checks
         ruleset = adapter.rules if adapter else pack.rules
         adapter_key = adapter.key if adapter else ""

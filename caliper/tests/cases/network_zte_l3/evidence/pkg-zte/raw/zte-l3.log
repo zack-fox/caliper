@@ -1,0 +1,53 @@
+===== RESULTS (collected) =====
+===== 身份鉴别/访问控制 =====
+[01] ZTE 账户与权限配置
+  cmd: show running-config
+  hostname ZTE-CORE
+  user-authen-restriction fail-time 3 lock-minute 5
+  user-name netops
+   bind authentication-template 1
+   bind authorization-template 1
+   password encrypted 9162daEXAMPLEZTE1
+   local-privilege-level 15
+  user-name audit
+   bind authentication-template 1
+   bind authorization-template 1
+   password encrypted 9162daEXAMPLEZTE2
+   local-privilege-level 3
+  line ssh idle-timeout 20
+  line console idle-timeout 10
+  acl number 2001
+   rule 10 permit source 192.0.2.0 0.0.0.255
+  line vty 0 4
+   access-class 2001 in
+[02] ZTE 登录控制
+  cmd: show running-config
+  user-authen-restriction fail-time 3 lock-minute 5
+  line ssh idle-timeout 20
+  line console idle-timeout 10
+[03] ZTE 远程管理加密
+  cmd: show running-config
+  ssh server enable
+  https server enable
+[04] ZTE 安全审计
+  cmd: show running-config
+  logging buffer 300
+  logging trap-enable informational
+  syslog-server host 192.0.2.20 port 514
+  cmd: show logfile
+  StartTime: 2026-11-20 10:00:00
+  UserName: netops
+  Content: login success from 192.0.2.10
+[05] ZTE 管理终端限制
+  cmd: show running-config
+  acl number 2001
+   rule 10 permit source 192.0.2.0 0.0.0.255
+  line vty 0 4
+   access-class 2001 in
+[06] ZTE 口令密文存储
+  cmd: show running-config
+  user-name netops
+   password encrypted 9162daEXAMPLEZTE1
+  user-name audit
+   password encrypted 9162daEXAMPLEZTE2
+===== END OF REPORT =====

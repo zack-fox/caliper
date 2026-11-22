@@ -39,6 +39,9 @@ _NORMALIZERS = {
     "mysql_remote_access",
     "mysql_backup",
     "h3c_config",
+    "huawei_config",
+    "cisco_config",
+    "zte_config",
 }
 
 _MYSQL_VARIABLES = {
@@ -855,6 +858,761 @@ def _normalize_h3c_config(block: CheckBlock) -> list[DerivedFact]:
     return facts
 
 
+_NET_DEFAULT_ACCOUNTS = {"admin", "administrator", "root", "test", "guest", "public"}
+_VENDOR_DEFAULT_ACCOUNTS = {
+    "huawei": _NET_DEFAULT_ACCOUNTS | {"huawei"},
+    "cisco": _NET_DEFAULT_ACCOUNTS | {"cisco"},
+    "zte": _NET_DEFAULT_ACCOUNTS | {"zte"},
+}
+_NET_ANONYMOUS_ACCOUNTS = {"anonymous", "guest", "public"}
+
+
+def _network_account_facts(
+    block: CheckBlock,
+    vendor: str,
+    users: dict[str, dict[str, object]],
+    password_seen: bool,
+) -> list[DerivedFact]:
+    """把各厂商的账户配置归一为同一组事实，命令本身仍由各适配器独立采集。"""
+    facts: list[DerivedFact] = []
+    if not users:
+        return facts
+    names = list(users)
+    user_lines = _matching(block, r"^\s*(?:local-user|user-name|username)\b")
+    password_lines = _matching(block, r"(?:^|\s)(?:password|secret)\s")
+    role_lines = _matching(
+        block,
+        r"privilege|user-role|authorization-template|local-privilege-level",
+    )
+    _add(
+        facts,
+        _fact(
+            block,
+            f"fact:{vendor}.users.unique={str(len(names) == len(set(names))).lower()}",
+            user_lines,
+        ),
+    )
+    if password_seen:
+        empty = any(
+            not str(user.get("password", "")).strip()
+            or re.search(r"not configured|none", str(user.get("password", "")), re.I)
+            for user in users.values()
+        )
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:{vendor}.users.empty_password={'present' if empty else 'none'}",
+                password_lines,
+            ),
+        )
+    default_accounts = _VENDOR_DEFAULT_ACCOUNTS[vendor]
+    default_present = any(
+        name.lower() in default_accounts and not bool(user.get("disabled"))
+        for name, user in users.items()
+    )
+    _add(
+        facts,
+        _fact(
+            block,
+            f"fact:{vendor}.users.default_account={'present' if default_present else 'none'}",
+            user_lines,
+        ),
+    )
+    anonymous_present = any(name.lower() in _NET_ANONYMOUS_ACCOUNTS for name in users)
+    _add(
+        facts,
+        _fact(
+            block,
+            f"fact:{vendor}.users.anonymous={'present' if anonymous_present else 'none'}",
+            user_lines,
+        ),
+    )
+    roles = {str(role) for user in users.values() for role in user.get("roles", [])}
+    if roles:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:{vendor}.roles.privilege_distinct="
+                f"{str(len(roles) >= 2).lower()}",
+                role_lines,
+            ),
+        )
+    with_password = [
+        user for user in users.values() if str(user.get("password", "")).strip()
+    ]
+    if with_password:
+        cipher = all(bool(user.get("cipher")) for user in with_password)
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:{vendor}.secret_storage.cipher={str(cipher).lower()}",
+                password_lines or user_lines,
+            ),
+        )
+    return facts
+
+
+def _network_remote_facts(
+    block: CheckBlock,
+    vendor: str,
+    remote: dict[str, bool],
+    seen: bool,
+) -> list[DerivedFact]:
+    facts: list[DerivedFact] = []
+    if not seen:
+        return facts
+    for key, value in remote.items():
+        lines = _matching(block, rf"{key}\s+server|protocol\s+inbound|{key}\b")
+        _add(
+            facts,
+            _fact(block, f"fact:{vendor}.remote.{key}_enabled={str(value).lower()}", lines),
+        )
+    _add(
+        facts,
+        _fact(
+            block,
+            f"fact:{vendor}.remote.any={str(any(remote.values())).lower()}",
+            _matching(block, r"server|protocol|https?|ssh|telnet"),
+        ),
+    )
+    encrypted = (remote["ssh"] or remote["https"]) and not (
+        remote["telnet"] or remote["http"]
+    )
+    _add(
+        facts,
+        _fact(
+            block,
+            f"fact:{vendor}.remote.encrypted={str(encrypted).lower()}",
+            _matching(block, r"server|protocol|https?|ssh|telnet"),
+        ),
+    )
+    return facts
+
+
+def _apply_huawei_user(user: dict[str, object], text: str) -> bool:
+    changed = False
+    match = re.match(
+        r"password\s+(irreversible-cipher|cipher|simple)\b\s*(\S*)", text, re.I
+    )
+    if match:
+        user["password"] = match.group(2)
+        user["cipher"] = match.group(1).lower() != "simple"
+        changed = True
+    elif re.match(r"password\s*$", text, re.I):
+        user["password"] = ""
+        changed = True
+    if re.search(r"service-type\s+none\b", text, re.I) or re.match(
+        r"disable\b", text, re.I
+    ):
+        user["disabled"] = True
+    level = re.search(r"privilege\s+level\s+(\d+)", text, re.I)
+    if level:
+        user["roles"].append(f"level-{level.group(1)}")
+    return changed
+
+
+def _normalize_huawei_config(block: CheckBlock) -> list[DerivedFact]:
+    """华为 VRP 配置与状态回显；命令与 H3C/Cisco/ZTE 完全分开。"""
+    facts: list[DerivedFact] = []
+    users: dict[str, dict[str, object]] = {}
+    current: str | None = None
+    password_seen = False
+    for line in block.output:
+        raw = line.text
+        stripped = raw.strip()
+        match = re.match(r"^local-user\s+(\S+)(?:\s+(.*))?$", stripped, re.I)
+        if match:
+            current = match.group(1)
+            users.setdefault(
+                current, {"password": "", "cipher": None, "disabled": False, "roles": []}
+            )
+            rest = (match.group(2) or "").strip()
+            if rest:
+                password_seen = _apply_huawei_user(users[current], rest) or password_seen
+            continue
+        if current and (raw.startswith(" ") or raw.startswith("\t")):
+            password_seen = _apply_huawei_user(users[current], stripped) or password_seen
+            continue
+        current = None
+    facts.extend(_network_account_facts(block, "huawei", users, password_seen))
+
+    enabled: bool | None = None
+    if _matching(block, r"^\s*undo\s+user-interface\s+password\s+complexity-check\s+disable"):
+        enabled = True
+    elif _matching(block, r"^\s*user-interface\s+password\s+complexity-check\s+disable"):
+        enabled = False
+    if _matching(block, r"^\s*password\s+complexity-check\s+enable"):
+        enabled = True
+    if enabled is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:huawei.password_control.enabled={str(enabled).lower()}",
+                _matching(block, r"password\s+complexity-check|min-length"),
+            ),
+        )
+    length = _h3c_value(block, r"set\s+password\s+min-length\s+(\d+)") or _h3c_value(
+        block, r"password\s+min-length\s+(\d+)"
+    )
+    if length is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:huawei.password_control.length={length}",
+                _matching(block, r"min-length"),
+            ),
+        )
+    if enabled:
+        _add(
+            facts,
+            _fact(
+                block,
+                "fact:huawei.password_control.composition_types=3",
+                _matching(block, r"password\s+complexity-check"),
+            ),
+        )
+    aging = _h3c_value(
+        block, r"(?:password|local-aaa-user)[^\n]*?(?:aging|expire)[^\n]*?(\d+)\s*(?:days?|天)?"
+    )
+    if aging is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:huawei.password_control.aging_days={aging}",
+                _matching(block, r"aging|expire"),
+            ),
+        )
+    login_attempt = _h3c_value(
+        block, r"local-aaa-user\s+wrong-password[^\n]*?retry-time\s+(\d+)"
+    )
+    if login_attempt is None:
+        login_attempt = _h3c_value(block, r"login-attempt\s+(\d+)")
+    if login_attempt is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:huawei.password_control.login_attempt={login_attempt}",
+                _matching(block, r"retry-time|login-attempt|wrong-password"),
+            ),
+        )
+    lock_minutes = _h3c_value(
+        block, r"local-aaa-user\s+wrong-password[^\n]*?block-time\s+(\d+)"
+    )
+    if lock_minutes is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:huawei.password_control.lock_minutes={lock_minutes}",
+                _matching(block, r"block-time|wrong-password"),
+            ),
+        )
+    idle_values = [
+        int(match.group(1))
+        for line in block.output
+        if (match := re.search(r"idle-timeout\s+(\d+)", line.text, re.I))
+    ]
+    if idle_values:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:huawei.timeout.idle_minutes={max(idle_values)}",
+                _matching(block, r"idle-timeout"),
+            ),
+        )
+
+    remote = {"ssh": False, "telnet": False, "http": False, "https": False}
+    remote_seen = False
+    for line in block.output:
+        text = line.text.strip().lower()
+        for key, pattern in {
+            "ssh": r"^ssh\s+server\s+enable\b|^protocol\s+inbound\s+ssh\b|ssh\s+server\s*:\s*enable\b",
+            "telnet": r"^telnet\s+server\s+enable\b|^protocol\s+inbound\s+(?:telnet|all)\b|telnet\s+server\s*:\s*enable\b",
+            "http": r"^(?:ip\s+)?http\s+server\s+enable\b|http\s+server\s*:\s*enable\b",
+            "https": r"^(?:ip\s+)?http\s+secure-server\s+enable\b|https\s+server\s*:\s*enable\b",
+        }.items():
+            if re.search(pattern, text):
+                remote[key] = True
+                remote_seen = True
+        for key, pattern in {
+            "ssh": r"^undo\s+ssh\s+server\s+enable\b|ssh\s+server\s*:\s*disable\b",
+            "telnet": r"^undo\s+telnet\s+server\s+enable\b|telnet\s+server\s*:\s*disable\b",
+            "http": r"^undo\s+(?:ip\s+)?http\s+server\s+enable\b|http\s+server\s*:\s*disable\b",
+            "https": r"^undo\s+(?:ip\s+)?http\s+secure-server\s+enable\b|https\s+server\s*:\s*disable\b",
+        }.items():
+            if re.search(pattern, text):
+                remote[key] = False
+                remote_seen = True
+    facts.extend(_network_remote_facts(block, "huawei", remote, remote_seen))
+
+    center: bool | None = None
+    if _matching(block, r"^\s*info-center\s+enable\b"):
+        center = True
+    if _matching(block, r"^\s*undo\s+info-center\s+enable\b"):
+        center = False
+    status = re.search(r"information\s+center\s*:\s*(enabled|disabled)", block.text, re.I)
+    if status:
+        center = status.group(1).lower() == "enabled"
+    if center is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:huawei.audit.enabled={str(center).lower()}",
+                _matching(block, r"info-center|information\s+center"),
+            ),
+        )
+    buffer = None
+    match = re.search(
+        r"logging\s+buffer[^\n]*?:\s*(enabled|disabled)", block.text, re.I
+    )
+    if match:
+        buffer = match.group(1).lower() == "enabled"
+    if _matching(block, r"^\s*info-center\s+logbuffer\b"):
+        buffer = True
+    if buffer is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:huawei.audit.buffer={str(buffer).lower()}",
+                _matching(block, r"logbuffer|logging\s+buffer"),
+            ),
+        )
+    forwarded = bool(
+        _matching(block, r"^\s*info-center\s+loghost\b")
+        or re.search(r"log\s+host\s*:\s*\S", block.text, re.I)
+    )
+    if forwarded:
+        _add(
+            facts,
+            _fact(
+                block,
+                "fact:huawei.audit.forwarded=true",
+                _matching(block, r"loghost|log\s+host"),
+            ),
+        )
+    elif center is True and re.search(r"information\s+center", block.text, re.I):
+        _add(
+            facts,
+            _fact(
+                block,
+                "fact:huawei.audit.forwarded=false",
+                _matching(block, r"information\s+center"),
+            ),
+        )
+
+    acl_lines = _matching(block, r"^\s*acl\s+")
+    inbound = _matching(block, r"^\s*acl\s+\d+\s+(?:inbound|in)\b")
+    if acl_lines or inbound:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:huawei.acl.vty_restricted={str(bool(inbound)).lower()}",
+                inbound or acl_lines,
+            ),
+        )
+    return facts
+
+
+def _apply_cisco_user(user: dict[str, object], match: re.Match[str]) -> bool:
+    privilege = match.group(2)
+    kind = (match.group(3) or "").lower()
+    password_type = match.group(4)
+    value = match.group(5) or ""
+    user["password"] = value
+    if kind == "secret":
+        user["cipher"] = True
+    elif password_type in {"5", "8", "9", "7"}:
+        user["cipher"] = True
+    else:
+        user["cipher"] = False
+    if privilege:
+        user["roles"].append(f"level-{privilege}")
+    return True
+
+
+def _normalize_cisco_config(block: CheckBlock) -> list[DerivedFact]:
+    """Cisco IOS 运行配置与 show 状态输出。"""
+    facts: list[DerivedFact] = []
+    users: dict[str, dict[str, object]] = {}
+    password_seen = False
+    for line in block.output:
+        text = line.text.strip()
+        match = re.match(
+            r"^username\s+(\S+)(?:\s+privilege\s+(\d+))?\s+(secret|password)"
+            r"(?:\s+(\d+))?(?:\s+(\S+))?",
+            text,
+            re.I,
+        )
+        if match:
+            name = match.group(1)
+            users.setdefault(
+                name, {"password": "", "cipher": None, "disabled": False, "roles": []}
+            )
+            password_seen = _apply_cisco_user(users[name], match) or password_seen
+            continue
+        removed = re.match(r"^no\s+username\s+(\S+)", text, re.I)
+        if removed and removed.group(1) in users:
+            users[removed.group(1)]["disabled"] = True
+    facts.extend(_network_account_facts(block, "cisco", users, password_seen))
+
+    enabled: bool | None = None
+    if re.search(r"passwords?\s+complexity\s+is\s+(?:enabled|eabled)", block.text, re.I):
+        enabled = True
+    if re.search(r"passwords?\s+complexity\s+is\s+disabled", block.text, re.I):
+        enabled = False
+    aging = _h3c_value(block, r"passwords?\s+aging\s+is\s+enabled\s+with\s+time\s+(\d+)\s+days?")
+    if aging is None:
+        aging = _h3c_value(block, r"passwords?\s+aging\s+(\d+)\s+days?")
+    length = _h3c_value(block, r"minimal\s+length\s*:\s*(\d+)")
+    if length is None:
+        length = _h3c_value(block, r"security\s+passwords\s+min-length\s+(\d+)")
+    classes = _h3c_value(block, r"minimal\s+classes\s*:\s*(\d+)")
+    if enabled is None and any(value is not None for value in (aging, length, classes)):
+        enabled = True
+    if enabled is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:cisco.password_control.enabled={str(enabled).lower()}",
+                _matching(block, r"passwords?\s+(?:complexity|aging)|min-length"),
+            ),
+        )
+    if aging is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:cisco.password_control.aging_days={aging}",
+                _matching(block, r"aging"),
+            ),
+        )
+    if length is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:cisco.password_control.length={length}",
+                _matching(block, r"minimal\s+length|min-length"),
+            ),
+        )
+    if classes is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:cisco.password_control.composition_types={classes}",
+                _matching(block, r"minimal\s+classes"),
+            ),
+        )
+    attempts = _h3c_value(block, r"login\s+block-for\s+\d+\s+attempts\s+(\d+)")
+    if attempts is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:cisco.password_control.login_attempt={attempts}",
+                _matching(block, r"login\s+block-for"),
+            ),
+        )
+    block_seconds = _h3c_value(block, r"login\s+block-for\s+(\d+)\s+attempts")
+    if block_seconds is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:cisco.password_control.lock_minutes={max(1, round(block_seconds / 60))}",
+                _matching(block, r"login\s+block-for"),
+            ),
+        )
+    idle_values = [
+        int(match.group(1))
+        for line in block.output
+        if (match := re.search(r"exec-timeout\s+(\d+)", line.text, re.I))
+    ]
+    if idle_values:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:cisco.timeout.idle_minutes={max(idle_values)}",
+                _matching(block, r"exec-timeout"),
+            ),
+        )
+
+    remote = {"ssh": False, "telnet": False, "http": False, "https": False}
+    remote_seen = False
+    for line in block.output:
+        text = line.text.strip().lower()
+        if re.search(r"^transport\s+input\s+ssh\b|^ip\s+ssh\s+version\b|ssh\s+enabled", text):
+            remote["ssh"] = True
+            remote_seen = True
+        if re.search(r"^transport\s+input\s+(?:telnet|all)\b", text):
+            remote["telnet"] = True
+            remote_seen = True
+        if re.search(r"^ip\s+http\s+server\b", text):
+            remote["http"] = True
+            remote_seen = True
+        if re.search(r"^no\s+ip\s+http\s+server\b", text):
+            remote["http"] = False
+            remote_seen = True
+        if re.search(r"^ip\s+http\s+secure-server\b|https?\s+server\s+status\s*:\s*enabled", text):
+            remote["https"] = True
+            remote_seen = True
+        if re.search(r"^no\s+ip\s+http\s+secure-server\b|secure\s+http\s+server\s+status\s*:\s*disabled", text):
+            remote["https"] = False
+            remote_seen = True
+    facts.extend(_network_remote_facts(block, "cisco", remote, remote_seen))
+
+    enabled = None
+    if _matching(block, r"^\s*logging\s+on\b"):
+        enabled = True
+    if _matching(block, r"^\s*no\s+logging\s+on\b"):
+        enabled = False
+    if re.search(r"syslog\s+logging\s*:\s*enabled", block.text, re.I):
+        enabled = True
+    buffer = bool(
+        _matching(block, r"^\s*logging\s+buffered\b")
+        or re.search(r"logging\s+buffered", block.text, re.I)
+    )
+    if enabled is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:cisco.audit.enabled={str(enabled).lower()}",
+                _matching(block, r"logging\s+on|syslog\s+logging"),
+            ),
+        )
+    if buffer:
+        _add(
+            facts,
+            _fact(
+                block,
+                "fact:cisco.audit.buffer=true",
+                _matching(block, r"logging\s+buffered"),
+            ),
+        )
+    forwarded_lines = _matching(
+        block,
+        r"^\s*logging\s+(?:host\s+)?\d{1,3}(?:\.\d{1,3}){3}\b|^\s*logging\s+server\b",
+    )
+    if forwarded_lines:
+        _add(facts, _fact(block, "fact:cisco.audit.forwarded=true", forwarded_lines))
+    elif enabled is True and re.search(r"syslog\s+logging", block.text, re.I):
+        _add(
+            facts,
+            _fact(
+                block,
+                "fact:cisco.audit.forwarded=false",
+                _matching(block, r"syslog\s+logging"),
+            ),
+        )
+
+    acl_lines = _matching(
+        block, r"^\s*(?:access-list|ip\s+access-list|ip\s+access-group)\b"
+    )
+    inbound = _matching(
+        block, r"^\s*(?:access-class\s+\S+\s+in|ip\s+access-group\s+\S+\s+in)\b"
+    )
+    if acl_lines or inbound:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:cisco.acl.vty_restricted={str(bool(inbound)).lower()}",
+                inbound or acl_lines,
+            ),
+        )
+    return facts
+
+
+def _apply_zte_user(user: dict[str, object], text: str) -> bool:
+    changed = False
+    match = re.match(
+        r"password\s+(encrypted|simple|plain|clear)\b\s*(\S*)", text, re.I
+    )
+    if match:
+        user["password"] = match.group(2)
+        user["cipher"] = match.group(1).lower() == "encrypted"
+        changed = True
+    elif re.match(r"password\s*$", text, re.I):
+        user["password"] = ""
+        changed = True
+    level = re.search(r"local-privilege-level\s+(\d+)", text, re.I)
+    if level:
+        user["roles"].append(f"level-{level.group(1)}")
+    template = re.search(r"bind\s+authorization-template\s+(\d+)", text, re.I)
+    if template and not level:
+        user["roles"].append(f"template-{template.group(1)}")
+    if re.match(r"disable\b", text, re.I):
+        user["disabled"] = True
+    return changed
+
+
+def _normalize_zte_config(block: CheckBlock) -> list[DerivedFact]:
+    """中兴 ZTE 运行配置与日志回显。"""
+    facts: list[DerivedFact] = []
+    users: dict[str, dict[str, object]] = {}
+    current: str | None = None
+    password_seen = False
+    for line in block.output:
+        raw = line.text
+        stripped = raw.strip()
+        match = re.match(r"^user-name\s+(\S+)(?:\s+(.*))?$", stripped, re.I)
+        if match:
+            current = match.group(1)
+            users.setdefault(
+                current, {"password": "", "cipher": None, "disabled": False, "roles": []}
+            )
+            rest = (match.group(2) or "").strip()
+            if rest:
+                password_seen = _apply_zte_user(users[current], rest) or password_seen
+            continue
+        if current and (raw.startswith(" ") or raw.startswith("\t")):
+            password_seen = _apply_zte_user(users[current], stripped) or password_seen
+            continue
+        current = None
+    facts.extend(_network_account_facts(block, "zte", users, password_seen))
+
+    login_attempt = _h3c_value(
+        block, r"user-authen-restriction\s+fail-time\s+(\d+)"
+    )
+    if login_attempt is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:zte.password_control.login_attempt={login_attempt}",
+                _matching(block, r"user-authen-restriction"),
+            ),
+        )
+    lock_minutes = _h3c_value(
+        block, r"user-authen-restriction[^\n]*?lock-minute\s+(\d+)"
+    )
+    if lock_minutes is None:
+        lock_minutes = _h3c_value(block, r"user-authen-restriction[^\n]*?lock-time\s+(\d+)")
+    if lock_minutes is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:zte.password_control.lock_minutes={lock_minutes}",
+                _matching(block, r"user-authen-restriction"),
+            ),
+        )
+    idle_values = [
+        int(match.group(1))
+        for line in block.output
+        if (match := re.search(r"idle-timeout\s+(\d+)", line.text, re.I))
+    ]
+    if idle_values:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:zte.timeout.idle_minutes={max(idle_values)}",
+                _matching(block, r"idle-timeout"),
+            ),
+        )
+
+    remote = {"ssh": False, "telnet": False, "http": False, "https": False}
+    remote_seen = False
+    for line in block.output:
+        text = line.text.strip().lower()
+        if re.search(r"^ssh\s+server\s+enable\b|^protocol\s+inbound\s+ssh\b", text):
+            remote["ssh"] = True
+            remote_seen = True
+        if re.search(r"^telnet\s+server\s+enable\b|^protocol\s+inbound\s+(?:telnet|all)\b", text):
+            remote["telnet"] = True
+            remote_seen = True
+        if re.search(r"^http\s+server\s+enable\b", text):
+            remote["http"] = True
+            remote_seen = True
+        if re.search(r"^https\s+server\s+enable\b", text):
+            remote["https"] = True
+            remote_seen = True
+        if re.search(r"^undo\s+ssh\s+server\s+enable\b", text):
+            remote["ssh"] = False
+            remote_seen = True
+        if re.search(r"^undo\s+telnet\s+server\s+enable\b", text):
+            remote["telnet"] = False
+            remote_seen = True
+    facts.extend(_network_remote_facts(block, "zte", remote, remote_seen))
+
+    enabled = None
+    if _matching(block, r"^\s*logging\s+(?:buffer|trap-enable|on)\b"):
+        enabled = True
+    if re.search(r"^\s*no\s+logging\s+on\b", block.text, re.I | re.M):
+        enabled = False
+    if re.search(r"starttime\s*:|username\s*:", block.text, re.I):
+        enabled = True
+    if enabled is not None:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:zte.audit.enabled={str(enabled).lower()}",
+                _matching(block, r"logging|starttime|username"),
+            ),
+        )
+    buffer = bool(
+        _matching(block, r"^\s*logging\s+buffer\s+\d+")
+        or re.search(r"logging\s+buffer", block.text, re.I)
+    )
+    if buffer:
+        _add(
+            facts,
+            _fact(
+                block,
+                "fact:zte.audit.buffer=true",
+                _matching(block, r"logging\s+buffer"),
+            ),
+        )
+    forwarded_lines = _matching(
+        block, r"^\s*syslog-server\s+host\b|^\s*logging\s+(?:host\s+)?\d{1,3}(?:\.\d{1,3}){3}\b"
+    )
+    if forwarded_lines:
+        _add(facts, _fact(block, "fact:zte.audit.forwarded=true", forwarded_lines))
+    elif enabled is True and re.search(r"logging|syslog", block.text, re.I):
+        _add(
+            facts,
+            _fact(
+                block,
+                "fact:zte.audit.forwarded=false",
+                _matching(block, r"logging|syslog"),
+            ),
+        )
+
+    acl_lines = _matching(
+        block, r"^\s*(?:acl|access-list|ip\s+access-list)\b"
+    )
+    inbound = _matching(
+        block, r"^\s*(?:access-class\s+\S+\s+in|acl\s+\d+\s+(?:in|inbound))\b"
+    )
+    if acl_lines or inbound:
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:zte.acl.vty_restricted={str(bool(inbound)).lower()}",
+                inbound or acl_lines,
+            ),
+        )
+    return facts
+
+
 def _dispatch(normalize: str, block: CheckBlock) -> list[DerivedFact]:
     if not normalize or block.status in {CheckStatus.FAILED, CheckStatus.SKIPPED}:
         return []
@@ -906,6 +1664,12 @@ def _dispatch(normalize: str, block: CheckBlock) -> list[DerivedFact]:
         return _normalize_mysql_backup(block)
     if normalize == "h3c_config":
         return _normalize_h3c_config(block)
+    if normalize == "huawei_config":
+        return _normalize_huawei_config(block)
+    if normalize == "cisco_config":
+        return _normalize_cisco_config(block)
+    if normalize == "zte_config":
+        return _normalize_zte_config(block)
     raise ValueError(f"未知 normalize 标识：{normalize}")
 
 

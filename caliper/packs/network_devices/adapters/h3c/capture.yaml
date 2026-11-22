@@ -6,83 +6,107 @@ rules:
   title: 查看运行配置
   command: display current-configuration
   levels:
+  - 2
   - 3
+  - 4
   families:
   - network
 - section: H3C 账户与权限配置
   title: 查看本地用户
   command: display local-user
   levels:
+  - 2
   - 3
+  - 4
   families:
   - network
 - section: H3C 口令控制策略
   title: 查看全局口令控制策略
   command: display password-control
   levels:
+  - 2
   - 3
+  - 4
   families:
   - network
 - section: H3C 远程管理加密
   title: 查看 SSH 服务状态
   command: display ssh server status
   levels:
+  - 2
   - 3
+  - 4
   families:
   - network
 - section: H3C 远程管理加密
   title: 查看 Telnet 服务状态
   command: display telnet server status
   levels:
+  - 2
   - 3
+  - 4
   families:
   - network
 - section: H3C 远程管理加密
   title: 查看 HTTPS 服务状态
   command: display ip https
   levels:
+  - 2
   - 3
+  - 4
   families:
   - network
 - section: H3C 远程管理加密
   title: 查看 HTTP 服务状态
   command: display ip http
   levels:
+  - 2
   - 3
+  - 4
   families:
   - network
 - section: H3C 安全审计
   title: 查看信息中心状态
   command: display info-center
   levels:
+  - 2
   - 3
+  - 4
   families:
   - network
 - section: H3C 安全审计
   title: 查看日志缓冲区
   command: display logbuffer
   levels:
+  - 2
   - 3
+  - 4
   families:
   - network
 - section: H3C 管理终端限制
   title: 查看 ACL 配置
   command: display acl all
   levels:
+  - 2
   - 3
+  - 4
   families:
   - network
 - section: H3C 管理终端限制
   title: 查看含 ACL 的配置行
   command: display current-configuration | include acl
   levels:
+  - 2
   - 3
+  - 4
   families:
   - network
 - section: H3C 口令密文存储
   title: 查看含 password 的配置行
   command: display current-configuration | include password
   levels:
+  - 2
   - 3
+  - 4
   families:
   - network

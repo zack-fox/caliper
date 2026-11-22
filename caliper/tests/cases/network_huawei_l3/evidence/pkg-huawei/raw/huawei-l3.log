@@ -1,0 +1,58 @@
+===== RESULTS (collected) =====
+===== 身份鉴别/访问控制 =====
+[01] HUAWEI 账户与权限配置
+  cmd: display current-configuration
+  #
+  sysname HUAWEI-CORE
+  #
+  local-user netops password irreversible-cipher $1c$EXAMPLE-HUAWEI-1
+   local-user netops service-type ssh
+   local-user netops privilege level 15
+  #
+  local-user audit password irreversible-cipher $1c$EXAMPLE-HUAWEI-2
+   local-user audit service-type ssh
+   local-user audit privilege level 3
+  #
+  user-interface vty 0 4
+   authentication-mode aaa
+   protocol inbound ssh
+   idle-timeout 20
+  #
+  return
+[02] HUAWEI 口令与登录控制
+  cmd: display current-configuration | include password
+  undo user-interface password complexity-check disable
+  set password min-length 10
+  cmd: display current-configuration | include aaa
+  local-aaa-user wrong-password retry-interval 5 retry-time 3 block-time 5
+  cmd: display current-configuration | include user-interface
+  user-interface vty 0 4
+   protocol inbound ssh
+   idle-timeout 20
+[03] HUAWEI 远程管理加密
+  cmd: display ssh server status
+  SSH server: Enable
+  cmd: display telnet server status
+  Telnet server: Disable
+  cmd: display http server status
+  HTTP server: Disable
+  cmd: display http secure-server status
+  HTTPS server: Disable
+[04] HUAWEI 安全审计
+  cmd: display info-center
+  Information Center: enabled
+  Log host: 192.0.2.20, channel number: 2, channel name: loghost
+  cmd: display logbuffer
+  Logging buffer configuration and contents : enabled
+  Nov 20 2026 10:00:00 HUAWEI-CORE %%01SHELL/5/LOGIN(l): netops logged in from 192.0.2.10.
+[05] HUAWEI 管理终端限制
+  cmd: display acl all
+  acl number 2001
+   rule 10 permit source 192.0.2.0 0.0.0.255
+  cmd: display current-configuration | include acl
+  acl 2001 inbound
+[06] HUAWEI 口令密文存储
+  cmd: display current-configuration | include password
+  local-user netops password irreversible-cipher $1c$EXAMPLE-HUAWEI-1
+  local-user audit password irreversible-cipher $1c$EXAMPLE-HUAWEI-2
+===== END OF REPORT =====

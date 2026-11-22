@@ -23,6 +23,11 @@ _NETWORK_PROMPTS = [
     re.compile(r"^<([A-Za-z][\w.-]*)>\s?(.*)$"),
     re.compile(r"^\[(?:~)?([A-Za-z][\w.-]*)(?:-[^\]]*)?\]\s?(.*)$"),
 ]
+# Cisco IOS 提示符：Router#、Switch#、Router(config)#、hostname>。
+_CISCO_PROMPTS = [
+    re.compile(r"^([A-Za-z][\w.-]*)\([^)]*\)#\s?(.*)$"),
+    re.compile(r"^([A-Za-z][\w.-]*)[#>]\s?(.*)$"),
+]
 _SENSITIVE_RE = re.compile(
     r"(?:--password(?:=|\s)|\bpasswd\s+-|\bpassword\s*\(|\bIDENTIFIED\s+|\bmysql(?:native|admin)?\b[^\n]*\s-p\S)",
     re.I,
@@ -32,7 +37,7 @@ _ERROR_RE = re.compile(
     re.I,
 )
 _NETWORK_WRITE_RE = re.compile(
-    r"^\s*(?:system-view|sys\b|undo\b|save\b|reset\b|reboot\b|delete\b|format\b|startup\b|shutdown\b|no\b|configure\b|conf\s+t\b|write\b)",
+    r"^\s*(?:system-view|sys\b|undo\b|save\b|reset\b|reboot\b|delete\b|format\b|startup\b|shutdown\b|no\b|configure\b|conf\s+t\b|write\b|erase\b|copy\b)",
     re.I,
 )
 _EMPTY_SET_RE = re.compile(r"^\s*Empty set(?:\s*\([^)]*\))?\s*$", re.I)
@@ -74,6 +79,9 @@ def _prompt(line: str) -> tuple[str, str, bool] | None:
         if match := pattern.match(line):
             return "shell", match.group(1).strip(), False
     for pattern in _NETWORK_PROMPTS:
+        if match := pattern.match(line):
+            return "network", (match.group(2) or "").strip(), False
+    for pattern in _CISCO_PROMPTS:
         if match := pattern.match(line):
             return "network", (match.group(2) or "").strip(), False
     return None

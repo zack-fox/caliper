@@ -5,7 +5,9 @@ aliases:
 - generic
 - 通用安全设备
 levels:
+- 2
 - 3
+- 4
 asset_types:
 - 网络设备
 - 安全设备

@@ -1,0 +1,180 @@
+checks:
+- title: ZTE 账户与权限配置
+  section: ''
+  block_index: 1
+  kind: judge
+  normalize: zte_config
+  binds:
+  - item: 1
+    level: 2
+    points: &id001
+    - 2
+    - 3
+  - item: 1
+    level: 3
+    points: *id001
+  - item: 1
+    level: 4
+    points: *id001
+  - item: 4
+    level: 2
+    points: &id002
+    - 2
+  - item: 5
+    level: 3
+    points: *id002
+  - item: 5
+    level: 4
+    points: *id002
+  - item: 5
+    level: 2
+    points: &id003
+    - 1
+  - item: 6
+    level: 3
+    points: *id003
+  - item: 6
+    level: 4
+    points: *id003
+  - item: 7
+    level: 2
+    points: &id004
+    - 2
+  - item: 8
+    level: 3
+    points: *id004
+  - item: 8
+    level: 4
+    points: *id004
+  session:
+  - kind: network
+    pattern: ^\s*show\s+(?:running-config|user)\s*$
+- title: ZTE 登录控制
+  section: ''
+  block_index: 2
+  kind: judge
+  normalize: zte_config
+  binds:
+  - item: 2
+    level: 2
+    points: &id005
+    - 1
+    - 2
+    - 3
+  - item: 2
+    level: 3
+    points: *id005
+  - item: 2
+    level: 4
+    points: *id005
+  session:
+  - kind: network
+    pattern: ^\s*show\s+running-config\s*$
+- title: ZTE 远程管理加密
+  section: ''
+  block_index: 3
+  kind: judge
+  normalize: zte_config
+  binds:
+  - item: 3
+    level: 2
+    points: &id006
+    - 2
+  - item: 3
+    level: 3
+    points: *id006
+  - item: 3
+    level: 4
+    points: *id006
+  - item: 17
+    level: 2
+    points: &id007
+    - 1
+  - item: 23
+    level: 3
+    points: *id007
+  - item: 23
+    level: 4
+    points: *id007
+  - item: 25
+    level: 3
+    points: &id008
+    - 1
+  - item: 26
+    level: 4
+    points: *id008
+  session:
+  - kind: network
+    pattern: ^\s*show\s+running-config\s*$
+- title: ZTE 安全审计
+  section: ''
+  block_index: 4
+  kind: judge
+  normalize: zte_config
+  binds:
+  - item: 8
+    level: 2
+    points: &id009
+    - 1
+    - 3
+  - item: 12
+    level: 3
+    points: *id009
+  - item: 12
+    level: 4
+    points: *id009
+  - item: 10
+    level: 2
+    points: &id010
+    - 2
+  - item: 14
+    level: 3
+    points: *id010
+  - item: 14
+    level: 4
+    points: *id010
+  session:
+  - kind: network
+    pattern: ^\s*show\s+(?:running-config|logfile)\s*$
+- title: ZTE 管理终端限制
+  section: ''
+  block_index: 5
+  kind: judge
+  normalize: zte_config
+  binds:
+  - item: 13
+    level: 2
+    points: &id011
+    - 1
+  - item: 18
+    level: 3
+    points: *id011
+  - item: 18
+    level: 4
+    points: *id011
+  session:
+  - kind: network
+    pattern: ^\s*show\s+running-config\s*$
+- title: ZTE 口令密文存储
+  section: ''
+  block_index: 6
+  kind: judge
+  normalize: zte_config
+  binds:
+  - item: 24
+    level: 3
+    points: &id012
+    - 1
+  - item: 24
+    level: 4
+    points: *id012
+  - item: 26
+    level: 3
+    points: &id013
+    - 1
+  - item: 27
+    level: 4
+    points: *id013
+  session:
+  - kind: network
+    pattern: ^\s*show\s+running-config\s*$

@@ -22,7 +22,7 @@
   binary: false
   manual_points:
   - point: 1
-    reason: 登录过程是否进行身份鉴别需现场测试，不能仅凭配置回显定论
+    reason: 登录过程是否进行身份鉴别、口令是否定期更换需现场测试或访谈，不能仅凭配置回显定论
 - item_id: L3-CES1-02
   level: 3
   seq: 2
@@ -63,7 +63,7 @@
   binary: true
   manual_points:
   - point: 1
-    reason: 是否实际通过远程方式管理设备需访谈确认，若未启用远程管理应判定为不适用
+    reason: 是否实际通过远程方式管理设备需访谈确认；若仅本地 console 管理应判定为不适用
 - item_id: L3-CES1-04
   level: 3
   seq: 4
@@ -102,7 +102,7 @@
   binary: false
   manual_points:
   - point: 1
-    reason: 账户权限分配是否遵循最小权限需结合访谈确认
+    reason: 账户作用是否与实际使用人员一一对应需结合访谈确认
 - item_id: L3-CES1-06
   level: 3
   seq: 6
@@ -166,7 +166,7 @@
   binary: false
   manual_points:
   - point: 1
-    reason: 管理用户角色划分与权限分离需访谈确认
+    reason: 管理用户角色划分需访谈确认
   - point: 3
     reason: 是否按最小权限原则分配权限需结合访谈确认
 - item_id: L3-CES1-09
@@ -407,6 +407,7 @@
   policy: manual
   mode: manual
   binary: false
+  optional_clause: true
 - item_id: L3-CES1-24
   level: 3
   seq: 22
@@ -427,7 +428,6 @@
   policy: manual
   mode: manual
   binary: false
-  optional_clause: true
 - item_id: L3-CES1-25
   level: 3
   seq: 23

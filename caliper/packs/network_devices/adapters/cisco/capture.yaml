@@ -1,0 +1,112 @@
+asset_family: network
+version: 0.1.0
+status: active
+rules:
+- section: Cisco 账户与权限配置
+  title: 查看运行配置
+  command: show running-config
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: Cisco 账户与权限配置
+  title: 查看用户配置
+  command: show running-config | include username
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: Cisco 口令与登录控制
+  title: 查看口令与登录控制配置
+  command: show running-config | include password
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: Cisco 口令与登录控制
+  title: 查看口令策略
+  command: show passwords configuration
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: Cisco 远程管理加密
+  title: 查看 SSH 状态
+  command: show ip ssh
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: Cisco 远程管理加密
+  title: 查看 HTTP 状态
+  command: show ip http server status
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: Cisco 远程管理加密
+  title: 查看 HTTPS 状态
+  command: show ip http secure-server status
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: Cisco 远程管理加密
+  title: 查看 VTY 传输协议
+  command: show running-config | include transport
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: Cisco 安全审计
+  title: 查看日志配置
+  command: show running-config | include logging
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: Cisco 安全审计
+  title: 查看日志状态
+  command: show logging
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: Cisco 管理终端限制
+  title: 查看 ACL 配置
+  command: show running-config | include access-list|access-class
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: Cisco 口令密文存储
+  title: 查看用户口令配置
+  command: show running-config | include username
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network

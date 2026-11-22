@@ -11,7 +11,8 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from core.checks.mapping import ChecksMap
 from core.major.major import MajorError, MajorLibrary, load_major_library
 from core.major.risk import HighRiskError, load_high_risk
-from core.model.entities import Item
+from core.model.entities import Item, ManualPoint
+from core.remediation import RemediationError, RemediationLibrary
 from core.rules.engine import RuleSet
 
 
@@ -53,6 +54,8 @@ class AdapterMeta(BaseModel):
     major: str = "major.yaml"
     texts: str = "texts/library.yaml"
     capture: str = "capture.yaml"
+    # 厂商特有的人工核查点：同一测评项在不同厂商下可验证的证据不同。
+    manual_points: dict[int, list[ManualPoint]] = Field(default_factory=dict)
 
     @field_validator("levels")
     @classmethod
@@ -73,6 +76,7 @@ class Adapter:
     high_risk: list[dict] = field(default_factory=list)
     major: MajorLibrary | None = None
     texts: list[dict] = field(default_factory=list)
+    remediation: RemediationLibrary | None = None
 
     @property
     def names(self) -> set[str]:
@@ -122,10 +126,25 @@ class Pack:
         return entries or self.texts
 
     def all_high_risk(self) -> list[dict]:
+        """各适配器共享同一组风险规则，按 hr_id 去重，避免重复评估。"""
         records: list[dict] = []
+        seen: set[str] = set()
         for adapter in self.adapters.values():
-            records.extend(adapter.high_risk)
+            for record in adapter.high_risk:
+                key = str(record.get("hr_id") or record.get("id") or "")
+                if key and key in seen:
+                    continue
+                if key:
+                    seen.add(key)
+                records.append(record)
         return records or self.high_risk
+
+    def remediation_library(self, adapter_key: str = "") -> RemediationLibrary | None:
+        """优先使用资产实际适配器的整改建议，避免把其他厂商命令带进报告。"""
+        adapter = self.adapters.get(adapter_key)
+        if adapter is not None and adapter.remediation is not None:
+            return adapter.remediation
+        return None
 
     def major_library(self) -> MajorLibrary | None:
         if self.major is not None:
@@ -177,6 +196,18 @@ def _load_texts(path: Path) -> list[dict]:
     return list(data.get("texts", []))
 
 
+def _load_remediation(
+    root: Path, items: dict[int, list[Item]]
+) -> RemediationLibrary | None:
+    if not (root / "remediation.yaml").is_file():
+        return None
+    all_items = [item for level_items in items.values() for item in level_items]
+    try:
+        return RemediationLibrary.load(root, all_items)
+    except RemediationError as exc:
+        raise PackError(str(exc)) from exc
+
+
 def _load_adapter(
     pack_dir: Path,
     key: str,
@@ -200,6 +231,7 @@ def _load_adapter(
             meta=meta,
             checks=ChecksMap(checks=[]),
             rules=RuleSet(rules=[]),
+            remediation=_load_remediation(root, items),
         )
 
     checks = ChecksMap.load(root / meta.checks_map)
@@ -209,6 +241,7 @@ def _load_adapter(
         major = load_major_library(root / meta.major)
     except (HighRiskError, MajorError) as exc:
         raise PackError(str(exc)) from exc
+    remediation = _load_remediation(root, items)
     return Adapter(
         key=key,
         root=root,
@@ -218,6 +251,7 @@ def _load_adapter(
         high_risk=high_risk,
         major=major,
         texts=_load_texts(root / meta.texts),
+        remediation=remediation,
     )
 
 

@@ -1,0 +1,23 @@
+name: 中兴ZTE
+vendor: 中兴ZTE
+aliases:
+- zte
+- 中兴
+- 中兴通讯
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 网络设备
+- 安全设备
+checks_map: checks_map.yaml
+rules_dir: rules
+high_risk: high_risk.yaml
+major: major.yaml
+texts: texts/library.yaml
+capture: capture.yaml
+manual_points:
+  1:
+  - point: 4
+    reason: ZTE 指导书未提供口令复杂度命令，需按访谈或口令测试结果人工判定

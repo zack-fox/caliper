@@ -1,0 +1,47 @@
+===== RESULTS (collected) =====
+===== 身份鉴别/访问控制 =====
+[01] Cisco 账户与权限配置
+  cmd: show running-config
+  hostname CISCO-CORE
+  username netops privilege 15 secret 9 $9$EXAMPLE-CISCO-1
+  username audit privilege 5 secret 9 $9$EXAMPLE-CISCO-2
+  access-list 10 permit 192.0.2.0 0.0.0.255
+  line vty 0 4
+   exec-timeout 20
+   access-class 10 in
+   transport input ssh
+[02] Cisco 口令与登录控制
+  cmd: show running-config | include password
+  login block-for 300 attempts 3 within 300
+  security passwords min-length 10
+  cmd: show passwords configuration
+  Passwords aging is enabled with time 60 days.
+  Passwords complexity is enabled with following attributes:
+   Minimal length: 10 characters
+   Minimal classes: 3
+[03] Cisco 远程管理加密
+  cmd: show ip ssh
+  SSH Enabled - version 2.0
+  cmd: show ip http server status
+  HTTP server status: Disabled
+  cmd: show ip http secure-server status
+  Secure HTTP server status: Disabled
+  cmd: show running-config | include transport
+  transport input ssh
+[04] Cisco 安全审计
+  cmd: show running-config | include logging
+  logging on
+  logging buffered 4096
+  logging host 192.0.2.20
+  cmd: show logging
+  Syslog logging: enabled
+  Logging buffered (4096)
+[05] Cisco 管理终端限制
+  cmd: show running-config | include access-list|access-class
+  access-list 10 permit 192.0.2.0 0.0.0.255
+  access-class 10 in
+[06] Cisco 口令密文存储
+  cmd: show running-config | include username
+  username netops privilege 15 secret 9 $9$EXAMPLE-CISCO-1
+  username audit privilege 5 secret 9 $9$EXAMPLE-CISCO-2
+===== END OF REPORT =====

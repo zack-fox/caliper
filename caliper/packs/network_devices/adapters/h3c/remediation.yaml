@@ -1,0 +1,1322 @@
+version: 0.1.0
+status: active
+rules:
+- id: REM-H3C-L2-01
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 1
+  priority: 低
+  problem: 1、登录设备时未进行身份验证或身份鉴别机制不完善；；2、设备中存在相同用户名的账户；；3、用户口令长度或复杂度不满足安全要求；；4、未定期更换用户口令
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议增加设备对登录用户的身份鉴别功能，使用用户名+口令进行身份验证；
+
+    2、建议修改相同用户名的账户；
+
+    3、建议将口令长度修改为8位以上，由大写字母、小写字母、数字及特殊字符中的至少三种元素组成；
+
+    4、建议至少每3个月更换一次口令；
+
+
+    口令安全策略设置为如下：
+
+    password-control enable
+
+    password aging          ：enable  （90 days）（口令90天过期）
+
+    password length         ：enable  （8 characters） （口令长度至少8位）
+
+    passwordi history       ：enable（max history records:10）（口令历史记录的最大条数为10）
+
+    password composition   ：enable （3 types，1 characters per type）（口令元素的最少组合类型为3种，每种至少包含一个字符）'
+  clause: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换；
+- id: REM-H3C-L2-02
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 2
+  priority: 低
+  problem: 1、未启用登录失败处理、登录超时自动退出功能；；2、登录失败处理功能、登录连接超时自动退出功能参数设置不合理
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议启用设备的登录失败处理/登录连接超时自动退出功能，如设置连续登录失败3次锁定账户5-10分钟，如设置登录后无操作10分钟自动退出
+  clause: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施；
+- id: REM-H3C-L2-03
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 3
+  priority: 低
+  problem: 1、远程管理设备时未采取措施防止鉴别信息在网络传输过程中被窃听；；2、采用SSH/HTTPS方式进行远程管理，但未禁用Telnet/HTTP管理方式
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议采用SSH或HTTPS的方式对设备进行远程管理，并禁用Telnet/HTTP等方式，防止鉴别信息在网络传输过程中被窃听
+  clause: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听。
+- id: REM-H3C-L2-04
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 4
+  priority: 低
+  problem: 1、未对需要登录使用设备的人员单独设立账户并分配权限，与实际使用情况不一致；；2、未对匿名账户XX进行禁用或限制
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议为需要登录使用该设备的人员单独设立账户并分配权限；
+
+    2、建议对匿名账户进行禁用'
+  clause: a）应对登录的用户分配账户和权限；
+- id: REM-H3C-L2-05
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 5
+  priority: 中
+  problem: 1、未重命名或删除/禁用默认账户；；2、未修改默认账户XXX的默认口令
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议重命名或删除/禁用默认账户名；
+
+    2、建议修改默认账户的默认口令，口令长度修改为8位以上，由大写字母、小写字母、数字及特殊字符中的至少三种元素组成'
+  clause: b）应重命名或删除默认账户，修改默认账户的默认口令；
+- id: REM-H3C-L2-06
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 6
+  priority: 高
+  problem: 1、设备中存在多余或过期的账户；；2、设备中存在共享账户
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议在设备中建立如：网络管理员、安全管理员、审计管理员等角色的若干账户，并且账户与使用人员一一对应，实现对特权用户的权限分离及对各登录用户身份的区分
+  clause: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在；
+- id: REM-H3C-L2-07
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 7
+  priority: 低
+  problem: 未实现管理用户的权限分离
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对设备账户权限进行梳理，建立如：网络管理员、安全管理员、审计管理员等角色的若干账户，实现管理用户的权限分离
+  clause: d）应授予管理用户所需的最小权限，实现管理用户的权限分离。
+- id: REM-H3C-L2-08
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 8
+  priority: 低
+  problem: 1、设备未开启安全审计功能；；2、设备审计范围不完善，未覆盖所有用户或所有安全事件
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议启用设备的安全审计功能，对重要用户行为和重要安全事件进行记录；
+
+    2、建议将设备上的所有用户或所有安全事件纳入审计范围，对发生的安全进行记录'
+  clause: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计；
+- id: REM-H3C-L2-09
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 9
+  priority: 低
+  problem: 设备审计记录的内容不全面
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议完善审计记录的相关信息，审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息
+  clause: b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息；
+- id: REM-H3C-L2-10
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 10
+  priority: 高
+  problem: 1、未对审计记录进行保护，可能会被非授权用户进行删除、修改等；；2、未对审计记录进行备份
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议对审计记录进行保护，限制非授权账户对审计功能的访问，避免审计记录受到未预期的删除、修改等；
+
+    2、建议对日志记录进行备份，定期手动导出或上传到日志服务器（日志审计系统）保存，且保存时间应达到6个月，避免审计记录受到未预期的删除、修改或覆盖等'
+  clause: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等。
+- id: REM-H3C-L2-11
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 11
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: a）应遵循最小安装的原则，仅安装需要的组件和应用程序；
+- id: REM-H3C-L2-12
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 12
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: b）应关闭不需要的系统服务、默认共享和高危端口；
+- id: REM-H3C-L2-13
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 13
+  priority: 低
+  problem: 1、未对设备的接入方式进行限制/未对设备的登录地址范围进行限制；；2、对设备的登录地址范围进行了限制，但限制范围不合理
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议限制可登录设备的管理终端或管理地址范围，仅允许特定的IP地址或网段可登录管理设备
+  clause: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制；
+- id: REM-H3C-L2-14
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 14
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求；
+- id: REM-H3C-L2-15
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 15
+  priority: 高
+  problem: 未定期对设备进行漏洞扫描
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议定期对系统内的设备进行漏洞扫描，在不影响正常业务的情况下及时更新设备补丁或版本，消除相关安全漏洞
+  clause: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞。
+- id: REM-H3C-L2-20
+  title: 恶意代码防范整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 20
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: —
+  clause: a）应安装防恶意代码软件或配置具有相应功能的软件，并定期进行升级和更新防恶意代码库。
+- id: REM-H3C-L2-16
+  title: 可信验证整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 16
+  priority: 低
+  problem: 1、未基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证；；2、部署了可信验证检测的设备，但检测到可信性受到破坏时无法进行报警
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警；
+
+    2、建议对可信验证设备的配置进行检查和调整，使其发现可信性受到破坏后及时向管理员进行报警。'
+  clause: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。
+- id: REM-H3C-L2-17
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 17
+  priority: 低
+  problem: 未采用校验技术或密码技术保证鉴别数据在传输过程中的完整性
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议采用校验技术或密码技术保证传输过程中鉴别数据的完整性
+  clause: a）应采用校验技术保证重要数据在传输过程中的完整性。
+- id: REM-H3C-L2-18
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 18
+  priority: 高
+  problem: 未对设备配置数据进行备份
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对设备配置数据每周或每月至少完全备份一次，并将备份介质场外存放，此外，还应定期对备份文件进行恢复测试，确保备份文件有效
+  clause: a）应提供重要数据的本地数据备份与恢复功能；
+- id: REM-H3C-L2-19
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 19
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: b）应提供异地数据备份功能，利用通信网络将重要数据定时批量传送至备用场地。
+- id: REM-H3C-L2-21
+  title: 剩余信息保护整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 21
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: —
+  clause: a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除；
+- id: REM-H3C-L2-22
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 22
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: —
+  clause: a）应仅采集和保存业务必需的用户个人信息；
+- id: REM-H3C-L2-23
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 2
+    family:
+    - network
+    item_seqs:
+    - 23
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: —
+  clause: b）应禁止未授权访问和非法使用用户个人信息。
+- id: REM-H3C-L3-01
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 1
+  priority: 低
+  problem: 1、登录设备时未进行身份验证或身份鉴别机制不完善；；2、设备中存在相同用户名的账户；；3、用户口令长度或复杂度不满足安全要求；；4、未定期更换用户口令
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议增加设备对登录用户的身份鉴别功能，使用用户名+口令进行身份验证；
+
+    2、建议修改相同用户名的账户；
+
+    3、建议将口令长度修改为8位以上，由大写字母、小写字母、数字及特殊字符中的至少三种元素组成；
+
+    4、建议至少每3个月更换一次口令；
+
+
+    口令安全策略设置为如下：
+
+    password-control enable
+
+    password aging          ：enable  （90 days）（口令90天过期）
+
+    password length         ：enable  （8 characters） （口令长度至少8位）
+
+    passwordi history       ：enable（max history records:10）（口令历史记录的最大条数为10）
+
+    password composition   ：enable （3 types，1 characters per type）（口令元素的最少组合类型为3种，每种至少包含一个字符）'
+  clause: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换；
+- id: REM-H3C-L3-02
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 2
+  priority: 低
+  problem: 1、未启用登录失败处理、登录超时自动退出功能；；2、登录失败处理功能、登录连接超时自动退出功能参数设置不合理
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议启用设备的登录失败处理/登录连接超时自动退出功能，如设置连续登录失败3次锁定账户5-10分钟，如设置登录后无操作10分钟自动退出
+  clause: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施；
+- id: REM-H3C-L3-03
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 3
+  priority: 高
+  problem: 1、远程管理设备时未采取措施防止鉴别信息在网络传输过程中被窃听；；2、采用SSH/HTTPS方式进行远程管理，但未禁用Telnet/HTTP管理方式
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议采用SSH或HTTPS的方式对设备进行远程管理，并禁用Telnet/HTTP等方式，防止鉴别信息在网络传输过程中被窃听
+  clause: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听；
+- id: REM-H3C-L3-04
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 4
+  priority: 高
+  problem: 未采用两种或两种以上组合的鉴别技术对用户进行身份鉴别
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对设备采用两种或两种以上组合的鉴别技术实现用户身份鉴别，且其中一种鉴别技术为密码技术，如使用基于国密算法的数字证书或数字令牌
+  clause: d）应采用口令、密码技术、生物技术等两种或两种以上组合的鉴别技术对用户进行身份鉴别，且其中一种鉴别技术至少应使用密码技术来实现。
+- id: REM-H3C-L3-05
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 5
+  priority: 高
+  problem: 1、未对需要登录使用设备的人员单独设立账户并分配权限，与实际使用情况不一致；；2、未对匿名账户XX进行禁用或限制
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议为需要登录使用该设备的人员单独设立账户并分配权限；
+
+    2、建议对匿名账户进行禁用'
+  clause: a）应对登录的用户分配账户和权限；
+- id: REM-H3C-L3-06
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 6
+  priority: 中
+  problem: 1、未重命名或删除/禁用默认账户；；2、未修改默认账户XXX的默认口令
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议重命名或删除/禁用默认账户名；
+
+    2、建议修改默认账户的默认口令，口令长度修改为8位以上，由大写字母、小写字母、数字及特殊字符中的至少三种元素组成'
+  clause: b）应重命名或删除默认账户，修改默认账户的默认口令；
+- id: REM-H3C-L3-07
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 7
+  priority: 高
+  problem: 1、设备中存在多余或过期的账户；；2、设备中存在共享账户
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议在设备中建立如：网络管理员、安全管理员、审计管理员等角色的若干账户，并且账户与使用人员一一对应，实现对特权用户的权限分离及对各登录用户身份的区分
+  clause: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在；
+- id: REM-H3C-L3-08
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 8
+  priority: 高
+  problem: 未实现管理用户的权限分离
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对设备账户权限进行梳理，建立如：网络管理员、安全管理员、审计管理员等角色的若干账户，实现管理用户的权限分离
+  clause: d）应授予管理用户所需的最小权限，实现管理用户的权限分离；
+- id: REM-H3C-L3-09
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 9
+  priority: 高
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: e）应由授权主体配置访问控制策略，访问控制策略规定主体对客体的访问规则；
+- id: REM-H3C-L3-10
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 10
+  priority: 高
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: f）访问控制的粒度应达到主体为用户级或进程级，客体为文件、数据库表级；
+- id: REM-H3C-L3-11
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 11
+  priority: 高
+  problem: 1、未提供设置安全标记的功能；；2、设置的安全标记无法实现不同主体对敏感信息资源的访问控制
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议采用设置安全标记的技术措施，实现不同主体对敏感信息资源的访问控制
+  clause: g）应对重要主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。
+- id: REM-H3C-L3-12
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 12
+  priority: 低
+  problem: 1、设备未开启安全审计功能；；2、设备审计范围不完善，未覆盖所有用户或所有安全事件
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议启用设备的安全审计功能，对重要用户行为和重要安全事件进行记录；
+
+    2、建议将设备上的所有用户或所有安全事件纳入审计范围，对发生的安全进行记录'
+  clause: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计；
+- id: REM-H3C-L3-13
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 13
+  priority: 低
+  problem: 设备审计记录的内容不全面
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议完善审计记录的相关信息，审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息
+  clause: b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息；
+- id: REM-H3C-L3-14
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 14
+  priority: 高
+  problem: 1、未对审计记录进行保护，可能会被非授权用户进行删除、修改等；；2、未对审计记录进行备份
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议对审计记录进行保护，限制非授权账户对审计功能的访问，避免审计记录受到未预期的删除、修改等；
+
+    2、建议对日志记录进行备份，定期手动导出或上传到日志服务器（日志审计系统）保存，且保存时间应达到6个月，避免审计记录受到未预期的删除、修改或覆盖等'
+  clause: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等；
+- id: REM-H3C-L3-15
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 15
+  priority: 低
+  problem: 未对审计进程进行保护，能够受到未经授权的中断
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议加强对设备审计功能的控制管理，除审计管理员账户或指定账户外其余账户不能中断设备审计进程
+  clause: d）应对审计进程进行保护，防止未经授权的中断。
+- id: REM-H3C-L3-16
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 16
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: a）应遵循最小安装的原则，仅安装需要的组件和应用程序；
+- id: REM-H3C-L3-17
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 17
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: b）应关闭不需要的系统服务、默认共享和高危端口；
+- id: REM-H3C-L3-18
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 18
+  priority: 低
+  problem: 1、未对设备的接入方式进行限制/未对设备的登录地址范围进行限制；；2、对设备的登录地址范围进行了限制，但限制范围不合理
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议限制可登录设备的管理终端或管理地址范围，仅允许特定的IP地址或网段可登录管理设备
+  clause: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制；
+- id: REM-H3C-L3-19
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 19
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求；
+- id: REM-H3C-L3-20
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 20
+  priority: 高
+  problem: 未定期对设备进行漏洞扫描
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议定期对系统内的设备进行漏洞扫描，在不影响正常业务的情况下及时更新设备补丁或版本，消除相关安全漏洞
+  clause: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞；
+- id: REM-H3C-L3-21
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 21
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: f）应能够检测到对重要节点进行入侵的行为，并在发生严重入侵事件时提供报警。
+- id: REM-H3C-L3-30
+  title: 恶意代码防范整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 30
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: —
+  clause: a）应采用免受恶意代码攻击的技术措施或主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。
+- id: REM-H3C-L3-22
+  title: 可信验证整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 22
+  priority: 低
+  problem: 1、未基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证；；2、部署了可信验证检测的设备，但检测到可信性受到破坏时无法进行报警
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警；
+
+    2、建议对可信验证设备的配置进行检查和调整，使其发现可信性受到破坏后及时向管理员进行报警。'
+  clause: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。
+- id: REM-H3C-L3-23
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 23
+  priority: 低
+  problem: 未采用校验技术或密码技术保证鉴别数据在传输过程中的完整性
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议采用校验技术或密码技术保证传输过程中鉴别数据的完整性
+  clause: a）应采用校验技术或密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等；
+- id: REM-H3C-L3-24
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 24
+  priority: 低
+  problem: 未对设备鉴别数据进行加密存储，无法保证鉴别数据的完整性
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对鉴别数据采用经国家密码主管部门认可的密码技术，保证其在存储过程中的完整性
+  clause: b）应采用校验技术或密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等。
+- id: REM-H3C-L3-25
+  title: 数据保密性整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 25
+  priority: 低
+  problem: 未采用密码技术保证鉴别数据在传输过程中的保密性
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议采用密码技术保证鉴别数据在传输过程中的保密性
+  clause: a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等；
+- id: REM-H3C-L3-26
+  title: 数据保密性整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 26
+  priority: 低
+  problem: 未对设备鉴别数据进行加密存储，无法保证鉴别数据的保密性
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对鉴别数据采用经国家密码主管部门认可的密码技术，保证其在存储过程中的保密性
+  clause: b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。
+- id: REM-H3C-L3-27
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 27
+  priority: 高
+  problem: 未对设备配置数据进行备份
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对设备配置数据每周或每月至少完全备份一次，并将备份介质场外存放，此外，还应定期对备份文件进行恢复测试，确保备份文件有效
+  clause: a）应提供重要数据的本地数据备份与恢复功能；
+- id: REM-H3C-L3-28
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 28
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地；
+- id: REM-H3C-L3-29
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 29
+  priority: 中
+  problem: 关键设备未采取热冗余措施
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对关键设备采用热冗余部署方式，保证系统的高可用性
+  clause: c）应提供重要数据处理系统的热冗余，保证系统的高可用性。
+- id: REM-H3C-L3-31
+  title: 剩余信息保护整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 31
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: —
+  clause: a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除；
+- id: REM-H3C-L3-32
+  title: 剩余信息保护整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 32
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: —
+  clause: b）应保证存有敏感数据的存储空间被释放或重新分配前得到完全清除。
+- id: REM-H3C-L3-33
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 33
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: —
+  clause: a）应仅采集和保存业务必需的用户个人信息；
+- id: REM-H3C-L3-34
+  title: 个人信息保护整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 34
+  priority: 中
+  problem: 此类对象不涉及该控制项。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: —
+  clause: b）应禁止未授权访问和非法使用用户个人信息。
+- id: REM-H3C-L4-01
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 1
+  priority: 低
+  problem: 1、登录设备时未进行身份验证或身份鉴别机制不完善；；2、设备中存在相同用户名的账户；；3、用户口令长度或复杂度不满足安全要求；；4、未定期更换用户口令
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议增加设备对登录用户的身份鉴别功能，使用用户名+口令进行身份验证；
+
+    2、建议修改相同用户名的账户；
+
+    3、建议将口令长度修改为8位以上，由大写字母、小写字母、数字及特殊字符中的至少三种元素组成；
+
+    4、建议至少每3个月更换一次口令；
+
+
+    口令安全策略设置为如下：
+
+    password-control enable
+
+    password aging          ：enable  （90 days）（口令90天过期）
+
+    password length         ：enable  （8 characters） （口令长度至少8位）
+
+    passwordi history       ：enable（max history records:10）（口令历史记录的最大条数为10）
+
+    password composition   ：enable （3 types，1 characters per type）（口令元素的最少组合类型为3种，每种至少包含一个字符）'
+  clause: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换；
+- id: REM-H3C-L4-02
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 2
+  priority: 低
+  problem: 1、未启用登录失败处理、登录超时自动退出功能；；2、登录失败处理功能、登录连接超时自动退出功能参数设置不合理
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议启用设备的登录失败处理/登录连接超时自动退出功能，如设置连续登录失败3次锁定账户5-10分钟，如设置登录后无操作10分钟自动退出
+  clause: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施；
+- id: REM-H3C-L4-03
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 3
+  priority: 高
+  problem: 1、远程管理设备时未采取措施防止鉴别信息在网络传输过程中被窃听；；2、采用SSH/HTTPS方式进行远程管理，但未禁用Telnet/HTTP管理方式
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议采用SSH或HTTPS的方式对设备进行远程管理，并禁用Telnet/HTTP等方式，防止鉴别信息在网络传输过程中被窃听
+  clause: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听；
+- id: REM-H3C-L4-04
+  title: 身份鉴别整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 4
+  priority: 高
+  problem: 未采用两种或两种以上组合的鉴别技术对用户进行身份鉴别
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对设备采用两种或两种以上组合的鉴别技术实现用户身份鉴别，且其中一种鉴别技术为密码技术，如使用基于国密算法的数字证书或数字令牌
+  clause: d）应采用口令、密码技术、生物技术等两种或两种以上组合的鉴别技术对用户进行身份鉴别，且其中一种鉴别技术至少应使用密码技术来实现。
+- id: REM-H3C-L4-05
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 5
+  priority: 高
+  problem: 1、未对需要登录使用设备的人员单独设立账户并分配权限，与实际使用情况不一致；；2、未对匿名账户XX进行禁用或限制
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议为需要登录使用该设备的人员单独设立账户并分配权限；
+
+    2、建议对匿名账户进行禁用'
+  clause: a）应对登录的用户分配账户和权限；
+- id: REM-H3C-L4-06
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 6
+  priority: 中
+  problem: 1、未重命名或删除/禁用默认账户；；2、未修改默认账户XXX的默认口令
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议重命名或删除/禁用默认账户名；
+
+    2、建议修改默认账户的默认口令，口令长度修改为8位以上，由大写字母、小写字母、数字及特殊字符中的至少三种元素组成'
+  clause: b）应重命名或删除默认账户，修改默认账户的默认口令；
+- id: REM-H3C-L4-07
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 7
+  priority: 高
+  problem: 1、设备中存在多余或过期的账户；；2、设备中存在共享账户
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议在设备中建立如：网络管理员、安全管理员、审计管理员等角色的若干账户，并且账户与使用人员一一对应，实现对特权用户的权限分离及对各登录用户身份的区分
+  clause: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在；
+- id: REM-H3C-L4-08
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 8
+  priority: 高
+  problem: 未实现管理用户的权限分离
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对设备账户权限进行梳理，建立如：网络管理员、安全管理员、审计管理员等角色的若干账户，实现管理用户的权限分离
+  clause: d）应授予管理用户所需的最小权限，实现管理用户的权限分离；
+- id: REM-H3C-L4-09
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 9
+  priority: 高
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: e）应由授权主体配置访问控制策略，访问控制策略规定主体对客体的访问规则；
+- id: REM-H3C-L4-10
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 10
+  priority: 高
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: f）访问控制的粒度应达到主体为用户级或进程级，客体为文件、数据库表级；
+- id: REM-H3C-L4-11
+  title: 访问控制整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 11
+  priority: 高
+  problem: 1、未提供设置安全标记的功能；；2、设置的安全标记无法实现不同主体对敏感信息资源的访问控制
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议采用设置安全标记的技术措施，实现不同主体对敏感信息资源的访问控制
+  clause: g）应对重要主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。
+- id: REM-H3C-L4-12
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 12
+  priority: 低
+  problem: 1、设备未开启安全审计功能；；2、设备审计范围不完善，未覆盖所有用户或所有安全事件
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议启用设备的安全审计功能，对重要用户行为和重要安全事件进行记录；
+
+    2、建议将设备上的所有用户或所有安全事件纳入审计范围，对发生的安全进行记录'
+  clause: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计；
+- id: REM-H3C-L4-13
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 13
+  priority: 低
+  problem: 设备审计记录的内容不全面
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议完善审计记录的相关信息，审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息
+  clause: b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息；
+- id: REM-H3C-L4-14
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 14
+  priority: 高
+  problem: 1、未对审计记录进行保护，可能会被非授权用户进行删除、修改等；；2、未对审计记录进行备份
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议对审计记录进行保护，限制非授权账户对审计功能的访问，避免审计记录受到未预期的删除、修改等；
+
+    2、建议对日志记录进行备份，定期手动导出或上传到日志服务器（日志审计系统）保存，且保存时间应达到6个月，避免审计记录受到未预期的删除、修改或覆盖等'
+  clause: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等；
+- id: REM-H3C-L4-15
+  title: 安全审计整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 15
+  priority: 低
+  problem: 未对审计进程进行保护，能够受到未经授权的中断
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议加强对设备审计功能的控制管理，除审计管理员账户或指定账户外其余账户不能中断设备审计进程
+  clause: d）应对审计进程进行保护，防止未经授权的中断。
+- id: REM-H3C-L4-16
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 16
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: a）应遵循最小安装的原则，仅安装需要的组件和应用程序；
+- id: REM-H3C-L4-17
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 17
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: b）应关闭不需要的系统服务、默认共享和高危端口；
+- id: REM-H3C-L4-18
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 18
+  priority: 低
+  problem: 1、未对设备的接入方式进行限制/未对设备的登录地址范围进行限制；；2、对设备的登录地址范围进行了限制，但限制范围不合理
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议限制可登录设备的管理终端或管理地址范围，仅允许特定的IP地址或网段可登录管理设备
+  clause: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制；
+- id: REM-H3C-L4-19
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 19
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求；
+- id: REM-H3C-L4-20
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 20
+  priority: 高
+  problem: 未定期对设备进行漏洞扫描
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议定期对系统内的设备进行漏洞扫描，在不影响正常业务的情况下及时更新设备补丁或版本，消除相关安全漏洞
+  clause: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞；
+- id: REM-H3C-L4-21
+  title: 入侵防范整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 21
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: f）应能够检测到对重要节点进行入侵的行为，并在发生严重入侵事件时提供报警。
+- id: REM-H3C-L4-22
+  title: 可信验证整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 22
+  priority: 低
+  problem: 1、未基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证；；2、部署了可信验证检测的设备，但检测到可信性受到破坏时无法进行报警
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: '1、建议基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警；
+
+    2、建议对可信验证设备的配置进行检查和调整，使其发现可信性受到破坏后及时向管理员进行报警。'
+  clause: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。
+- id: REM-H3C-L4-23
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 23
+  priority: 低
+  problem: 未采用校验技术或密码技术保证鉴别数据在传输过程中的完整性
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议采用校验技术或密码技术保证传输过程中鉴别数据的完整性
+  clause: a）应采用校验技术或密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等；
+- id: REM-H3C-L4-24
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 24
+  priority: 低
+  problem: 未对设备鉴别数据进行加密存储，无法保证鉴别数据的完整性
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对鉴别数据采用经国家密码主管部门认可的密码技术，保证其在存储过程中的完整性
+  clause: b）应采用校验技术或密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等。
+- id: REM-H3C-L4-25
+  title: 数据完整性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 25
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: c）在可能涉及法律责任认定的应用中，应采用密码技术提供数据原发证据和数据接收证据，实现数据原发行为的抗抵赖和数据接收行为的抗抵赖。
+- id: REM-H3C-L4-26
+  title: 数据保密性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 26
+  priority: 低
+  problem: 未采用密码技术保证鉴别数据在传输过程中的保密性
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议采用密码技术保证鉴别数据在传输过程中的保密性
+  clause: a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等；
+- id: REM-H3C-L4-27
+  title: 数据保密性整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 27
+  priority: 低
+  problem: 未对设备鉴别数据进行加密存储，无法保证鉴别数据的保密性
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对鉴别数据采用经国家密码主管部门认可的密码技术，保证其在存储过程中的保密性
+  clause: b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。
+- id: REM-H3C-L4-28
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 28
+  priority: 高
+  problem: 未对设备配置数据进行备份
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对设备配置数据每周或每月至少完全备份一次，并将备份介质场外存放，此外，还应定期对备份文件进行恢复测试，确保备份文件有效
+  clause: a）应提供重要数据的本地数据备份与恢复功能；
+- id: REM-H3C-L4-29
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 29
+  priority: 中
+  problem: /
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: /
+  clause: b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地；
+- id: REM-H3C-L4-30
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 30
+  priority: 中
+  problem: 关键设备未采取热冗余措施
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对关键设备采用热冗余部署方式，保证系统的高可用性
+  clause: c）应提供重要数据处理系统的热冗余，保证系统的高可用性。
+- id: REM-H3C-L4-31
+  title: 数据备份恢复整改
+  applies_to:
+    level:
+    - 4
+    family:
+    - network
+    item_seqs:
+    - 31
+  priority: 高
+  problem: 未建立异地灾难备份中心，未配备灾难恢复所需的通信线路、网络设备和数据处理设备
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议建立异地灾难备份中心，配备灾难恢复所需的通信线路、网络设备和数据处理设备，确保其可在故障发生时及时接管生产系统的业务服务
+  clause: d）应建立异地灾难备份中心，提供业务应用的实时切换。

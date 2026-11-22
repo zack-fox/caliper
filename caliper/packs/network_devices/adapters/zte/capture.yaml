@@ -1,0 +1,67 @@
+asset_family: network
+version: 0.1.0
+status: active
+rules:
+- section: ZTE 账户与权限配置
+  title: 查看账户与权限配置
+  command: show running-config
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: ZTE 登录控制
+  title: 查看登录控制配置
+  command: show running-config
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: ZTE 远程管理加密
+  title: 查看远程管理配置
+  command: show running-config
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: ZTE 安全审计
+  title: 查看审计配置
+  command: show running-config
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: ZTE 安全审计
+  title: 查看日志
+  command: show logfile
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: ZTE 管理终端限制
+  title: 查看管理终端配置
+  command: show running-config
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network
+- section: ZTE 口令密文存储
+  title: 查看口令存储配置
+  command: show running-config
+  levels:
+  - 2
+  - 3
+  - 4
+  families:
+  - network

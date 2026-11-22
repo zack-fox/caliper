@@ -1,0 +1,199 @@
+checks:
+- title: Cisco 账户与权限配置
+  section: ''
+  block_index: 1
+  kind: judge
+  normalize: cisco_config
+  binds:
+  - item: 1
+    level: 2
+    points: &id001
+    - 2
+    - 3
+  - item: 1
+    level: 3
+    points: *id001
+  - item: 1
+    level: 4
+    points: *id001
+  - item: 4
+    level: 2
+    points: &id002
+    - 2
+  - item: 5
+    level: 3
+    points: *id002
+  - item: 5
+    level: 4
+    points: *id002
+  - item: 5
+    level: 2
+    points: &id003
+    - 1
+  - item: 6
+    level: 3
+    points: *id003
+  - item: 6
+    level: 4
+    points: *id003
+  - item: 7
+    level: 2
+    points: &id004
+    - 2
+  - item: 8
+    level: 3
+    points: *id004
+  - item: 8
+    level: 4
+    points: *id004
+  - item: 2
+    level: 2
+    points: &id005
+    - 3
+  - item: 2
+    level: 3
+    points: *id005
+  - item: 2
+    level: 4
+    points: *id005
+  session:
+  - kind: network
+    pattern: ^\s*show\s+(?:running-config|running-config\s*\|\s*include\s+username)\s*$
+- title: Cisco 口令与登录控制
+  section: ''
+  block_index: 2
+  kind: judge
+  normalize: cisco_config
+  binds:
+  - item: 1
+    level: 2
+    points: &id006
+    - 4
+  - item: 1
+    level: 3
+    points: *id006
+  - item: 1
+    level: 4
+    points: *id006
+  - item: 2
+    level: 2
+    points: &id007
+    - 1
+    - 2
+  - item: 2
+    level: 3
+    points: *id007
+  - item: 2
+    level: 4
+    points: *id007
+  session:
+  - kind: network
+    pattern: ^\s*show\s+(?:running-config\s*\|\s*include\s+(?:password|login|exec-timeout)|passwords\s+configuration)\s*$
+- title: Cisco 远程管理加密
+  section: ''
+  block_index: 3
+  kind: judge
+  normalize: cisco_config
+  binds:
+  - item: 3
+    level: 2
+    points: &id008
+    - 2
+  - item: 3
+    level: 3
+    points: *id008
+  - item: 3
+    level: 4
+    points: *id008
+  - item: 17
+    level: 2
+    points: &id009
+    - 1
+  - item: 23
+    level: 3
+    points: *id009
+  - item: 23
+    level: 4
+    points: *id009
+  - item: 25
+    level: 3
+    points: &id010
+    - 1
+  - item: 26
+    level: 4
+    points: *id010
+  session:
+  - kind: network
+    pattern: ^\s*show\s+(?:ip\s+ssh|ip\s+http\s+server\s+status|ip\s+http\s+secure-server\s+status|running-config\s*\|\s*include\s+transport)\s*$
+- title: Cisco 安全审计
+  section: ''
+  block_index: 4
+  kind: judge
+  normalize: cisco_config
+  binds:
+  - item: 8
+    level: 2
+    points: &id011
+    - 1
+    - 3
+  - item: 12
+    level: 3
+    points: *id011
+  - item: 12
+    level: 4
+    points: *id011
+  - item: 10
+    level: 2
+    points: &id012
+    - 2
+  - item: 14
+    level: 3
+    points: *id012
+  - item: 14
+    level: 4
+    points: *id012
+  session:
+  - kind: network
+    pattern: ^\s*show\s+(?:logging|running-config\s*\|\s*include\s+logging)\s*$
+- title: Cisco 管理终端限制
+  section: ''
+  block_index: 5
+  kind: judge
+  normalize: cisco_config
+  binds:
+  - item: 13
+    level: 2
+    points: &id013
+    - 1
+  - item: 18
+    level: 3
+    points: *id013
+  - item: 18
+    level: 4
+    points: *id013
+  session:
+  - kind: network
+    pattern: ^\s*show\s+running-config\s*\|\s*include\s+(?:access-list|access-class|ip\s+access-list)\s*$
+- title: Cisco 口令密文存储
+  section: ''
+  block_index: 6
+  kind: judge
+  normalize: cisco_config
+  binds:
+  - item: 24
+    level: 3
+    points: &id014
+    - 1
+  - item: 24
+    level: 4
+    points: *id014
+  - item: 26
+    level: 3
+    points: &id015
+    - 1
+  - item: 27
+    level: 4
+    points: *id015
+  session:
+  - kind: network
+    pattern: ^\s*show\s+running-config\s*\|\s*include\s+username\s*$
