@@ -131,6 +131,59 @@ def test_issues_screen_shows_review_and_gate(qapp, tmp_path):
         controller.ensure_major_confirmations()
 
 
+def test_issues_search_filter_and_detail_panel(qapp, tmp_path):
+    controller, _asset = _controller_with_run(tmp_path)
+    screen = IssuesScreen(controller)
+    total = screen.table.rowCount()
+    assert total > 0
+
+    detail = screen.detail.text()
+    assert "问题编号" in detail
+    assert "整改建议" in detail
+
+    point = screen.table.item(0, 3).text()
+    screen.point_filter.setCurrentText(point)
+    QApplication.processEvents()
+    assert screen.table.rowCount() >= 1
+    assert all(
+        screen.table.item(row, 3).text() == point
+        for row in range(screen.table.rowCount())
+    )
+
+    screen.search.setText("不存在的关键词")
+    QApplication.processEvents()
+    assert screen.table.rowCount() == 0
+    assert "没有匹配" in screen.detail.text()
+
+    screen.search.clear()
+    screen.point_filter.setCurrentText("全部控制点")
+    QApplication.processEvents()
+    assert screen.table.rowCount() == total
+
+    screen.priority_filter.setCurrentText("高风险命中")
+    QApplication.processEvents()
+    assert all(
+        "无高风险命中" not in screen.table.item(row, 6).text()
+        for row in range(screen.table.rowCount())
+    )
+    screen.close()
+
+
+def test_issues_remediation_view_keeps_detail(qapp, tmp_path):
+    controller, _asset = _controller_with_run(tmp_path)
+    screen = IssuesScreen(controller)
+
+    screen._switch_view("remediation")
+    QApplication.processEvents()
+    assert screen.stack.currentWidget() is screen.remediation_table
+    assert screen.remediation_table.rowCount() == screen.table.rowCount()
+
+    screen.remediation_table.selectRow(0)
+    QApplication.processEvents()
+    assert "整改建议" in screen.detail.text()
+    screen.close()
+
+
 def _controller_with_domains(tmp_path):
     """服务器 + 数据库两台资产，用于领域页签、筛选与检查器回归。"""
     controller = AppController()
