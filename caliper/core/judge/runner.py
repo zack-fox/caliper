@@ -77,7 +77,9 @@ def _empty_run(
         basis_fingerprint=_fingerprint(
             {
                 "assessment": assessment_fingerprint,
-                "asset": asset.model_dump(mode="json", exclude={"evidence_package"}),
+                "asset": asset.model_dump(
+                    mode="json", exclude={"evidence_package", "remediation_package"}
+                ),
                 "reason": reason,
             }
         ),
@@ -105,7 +107,9 @@ def _judge_package(
         basis_fingerprint=_fingerprint(
             {
                 "assessment": assessment_fingerprint,
-                "asset": asset.model_dump(mode="json", exclude={"evidence_package"}),
+                "asset": asset.model_dump(
+                    mode="json", exclude={"evidence_package", "remediation_package"}
+                ),
                 "manifest": {
                     "os_family": package.manifest.os_family,
                     "level": package.manifest.level,

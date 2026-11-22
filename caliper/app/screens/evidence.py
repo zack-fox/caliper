@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
+from uuid import uuid4
 
 from PySide6.QtCore import QDate, Qt, Signal
 from PySide6.QtWidgets import (
@@ -454,7 +456,7 @@ class EvidenceScreen(QWidget):
             self.readiness_pending.setText(f"需处理：{shown}{suffix}")
         else:
             self.readiness_pending.setText("")
-        self.table_hint.setText("双击行可编辑；操作列可查看材料、编辑或删除设备。")
+        self.table_hint.setText("双击行可编辑；选中设备后可上传整改材料，操作列可查看材料、编辑或删除设备。")
 
     def _asset_field_value(self, asset: Asset, field: str) -> str:
         value = getattr(asset, field)
@@ -474,7 +476,7 @@ class EvidenceScreen(QWidget):
         ]
         self.table.setRowCount(0)
         self._visible_assets = []
-        for asset, package, text, tone, tooltip, material_count in visible:
+        for asset, package, text, tone, tooltip, _material_count in visible:
             row = self.table.rowCount()
             self.table.insertRow(row)
             self.table.setItem(row, 0, QTableWidgetItem(str(row + 1)))
@@ -484,11 +486,17 @@ class EvidenceScreen(QWidget):
                 item.setToolTip(value)
                 self.table.setItem(row, offset, item)
 
-            status = QTableWidgetItem(text)
-            status.setToolTip(tooltip)
+            remediation = self.controller.remediation_files(asset)
+            status_text = f"{text} · 整改 {len(remediation)} 份" if remediation else text
+            status_tip = tooltip
+            if remediation:
+                names = "、".join(path.name for path in remediation)
+                status_tip = f"{tooltip}\n整改材料（{len(remediation)} 份）：{names}"
+            status = QTableWidgetItem(status_text)
+            status.setToolTip(status_tip)
             self.table.setItem(row, EVIDENCE_COLUMN, status)
             self.table.setCellWidget(
-                row, EVIDENCE_COLUMN, self._status_cell(text, tone, tooltip)
+                row, EVIDENCE_COLUMN, self._status_cell(status_text, tone, status_tip)
             )
             self.table.setCellWidget(row, ACTION_COLUMN, self._action_cell(asset))
             self._visible_assets.append(asset)
@@ -530,22 +538,39 @@ class EvidenceScreen(QWidget):
         if not ok or not text.strip():
             return
         root = self.controller.evidence_root_path()
-        root.mkdir(parents=True, exist_ok=True)
-        target = root / "pasted-evidence.txt"
+        pasted_dir = root / "pasted"
+        pasted_dir.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        target = pasted_dir / f"pasted-{stamp}-{uuid4().hex[:4]}.txt"
         target.write_text(text, encoding="utf-8")
         self._add_asset(initial_evidence=self.controller.display_package_path(target))
 
     def _upload_remediation(self) -> None:
+        asset = self._current_asset()
+        if asset is None:
+            QMessageBox.information(
+                self, "提示", "请先在资产表选择设备，再上传该设备的整改材料"
+            )
+            return
         start = str(self.controller.evidence_root_path())
-        path, _ = QFileDialog.getOpenFileName(
+        paths, _ = QFileDialog.getOpenFileNames(
             self,
             "选择整改文件",
             start,
-            "整改/证据文件 (*.txt *.md *.log *.out *.json *.csv *.xlsx);;所有文件 (*)",
+            "整改/证据文件 (*.txt *.md *.log *.out *.json *.csv *.xlsx *.docx *.pdf);;所有文件 (*)",
         )
-        if not path:
+        if not paths:
             return
-        self._add_asset(initial_evidence=self.controller.display_package_path(Path(path)))
+        failed: list[str] = []
+        for path in paths:
+            try:
+                self.controller.attach_remediation(asset.device_name, Path(path))
+            except ControllerError as exc:
+                failed.append(f"{Path(path).name}：{exc}")
+        self.refresh()
+        self.assets_changed.emit()
+        if failed:
+            QMessageBox.warning(self, "部分整改材料未上传", "\n".join(failed))
 
     def _add_asset(
         self,

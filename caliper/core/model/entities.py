@@ -191,6 +191,8 @@ class Asset(BaseModel):
     is_test_env: str = ""
     # 对应 fixtures/evidence 下的证据包目录名；为空表示该资产暂无采集证据
     evidence_package: str | None = None
+    # 整改材料目录（相对证据根目录）；为空表示尚未上传整改材料
+    remediation_package: str | None = None
 
     @field_validator("ip")
     @classmethod

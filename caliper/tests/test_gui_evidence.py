@@ -205,3 +205,58 @@ def test_existing_actions_and_signals_are_preserved(qapp):
 def test_page_has_no_hard_coded_colors():
     source = Path(__file__).resolve().parents[1] / "app" / "screens" / "evidence.py"
     assert re.search(r"#[0-9a-fA-F]{3,8}\b", source.read_text(encoding="utf-8")) is None
+
+
+class _RejectingAssetDialog:
+    """替换资产对话框：只验证粘贴落盘，不进入编辑流程。"""
+
+    asset = None
+
+    def __init__(self, *args, **kwargs) -> None:
+        pass
+
+    def exec(self) -> int:
+        return 0
+
+
+def test_pasted_evidence_files_do_not_overwrite(qapp, tmp_path, monkeypatch):
+    controller = AppController()
+    controller.project = controller.project.model_copy(
+        update={"evidence_root": tmp_path / "evidence"}
+    )
+    screen = _screen(controller)
+    monkeypatch.setattr(
+        "app.screens.evidence.QInputDialog.getMultiLineText",
+        lambda *args, **kwargs: ("hostname: paste-1", True),
+    )
+    monkeypatch.setattr("app.screens.evidence.AssetDialog", _RejectingAssetDialog)
+
+    screen._paste_text()
+    screen._paste_text()
+
+    files = sorted((tmp_path / "evidence" / "pasted").glob("*.txt"))
+    assert len(files) == 2
+    assert files[0].read_text(encoding="utf-8") == "hostname: paste-1"
+    screen.close()
+
+
+def test_upload_remediation_copies_and_marks_asset(qapp, tmp_path):
+    controller = AppController()
+    controller.project = controller.project.model_copy(
+        update={"evidence_root": tmp_path / "evidence"}
+    )
+    controller.add_asset(_asset(device_name="整改设备"))
+    source = tmp_path / "整改报告.md"
+    source.write_text("整改完成", encoding="utf-8")
+
+    controller.attach_remediation("整改设备", source)
+    controller.attach_remediation("整改设备", source)
+
+    asset = controller.project.asset_by_device("整改设备")
+    assert asset is not None
+    assert asset.remediation_package == "remediation/整改设备"
+    assert len(controller.remediation_files(asset)) == 2
+
+    screen = _screen(controller)
+    assert "整改 2 份" in screen.table.item(0, EVIDENCE_COLUMN).text()
+    screen.close()

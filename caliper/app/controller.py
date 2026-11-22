@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import os
+import re
+import shutil
 import sqlite3
 import sys
 from dataclasses import dataclass
@@ -667,6 +669,43 @@ class AppController:
     def remove_asset(self, device_name: str) -> None:
         assets = [asset for asset in self.project.assets if asset.device_name != device_name]
         self.project = self.project.model_copy(update={"assets": assets})
+
+    def attach_remediation(self, device_name: str, source: Path) -> Path:
+        """把整改材料复制到证据根目录 remediation/<设备名>/，并登记到资产。"""
+        asset = self.project.asset_by_device(device_name)
+        if asset is None:
+            raise ControllerError(f"设备不存在：{device_name}")
+        folder = (
+            self.evidence_root_path()
+            / "remediation"
+            / re.sub(r'[\\/:*?"<>|]+', "_", device_name).strip()
+        )
+        folder.mkdir(parents=True, exist_ok=True)
+        source = Path(source)
+        target = folder / source.name
+        index = 1
+        while target.exists():
+            target = folder / f"{source.stem}-{index}{source.suffix}"
+            index += 1
+        try:
+            shutil.copy2(source, target)
+        except OSError as exc:
+            raise ControllerError(f"复制整改材料失败：{exc}") from exc
+        self.update_asset(
+            device_name,
+            asset.model_copy(
+                update={"remediation_package": self.display_package_path(folder)}
+            ),
+        )
+        return target
+
+    def remediation_files(self, asset: Asset) -> list[Path]:
+        if not asset.remediation_package:
+            return []
+        folder = self.evidence_path(asset.remediation_package)
+        if not folder.is_dir():
+            return []
+        return sorted(path for path in folder.iterdir() if path.is_file())
 
     def expected_result_filename(self) -> str:
         return RESULT_FILENAME
