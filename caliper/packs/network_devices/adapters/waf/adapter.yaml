@@ -1,0 +1,13 @@
+name: WAF
+vendor: WAF
+aliases:
+- web应用防火墙
+- web 应用防火墙
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 安全设备
+- 网络设备
+manual_all: true

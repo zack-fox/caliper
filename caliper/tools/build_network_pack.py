@@ -256,16 +256,37 @@ NEUTRAL_ACTIONS = {
     "AUTH_ID": "建议为每个管理账户设置唯一用户名和满足复杂度要求的口令，并启用口令有效期与登录失败处理策略。",
     "LOGIN_FAIL": "建议启用登录失败锁定、登录超时自动退出等登录失败处理措施。",
     "REMOTE": "建议仅启用 SSH/HTTPS 等加密远程管理方式，关闭 Telnet/HTTP 明文管理。",
+    "TWO_FACTOR": "建议对重要管理操作采用双因素鉴别，不能仅依赖口令认证。",
     "ACCOUNT_PERM": "建议按岗位分配账户和最小权限，删除匿名或共享账户。",
     "DEFAULT": "建议重命名或删除默认账户，并修改默认口令。",
+    "EXTRA_ACCOUNT": "建议删除或禁用多余、过期账户，并定期核查账户清单。",
     "PRIV_SEP": "建议划分系统管理员、安全管理员和审计管理员等角色，实现权限分离。",
+    "ACCESS_POLICY": "建议制定并落实访问控制策略，按默认拒绝原则授权。",
+    "ACCESS_GRANULARITY": "建议按最小权限细化访问控制粒度，避免过宽授权。",
+    "SECURITY_MARK": "建议对重要数据设置安全标记，并基于标记实施访问控制。",
     "AUDIT_ENABLE": "建议启用安全审计功能，确保审计覆盖每个用户和重要安全事件。",
+    "AUDIT_CONTENT": "建议审计记录覆盖日期时间、用户、事件类型、结果等必要内容。",
     "AUDIT_PROTECT": "建议将审计记录备份至日志服务器，并限制审计记录访问。",
+    "AUDIT_PROCESS": "建议对审计记录进行保护，避免未预期的删除、修改或覆盖。",
     "TERMINAL": "建议通过 ACL 或接入方式限制管理终端地址范围。",
-    "INTEGRITY_TRANSFER": "建议使用 SSH/HTTPS 等加密协议传输管理数据。",
-    "INTEGRITY_STORE": "建议账户口令以密文形式存储。",
+    "INPUT": "建议对输入数据进行有效性校验，避免输入验证缺陷被利用。",
+    "VULN": "建议及时修补已知漏洞，并关闭不必要的服务与端口。",
+    "INTRUSION_DETECT": "建议部署入侵检测或防御能力，并在发生严重入侵事件时提供报警。",
+    "MALWARE": "建议部署恶意代码检测与防范措施，并及时更新特征库。",
+    "TRUST": "建议基于可信根对引导程序、系统程序和重要配置进行可信验证。",
+    "INTEGRITY_TRANSFER": "建议使用 SSH/HTTPS 等加密协议传输管理数据，保证传输完整性。",
+    "INTEGRITY_STORE": "建议账户口令以密文形式存储，保证存储完整性。",
+    "NON_REPUDIATION": "建议通过安全审计与数字签名等手段保证重要操作不可否认。",
     "CONF_TRANSFER": "建议使用 SSH/HTTPS 等加密协议传输管理数据。",
     "CONF_STORE": "建议账户口令以密文形式存储。",
+    "BACKUP_LOCAL": "建议定期备份重要配置与数据，并对备份文件采取保护措施。",
+    "HOT_REDUNDANCY": "建议对关键设备或链路提供热冗余，避免单点故障影响业务。",
+    "DR_CENTER": "建议建立异地灾难备份中心，保证重要数据可在灾难后恢复。",
+    "RESIDUAL": "建议在设备退役或介质复用前彻底清除剩余信息。",
+    "RESIDUAL_STORAGE": "建议对存储介质中的临时文件进行清除或安全删除。",
+    "RESIDUAL_CLEAR": "建议在设备退役或介质复用前彻底清除剩余信息。",
+    "PERSONAL_COLLECT": "建议仅采集业务必需的个人信息，并取得授权后处理。",
+    "PERSONAL_USE": "建议限制个人信息访问范围，防止未授权访问或披露。",
 }
 
 BLOCK_NAMES: dict[str, list[str]] = {
@@ -327,6 +348,46 @@ VENDOR_META = {
         "vendor": "中兴ZTE",
         "aliases": ["zte", "中兴", "中兴通讯"],
         "normalize": "zte_config",
+    },
+}
+
+# 尚无厂商指导书的安全设备先提供人工核查模板：保留设备识别与整改链路，
+# 不凭空编写采集命令，取得厂商资料后再补采集适配器。
+SECURITY_ADAPTERS: dict[str, dict[str, Any]] = {
+    "firewall": {
+        "name": "防火墙",
+        "vendor": "防火墙",
+        "aliases": ["firewall", "fw", "ngfw", "下一代防火墙"],
+    },
+    "waf": {
+        "name": "WAF",
+        "vendor": "WAF",
+        "aliases": ["web应用防火墙", "web 应用防火墙"],
+    },
+    "ids_ips": {
+        "name": "IDS/IPS",
+        "vendor": "IDS/IPS",
+        "aliases": ["ids", "ips", "idps", "入侵检测", "入侵防御"],
+    },
+    "vpn": {
+        "name": "VPN",
+        "vendor": "VPN",
+        "aliases": ["ssl vpn", "ipsec vpn", "虚拟专用网"],
+    },
+    "bastion": {
+        "name": "堡垒机",
+        "vendor": "堡垒机",
+        "aliases": ["bastion", "运维审计", "跳板机", "jump server"],
+    },
+    "load_balancer": {
+        "name": "负载均衡",
+        "vendor": "负载均衡",
+        "aliases": ["load balancer", "lb", "adc"],
+    },
+    "gap": {
+        "name": "网闸",
+        "vendor": "网闸",
+        "aliases": ["隔离网闸", "安全隔离与信息交换", "gap"],
     },
 }
 
@@ -1231,6 +1292,10 @@ def build(guide: Path, out: Path) -> None:
                 "huawei": "adapters/huawei",
                 "cisco": "adapters/cisco",
                 "zte": "adapters/zte",
+                **{
+                    key: f"adapters/{key}"
+                    for key in SECURITY_ADAPTERS
+                },
                 "generic": "adapters/generic",
             },
             "default_adapter": "generic",
@@ -1276,6 +1341,24 @@ def build(guide: Path, out: Path) -> None:
         _dump(
             adapter / "remediation.yaml",
             _adapter_remediation(records, vendor_name, seq_by_key),
+        )
+
+    for key, meta in SECURITY_ADAPTERS.items():
+        adapter = out / "adapters" / key
+        _dump(
+            adapter / "adapter.yaml",
+            {
+                "name": meta["name"],
+                "vendor": meta["vendor"],
+                "aliases": meta["aliases"],
+                "levels": list(LEVELS),
+                "asset_types": ["安全设备", "网络设备"],
+                "manual_all": True,
+            },
+        )
+        _dump(
+            adapter / "remediation.yaml",
+            _pack_remediation(seq_by_key, tuple(LEVELS)),
         )
 
     _dump(
@@ -1352,6 +1435,26 @@ def build(guide: Path, out: Path) -> None:
                 ),
                 encoding="utf-8",
             )
+
+    security_lines = [
+        "# 网络安全设备人工核查模板",
+        "",
+        "以下设备类型尚无厂商指导书，先建立人工核查模板：",
+        "不提供采集命令，所有测评项按人工核查处理；取得厂商资料后再补充专用采集适配器。",
+        "",
+        "| 适配器 | 设备类型 | 可识别的资产厂商/类型 | 等级 |",
+        "| --- | --- | --- | --- |",
+    ]
+    for key, meta in SECURITY_ADAPTERS.items():
+        names = "、".join(
+            dict.fromkeys([meta["name"], meta["vendor"], *meta["aliases"]])
+        )
+        security_lines.append(
+            f"| {key} | {meta['name']} | {names} | {','.join(map(str, LEVELS))} |"
+        )
+    (reports / "network_security_devices.md").write_text(
+        "\n".join(security_lines) + "\n", encoding="utf-8"
+    )
 
 
 def main() -> None:

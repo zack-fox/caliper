@@ -378,7 +378,14 @@ class AssetDialog(QDialog):
                 self.asset_type.setCurrentIndex(index)
         self.vendor = QComboBox()
         self.vendor.setEditable(True)
-        self.vendor.addItems(["", "H3C", "HUAWEI", "Cisco", "ZTE", "通用安全设备"])
+        vendors = controller.vendors() or [
+            "H3C",
+            "HUAWEI",
+            "Cisco",
+            "中兴ZTE",
+            "通用安全设备",
+        ]
+        self.vendor.addItems(["", *vendors])
         self.vendor.setCurrentText(asset.vendor if asset is not None else "")
 
         package_row = QHBoxLayout()
@@ -401,7 +408,7 @@ class AssetDialog(QDialog):
         form.addRow("重要程度 *", self.importance)
         form.addRow("作业指导书 *", self.guide)
         form.addRow("资产类型", self.asset_type)
-        form.addRow("设备厂商", self.vendor)
+        form.addRow("设备厂商/类型", self.vendor)
         form.addRow("证据目录", package_row)
         layout.addLayout(form)
 

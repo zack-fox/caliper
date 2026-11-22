@@ -1,0 +1,14 @@
+name: VPN
+vendor: VPN
+aliases:
+- ssl vpn
+- ipsec vpn
+- 虚拟专用网
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 安全设备
+- 网络设备
+manual_all: true

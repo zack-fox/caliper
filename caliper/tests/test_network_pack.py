@@ -74,7 +74,20 @@ def test_pack_exposes_device_rule_domains() -> None:
     pack = load_pack(PACK_DIR)
 
     assert pack.meta.levels == [2, 3, 4]
-    assert set(pack.adapters) == {"h3c", "huawei", "cisco", "zte", "generic"}
+    assert set(pack.adapters) == {
+        "h3c",
+        "huawei",
+        "cisco",
+        "zte",
+        "firewall",
+        "waf",
+        "ids_ips",
+        "vpn",
+        "bastion",
+        "load_balancer",
+        "gap",
+        "generic",
+    }
     assert pack.meta.default_adapter == "generic"
     assert [len(pack.items_for_level(level)) for level in (2, 3, 4)] == [23, 34, 31]
     for vendor in ("h3c", "huawei", "cisco", "zte"):
@@ -305,6 +318,60 @@ def test_h3c_session_prompts_and_write_guard() -> None:
 
     assert [block.title for block in outcome.blocks] == ["H3C 远程管理加密"]
     assert any("非只读" in warning for warning in outcome.warnings)
+
+
+SECURITY_DEVICES = [
+    ("防火墙", "firewall"),
+    ("WAF", "waf"),
+    ("IDS/IPS", "ids_ips"),
+    ("VPN", "vpn"),
+    ("堡垒机", "bastion"),
+    ("负载均衡", "load_balancer"),
+    ("网闸", "gap"),
+]
+
+
+@pytest.mark.parametrize(("device", "key"), SECURITY_DEVICES)
+def test_security_device_templates_are_manual_only(tmp_path, device, key) -> None:
+    pack = load_pack(PACK_DIR)
+    adapter, matched = pack.resolve_adapter(device)
+
+    assert matched is True
+    assert adapter is not None and adapter.key == key
+    assert adapter.meta.manual_all is True
+    assert adapter.meta.levels == [2, 3, 4]
+    # 没有厂商指导书时不编造采集命令或自动判定规则。
+    assert adapter.checks.checks == []
+    assert adapter.rules.rules == []
+    assert not (PACK_DIR / "adapters" / key / "capture.yaml").exists()
+    assert adapter.remediation is not None
+    levels = {level for rule in adapter.remediation.rules for level in rule.applies_to.level}
+    assert levels == {2, 3, 4}
+
+    project = _project(tmp_path, device, "pkg-h3c", 3, "network_h3c_l3")
+    run = run_project(project, pack).asset_runs[0]
+    assert run.adapter == key
+    assert all(
+        item.verdict in {Verdict.UNCOLLECTED, Verdict.NOT_APPLICABLE}
+        for item in run.items
+    )
+    assert any(
+        "需人工核查" in (item.note or "")
+        for item in run.items
+        if item.verdict is Verdict.UNCOLLECTED
+    )
+
+
+def test_unknown_security_device_falls_back_to_generic(tmp_path) -> None:
+    pack = load_pack(PACK_DIR)
+    adapter, matched = pack.resolve_adapter("某未知安全设备厂商")
+
+    assert matched is False
+    assert adapter is not None and adapter.key == "generic"
+    project = _project(tmp_path, "某未知安全设备厂商", "pkg-h3c", 3, "network_h3c_l3")
+    run = run_project(project, pack).asset_runs[0]
+    assert run.adapter == "generic"
+    assert not any(item.verdict is Verdict.COMPLIANT for item in run.items)
 
 
 def test_network_asset_type_maps_to_network_family() -> None:

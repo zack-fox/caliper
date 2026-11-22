@@ -43,6 +43,20 @@ rules:
   cause: 设备安全基线未配置或配置未落到该设备。
   action: 建议仅启用 SSH/HTTPS 等加密远程管理方式，关闭 Telnet/HTTP 明文管理。
   clause: REMOTE
+- id: REM-NET-L3-04
+  title: TWO_FACTOR 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 4
+  priority: 高
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对重要管理操作采用双因素鉴别，不能仅依赖口令认证。
+  clause: TWO_FACTOR
 - id: REM-NET-L3-05
   title: ACCOUNT_PERM 整改
   applies_to:
@@ -71,6 +85,20 @@ rules:
   cause: 设备安全基线未配置或配置未落到该设备。
   action: 建议重命名或删除默认账户，并修改默认口令。
   clause: DEFAULT
+- id: REM-NET-L3-07
+  title: EXTRA_ACCOUNT 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 7
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议删除或禁用多余、过期账户，并定期核查账户清单。
+  clause: EXTRA_ACCOUNT
 - id: REM-NET-L3-08
   title: PRIV_SEP 整改
   applies_to:
@@ -85,6 +113,48 @@ rules:
   cause: 设备安全基线未配置或配置未落到该设备。
   action: 建议划分系统管理员、安全管理员和审计管理员等角色，实现权限分离。
   clause: PRIV_SEP
+- id: REM-NET-L3-09
+  title: ACCESS_POLICY 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 9
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议制定并落实访问控制策略，按默认拒绝原则授权。
+  clause: ACCESS_POLICY
+- id: REM-NET-L3-10
+  title: ACCESS_GRANULARITY 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 10
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议按最小权限细化访问控制粒度，避免过宽授权。
+  clause: ACCESS_GRANULARITY
+- id: REM-NET-L3-11
+  title: SECURITY_MARK 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 11
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对重要数据设置安全标记，并基于标记实施访问控制。
+  clause: SECURITY_MARK
 - id: REM-NET-L3-12
   title: AUDIT_ENABLE 整改
   applies_to:
@@ -99,6 +169,20 @@ rules:
   cause: 设备安全基线未配置或配置未落到该设备。
   action: 建议启用安全审计功能，确保审计覆盖每个用户和重要安全事件。
   clause: AUDIT_ENABLE
+- id: REM-NET-L3-13
+  title: AUDIT_CONTENT 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 13
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议审计记录覆盖日期时间、用户、事件类型、结果等必要内容。
+  clause: AUDIT_CONTENT
 - id: REM-NET-L3-14
   title: AUDIT_PROTECT 整改
   applies_to:
@@ -113,6 +197,20 @@ rules:
   cause: 设备安全基线未配置或配置未落到该设备。
   action: 建议将审计记录备份至日志服务器，并限制审计记录访问。
   clause: AUDIT_PROTECT
+- id: REM-NET-L3-15
+  title: AUDIT_PROCESS 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 15
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对审计记录进行保护，避免未预期的删除、修改或覆盖。
+  clause: AUDIT_PROCESS
 - id: REM-NET-L3-18
   title: TERMINAL 整改
   applies_to:
@@ -127,6 +225,62 @@ rules:
   cause: 设备安全基线未配置或配置未落到该设备。
   action: 建议通过 ACL 或接入方式限制管理终端地址范围。
   clause: TERMINAL
+- id: REM-NET-L3-19
+  title: INPUT 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 19
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对输入数据进行有效性校验，避免输入验证缺陷被利用。
+  clause: INPUT
+- id: REM-NET-L3-20
+  title: VULN 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 20
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议及时修补已知漏洞，并关闭不必要的服务与端口。
+  clause: VULN
+- id: REM-NET-L3-21
+  title: INTRUSION_DETECT 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 21
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议部署入侵检测或防御能力，并在发生严重入侵事件时提供报警。
+  clause: INTRUSION_DETECT
+- id: REM-NET-L3-22
+  title: TRUST 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 22
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议基于可信根对引导程序、系统程序和重要配置进行可信验证。
+  clause: TRUST
 - id: REM-NET-L3-23
   title: INTEGRITY_TRANSFER 整改
   applies_to:
@@ -139,7 +293,7 @@ rules:
   priority: 中
   problem: 设备配置不符合指导书要求。
   cause: 设备安全基线未配置或配置未落到该设备。
-  action: 建议使用 SSH/HTTPS 等加密协议传输管理数据。
+  action: 建议使用 SSH/HTTPS 等加密协议传输管理数据，保证传输完整性。
   clause: INTEGRITY_TRANSFER
 - id: REM-NET-L3-24
   title: INTEGRITY_STORE 整改
@@ -153,7 +307,7 @@ rules:
   priority: 中
   problem: 设备配置不符合指导书要求。
   cause: 设备安全基线未配置或配置未落到该设备。
-  action: 建议账户口令以密文形式存储。
+  action: 建议账户口令以密文形式存储，保证存储完整性。
   clause: INTEGRITY_STORE
 - id: REM-NET-L3-25
   title: CONF_TRANSFER 整改
@@ -183,3 +337,101 @@ rules:
   cause: 设备安全基线未配置或配置未落到该设备。
   action: 建议账户口令以密文形式存储。
   clause: CONF_STORE
+- id: REM-NET-L3-27
+  title: BACKUP_LOCAL 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 27
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议定期备份重要配置与数据，并对备份文件采取保护措施。
+  clause: BACKUP_LOCAL
+- id: REM-NET-L3-29
+  title: HOT_REDUNDANCY 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 29
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对关键设备或链路提供热冗余，避免单点故障影响业务。
+  clause: HOT_REDUNDANCY
+- id: REM-NET-L3-30
+  title: MALWARE 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 30
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议部署恶意代码检测与防范措施，并及时更新特征库。
+  clause: MALWARE
+- id: REM-NET-L3-31
+  title: RESIDUAL_STORAGE 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 31
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议对存储介质中的临时文件进行清除或安全删除。
+  clause: RESIDUAL_STORAGE
+- id: REM-NET-L3-32
+  title: RESIDUAL_CLEAR 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 32
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议在设备退役或介质复用前彻底清除剩余信息。
+  clause: RESIDUAL_CLEAR
+- id: REM-NET-L3-33
+  title: PERSONAL_COLLECT 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 33
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议仅采集业务必需的个人信息，并取得授权后处理。
+  clause: PERSONAL_COLLECT
+- id: REM-NET-L3-34
+  title: PERSONAL_USE 整改
+  applies_to:
+    level:
+    - 3
+    family:
+    - network
+    item_seqs:
+    - 34
+  priority: 中
+  problem: 设备配置不符合指导书要求。
+  cause: 设备安全基线未配置或配置未落到该设备。
+  action: 建议限制个人信息访问范围，防止未授权访问或披露。
+  clause: PERSONAL_USE

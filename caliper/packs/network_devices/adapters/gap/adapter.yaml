@@ -1,0 +1,14 @@
+name: 网闸
+vendor: 网闸
+aliases:
+- 隔离网闸
+- 安全隔离与信息交换
+- gap
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 安全设备
+- 网络设备
+manual_all: true

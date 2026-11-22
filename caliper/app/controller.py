@@ -171,6 +171,15 @@ class AppController:
             return []
         return list(pack.meta.guides)
 
+    def vendors(self) -> list[str]:
+        """设备适配器清单（厂商或设备类型）；用于界面设备识别下拉框。"""
+        try:
+            pack = self.pack or self.load_pack()
+        except ControllerError:
+            return []
+        names = [adapter.meta.name for adapter in pack.adapters.values()]
+        return list(dict.fromkeys(name for name in names if name))
+
     # ---- 证据包 ----
     def evidence_root_path(self) -> Path:
         root = self.project.evidence_root

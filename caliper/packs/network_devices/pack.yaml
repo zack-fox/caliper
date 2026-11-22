@@ -22,5 +22,12 @@ adapters:
   huawei: adapters/huawei
   cisco: adapters/cisco
   zte: adapters/zte
+  firewall: adapters/firewall
+  waf: adapters/waf
+  ids_ips: adapters/ids_ips
+  vpn: adapters/vpn
+  bastion: adapters/bastion
+  load_balancer: adapters/load_balancer
+  gap: adapters/gap
   generic: adapters/generic
 default_adapter: generic

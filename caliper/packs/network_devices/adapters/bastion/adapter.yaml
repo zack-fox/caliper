@@ -1,0 +1,15 @@
+name: 堡垒机
+vendor: 堡垒机
+aliases:
+- bastion
+- 运维审计
+- 跳板机
+- jump server
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 安全设备
+- 网络设备
+manual_all: true

@@ -1,0 +1,14 @@
+name: 负载均衡
+vendor: 负载均衡
+aliases:
+- load balancer
+- lb
+- adc
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 安全设备
+- 网络设备
+manual_all: true

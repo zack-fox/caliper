@@ -1,0 +1,16 @@
+name: IDS/IPS
+vendor: IDS/IPS
+aliases:
+- ids
+- ips
+- idps
+- 入侵检测
+- 入侵防御
+levels:
+- 2
+- 3
+- 4
+asset_types:
+- 安全设备
+- 网络设备
+manual_all: true
