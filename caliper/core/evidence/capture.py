@@ -20,8 +20,8 @@ from pydantic import (
     field_validator,
 )
 
-FAMILIES = {"server", "database"}
-LEVELS = {2, 3}
+FAMILIES = {"server", "database", "network"}
+LEVELS = {2, 3, 4}
 STATUSES = {"active", "scaffold"}
 RESULTS_MARKER = "===== RESULTS (collected) ====="
 END_MARKER = "===== END OF REPORT ====="
@@ -77,7 +77,7 @@ class CaptureRule(BaseModel):
     def _check_levels(cls, value: list[int]) -> list[int]:
         invalid = sorted(set(value) - LEVELS)
         if invalid:
-            raise ValueError(f"levels 只支持 2/3，实际 {invalid}")
+            raise ValueError(f"levels 只支持 2/3/4，实际 {invalid}")
         return sorted(set(value))
 
     @field_validator("families")
@@ -86,7 +86,7 @@ class CaptureRule(BaseModel):
         normalized = [str(item).strip() for item in value]
         invalid = sorted(set(normalized) - FAMILIES)
         if invalid:
-            raise ValueError(f"families 只支持 server/database，实际 {invalid}")
+            raise ValueError(f"families 只支持 server/database/network，实际 {invalid}")
         return sorted(set(normalized))
 
 
@@ -118,7 +118,7 @@ class CaptureLibrary(BaseModel):
     def _check_asset_family(cls, value: str) -> str:
         family = value.strip()
         if family not in FAMILIES:
-            raise ValueError(f"asset_family 只支持 server/database，实际 {family!r}")
+            raise ValueError(f"asset_family 只支持 server/database/network，实际 {family!r}")
         return family
 
     def rules_for(self, family: str, level: int) -> list[CaptureRule]:
@@ -189,15 +189,37 @@ def _rule_block(index: int, rule: CaptureRule) -> str:
     )
 
 
+def _render_network(library: CaptureLibrary, level: int) -> str:
+    """网络/安全设备输出只读命令清单；设备 CLI 由测评师在授权会话中执行。"""
+    rules = library.rules_for("network", level)
+    parts = [
+        "# Caliper 网络设备采集命令清单\n",
+        "# 仅供已授权环境使用；请逐条执行只读命令，并保存完整会话回显。\n",
+        "# 严禁在设备上执行配置、保存、重启、删除等写操作。\n",
+        f"# 等级：{level} 级\n",
+    ]
+    current_section = ""
+    for index, rule in enumerate(rules, 1):
+        if rule.section != current_section:
+            parts.append(f"\n# ===== {rule.section} =====\n")
+            current_section = rule.section
+        if rule.expect:
+            parts.append(f"# 期望输出：{rule.expect}\n")
+        parts.append(f"[{index:02d}] {rule.title}\n{rule.command}\n")
+    return "".join(parts)
+
+
 def render_script(library: CaptureLibrary, family: str, level: int) -> str:
-    """按资产族与等级拼出可直接执行的 POSIX shell 采集脚本。"""
+    """按资产族与等级拼出采集脚本；网络/安全设备输出只读命令清单。"""
     if family not in FAMILIES:
-        raise CaptureError(f"family 只支持 server/database，实际 {family!r}")
+        raise CaptureError(f"family 只支持 server/database/network，实际 {family!r}")
     if level not in LEVELS:
-        raise CaptureError(f"level 只支持 2/3，实际 {level}")
+        raise CaptureError(f"level 只支持 2/3/4，实际 {level}")
     rules = library.rules_for(family, level)
     if not rules:
         raise CaptureError(f"没有适用于 {family} 族 {level} 级的采集条目")
+    if family == "network":
+        return _render_network(library, level)
 
     parts = [
         "#!/bin/sh\n",

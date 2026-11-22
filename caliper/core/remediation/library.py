@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 from core.model.entities import Item
 
 PRIORITY_ORDER: dict[str, int] = {"高": 0, "中": 1, "低": 2}
-FAMILIES = {"server", "database"}
+FAMILIES = {"server", "database", "network"}
 STATUSES = {"active", "scaffold"}
 
 
@@ -44,9 +44,9 @@ class AppliesTo(BaseModel):
     def _check_level(cls, value: list[int]) -> list[int]:
         if not value:
             raise ValueError("applies_to.level 至少填写一个等级")
-        bad = sorted({level for level in value if level not in {2, 3}})
+        bad = sorted({level for level in value if level not in {2, 3, 4}})
         if bad:
-            raise ValueError(f"applies_to.level 只支持 2/3，实际 {bad}")
+            raise ValueError(f"applies_to.level 只支持 2/3/4，实际 {bad}")
         return sorted(set(value))
 
     @field_validator("family")
@@ -56,7 +56,7 @@ class AppliesTo(BaseModel):
             raise ValueError("applies_to.family 至少填写一个资产族")
         bad = sorted({family for family in value if family not in FAMILIES})
         if bad:
-            raise ValueError(f"applies_to.family 只支持 server/database，实际 {bad}")
+            raise ValueError(f"applies_to.family 只支持 server/database/network，实际 {bad}")
         return sorted(set(value))
 
     @field_validator("item_seqs")

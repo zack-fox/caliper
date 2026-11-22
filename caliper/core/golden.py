@@ -159,11 +159,13 @@ def run_case(case: GoldenCase, output_dir: Path) -> dict[str, Path]:
             if report.path is not None:
                 generated["asset"] = report.path
         # 金标准只比对规则输出：人工备注与重大确认不参与，保证结果可复现
-        issue_rows = build_issue_rows(result, items, TextLibrary(pack.texts))
+        issue_rows = build_issue_rows(result, items, TextLibrary(pack.all_texts()))
         generated["issue"] = render_issue_workbook(
             issue_rows, project, find_template(pack.root, "issue_summary.xlsx"), output_dir
         )
-        major_rows = build_major_rows(issue_rows, pack.high_risk, project.level, set())
+        major_rows = build_major_rows(
+            issue_rows, pack.all_high_risk(), project.level, set()
+        )
         generated["major"] = render_major_workbook(
             major_rows, project, find_template(pack.root, "major_risk.xlsx"), output_dir
         )

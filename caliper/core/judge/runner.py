@@ -45,7 +45,11 @@ def _assessment_fingerprint(items: list[Item], checks: ChecksMap, ruleset, level
 
 
 def _empty_run(
-    asset: Asset, items: list[Item], reason: str, assessment_fingerprint: str
+    asset: Asset,
+    items: list[Item],
+    reason: str,
+    assessment_fingerprint: str,
+    adapter: str = "",
 ) -> AssetRun:
     results = []
     for item in items:
@@ -73,6 +77,7 @@ def _empty_run(
             )
     return AssetRun(
         asset=asset,
+        adapter=adapter,
         items=results,
         basis_fingerprint=_fingerprint(
             {
@@ -80,6 +85,7 @@ def _empty_run(
                 "asset": asset.model_dump(
                     mode="json", exclude={"evidence_package", "remediation_package"}
                 ),
+                "adapter": adapter,
                 "reason": reason,
             }
         ),
@@ -228,32 +234,56 @@ def run_project(project: ProjectConfig, pack: Pack, base_dir: Path | None = None
     base = Path(base_dir) if base_dir else Path.cwd()
     evidence_root = project.evidence_root if project.evidence_root.is_absolute() else base / project.evidence_root
     items = pack.items_for_level(project.level)
-    assessment_fingerprint = _assessment_fingerprint(
-        items, pack.checks, pack.rules, project.level
-    )
     if not project.assets:
         raise RunError("项目没有任何资产")
 
     result = RunResult(project=project)
+    fingerprints: dict[str, str] = {}
     for asset in project.assets:
+        adapter, matched = pack.resolve_adapter(asset.vendor)
+        checks = adapter.checks if adapter else pack.checks
+        ruleset = adapter.rules if adapter else pack.rules
+        adapter_key = adapter.key if adapter else ""
+        fingerprint = fingerprints.get(adapter_key)
+        if fingerprint is None:
+            fingerprint = _assessment_fingerprint(items, checks, ruleset, project.level)
+            fingerprints[adapter_key] = fingerprint
+
         if not asset.evidence_package:
-            result.asset_runs.append(
-                _empty_run(asset, items, "未关联证据包", assessment_fingerprint)
+            run = _empty_run(asset, items, "未关联证据包", fingerprint, adapter_key)
+        elif adapter is not None and adapter.meta.manual_all:
+            run = _empty_run(
+                asset,
+                items,
+                f"适配器 {adapter.meta.name} 无自动采集方案，需人工核查",
+                fingerprint,
+                adapter_key,
             )
-            continue
-        package_root = evidence_root / asset.evidence_package
-        try:
-            result.asset_runs.append(
-                _judge_package(
+        else:
+            package_root = evidence_root / asset.evidence_package
+            try:
+                run = _judge_package(
                     asset,
                     items,
-                    pack.checks,
-                    pack.rules,
+                    checks,
+                    ruleset,
                     package_root,
                     project.level,
-                    assessment_fingerprint,
+                    fingerprint,
                 )
-            )
-        except EvidenceError as exc:
-            raise RunError(f"{asset.device_name}：{exc}") from exc
+            except EvidenceError as exc:
+                raise RunError(f"{asset.device_name}：{exc}") from exc
+            run.adapter = adapter_key
+
+        if adapter is not None:
+            if asset.vendor and not matched:
+                run.diagnostics.append(
+                    f"厂商 {asset.vendor!r} 没有专用适配器，已使用默认适配器 "
+                    f"{adapter.meta.name}；不得套用其他厂商命令"
+                )
+            elif not asset.vendor:
+                run.diagnostics.append(
+                    f"未填写设备厂商，使用默认适配器 {adapter.meta.name}"
+                )
+        result.asset_runs.append(run)
     return result

@@ -1,0 +1,17 @@
+name: network_devices
+version: 0.1.0
+levels:
+- 3
+os_family:
+- network
+asset_types:
+- 网络设备
+- 安全设备
+guides:
+- 三级-安全通用要求
+items:
+  level_3: items_L3.yaml
+adapters:
+  h3c: adapters/h3c
+  generic: adapters/generic
+default_adapter: generic

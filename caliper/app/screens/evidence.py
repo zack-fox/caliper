@@ -148,7 +148,8 @@ class EvidenceScreen(QWidget):
         self.system_name = QLineEdit()
         self.system_name.setPlaceholderText("例如：示例系统A")
         self.level = QComboBox()
-        self.level.addItems(["三级", "二级"])
+        for label, level in (("三级", 3), ("二级", 2), ("四级", 4)):
+            self.level.addItem(label, level)
         self.check_date = QDateEdit(QDate.currentDate())
         self.check_date.setCalendarPopup(True)
         self.evidence_root = self._path_label()
@@ -387,7 +388,7 @@ class EvidenceScreen(QWidget):
             {
                 "project_code": self.project_code.text().strip(),
                 "system_name": self.system_name.text().strip(),
-                "level": 3 if self.level.currentIndex() == 0 else 2,
+                "level": int(self.level.currentData()),
                 "check_date": self.check_date.date().toPython(),
             }
         )
@@ -399,7 +400,8 @@ class EvidenceScreen(QWidget):
         project = self.controller.project
         self.project_code.setText(project.project_code)
         self.system_name.setText(project.system_name)
-        self.level.setCurrentIndex(0 if project.level == 3 else 1)
+        index = self.level.findData(project.level)
+        self.level.setCurrentIndex(index if index >= 0 else 0)
         self.check_date.setDate(
             QDate(project.check_date.year, project.check_date.month, project.check_date.day)
         )

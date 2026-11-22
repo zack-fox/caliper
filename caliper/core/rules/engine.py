@@ -45,7 +45,7 @@ class Rule(BaseModel):
         return f"L{self.level}-{item_key}-P{self.point:02d}-{digest}"
 
 
-_LEVEL_FILE = re.compile(r"level(\d)")
+_LEVEL_FILE = re.compile(r"level([234])")
 
 
 class RuleSet(BaseModel):
@@ -69,7 +69,7 @@ class RuleSet(BaseModel):
         for path in files:
             match = _LEVEL_FILE.fullmatch(path.stem)
             if not match:
-                raise RulesError(f"{path.name}：规则文件名必须是 level2.yaml / level3.yaml")
+                raise RulesError(f"{path.name}：规则文件名必须是 level2.yaml / level3.yaml / level4.yaml")
             level = int(match.group(1))
             with path.open(encoding="utf-8") as handle:
                 data = yaml.safe_load(handle) or {}

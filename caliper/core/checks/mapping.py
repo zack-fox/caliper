@@ -29,8 +29,8 @@ class SessionBinding(BaseModel):
     @field_validator("kind")
     @classmethod
     def _check_kind(cls, value: str) -> str:
-        if value not in {"shell", "mysql"}:
-            raise ValueError("session.kind 只支持 shell/mysql")
+        if value not in {"shell", "mysql", "network"}:
+            raise ValueError("session.kind 只支持 shell/mysql/network")
         return value
 
     @field_validator("pattern")

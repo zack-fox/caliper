@@ -361,7 +361,11 @@ class AssetDialog(QDialog):
         if asset is not None:
             self.guide.setCurrentText(asset.guide)
         else:
-            preferred = "三级-安全通用要求" if controller.project.level == 3 else "二级-安全通用要求"
+            preferred = {
+                2: "二级-安全通用要求",
+                3: "三级-安全通用要求",
+                4: "四级-安全通用要求",
+            }.get(controller.project.level, "三级-安全通用要求")
             if preferred in guides:
                 self.guide.setCurrentText(preferred)
         self.asset_type = QComboBox()
@@ -372,6 +376,10 @@ class AssetDialog(QDialog):
             index = self.asset_type.findText(default_asset_type)
             if index >= 0:
                 self.asset_type.setCurrentIndex(index)
+        self.vendor = QComboBox()
+        self.vendor.setEditable(True)
+        self.vendor.addItems(["", "H3C", "HUAWEI", "Cisco", "ZTE", "通用安全设备"])
+        self.vendor.setCurrentText(asset.vendor if asset is not None else "")
 
         package_row = QHBoxLayout()
         package_row.setSpacing(6)
@@ -393,6 +401,7 @@ class AssetDialog(QDialog):
         form.addRow("重要程度 *", self.importance)
         form.addRow("作业指导书 *", self.guide)
         form.addRow("资产类型", self.asset_type)
+        form.addRow("设备厂商", self.vendor)
         form.addRow("证据目录", package_row)
         layout.addLayout(form)
 
@@ -462,6 +471,7 @@ class AssetDialog(QDialog):
         preview = self.controller.inspect_evidence(
             self.evidence.text().strip() or None,
             self.device_name.text().strip(),
+            self.vendor.currentText().strip(),
         )
         self.status.setText(preview.message)
         self.status.setObjectName(
@@ -481,6 +491,7 @@ class AssetDialog(QDialog):
                 "importance": self.importance.currentText(),
                 "guide": self.guide.currentText().strip(),
                 "asset_type": self.asset_type.currentText(),
+                "vendor": self.vendor.currentText().strip(),
                 "evidence_package": self.evidence.text().strip() or None,
             }
         )

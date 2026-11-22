@@ -146,8 +146,8 @@ class PackageManifest(BaseModel):
     @field_validator("level")
     @classmethod
     def _check_level(cls, value: int) -> int:
-        if value not in {2, 3}:
-            raise ValueError(f"level 只支持 2/3，实际 {value}")
+        if value not in {2, 3, 4}:
+            raise ValueError(f"level 只支持 2/3/4，实际 {value}")
         return value
 
 
@@ -177,6 +177,8 @@ class Asset(BaseModel):
     asset_type: AssetType = AssetType.SERVER
     is_virtual: str = ""
     business_system: str = ""
+    # 设备厂商：网络/安全设备用它选择专用采集适配器，不能与其他厂商命令混用。
+    vendor: str = ""
     os_version: str = ""
     db_version: str = ""
     middleware_version: str = ""
@@ -232,8 +234,8 @@ class ProjectConfig(BaseModel):
     @field_validator("level")
     @classmethod
     def _check_level(cls, value: int) -> int:
-        if value not in {2, 3}:
-            raise ValueError(f"level 只支持 2/3，实际 {value}")
+        if value not in {2, 3, 4}:
+            raise ValueError(f"level 只支持 2/3/4，实际 {value}")
         return value
 
     def asset_by_device(self, device_name: str) -> Asset | None:
@@ -348,6 +350,8 @@ class AssetRun(BaseModel):
     asset: Asset
     package_id: str | None = None
     os_family: str | None = None
+    # 实际使用的采集适配器；空表示规则包未使用设备适配器。
+    adapter: str = ""
     items: list[ItemResult] = Field(default_factory=list)
     diagnostics: list[str] = Field(default_factory=list)
     basis_fingerprint: str = ""

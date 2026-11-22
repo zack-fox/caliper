@@ -1,0 +1,63 @@
+===== RESULTS (collected) =====
+===== 身份鉴别/访问控制 =====
+[01] H3C 账户与权限配置
+  cmd: display current-configuration
+  #
+  sysname H3C-CORE
+  #
+  local-user netops class manage
+   password irreversible-cipher $h$6$EXAMPLE-1
+   service-type ssh https
+   authorization-attribute user-role network-admin
+  #
+  local-user audit class manage
+   password irreversible-cipher $h$6$EXAMPLE-2
+   service-type ssh
+   authorization-attribute user-role network-operator
+  #
+  line vty 0 4
+   authentication-mode scheme
+   protocol inbound ssh
+   idle-timeout 10 0
+  #
+  return
+[02] H3C 口令控制策略
+  cmd: display password-control
+  Global password control configuration:
+   Password control: Enabled
+   Password aging: Enabled (90 days)
+   Password length: Enabled (10 characters)
+   Password composition: Enabled (3 types, 1 characters per type)
+   Password history: Enabled (5 records)
+   Login attempt limit: 3
+   Lock time: 300 seconds
+[03] H3C 远程管理加密
+  cmd: display ssh server status
+  SSH server: Enable
+  SSH version: 2.0
+  cmd: display telnet server status
+  Telnet server: Disable
+  cmd: display ip https
+  HTTPS server: Enable
+  cmd: display ip http
+  HTTP server: Disable
+[04] H3C 安全审计
+  cmd: display info-center
+  Information center: Enabled
+  Log host: 192.0.2.20
+  cmd: display logbuffer
+  Logging buffer configuration and contents: enabled
+  %Nov 20 10:00:00:123 2026 H3C-CORE SHELL/5/SHELL_LOGIN: netops logged in from 192.0.2.10.
+[05] H3C 管理终端限制
+  cmd: display acl all
+  Basic ACL 2001, 1 rule
+  rule 0 permit source 192.0.2.0 0.0.0.255
+  cmd: display current-configuration | include acl
+  acl number 2001
+  acl 2001 inbound
+[06] H3C 口令密文存储
+  cmd: display current-configuration | include password
+  password-control enable
+  password irreversible-cipher $h$6$EXAMPLE-1
+  password irreversible-cipher $h$6$EXAMPLE-2
+===== END OF REPORT =====

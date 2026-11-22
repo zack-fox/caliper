@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from core.checks.mapping import ChecksMap
 from core.contracts.filenames import RESULT_FILENAME
 from core.contracts.verdict import to_text
 from core.evidence.capture import CaptureError, load_capture, render_script
@@ -36,6 +37,7 @@ from core.major.risk import (
 )
 from core.model.entities import CheckBlock, ProjectConfig, RunResult
 from core.records import RecordError, write_record_book
+from core.rules.engine import RuleSet
 from core.render.asset_record import (
     AssetRecordError,
     fill_asset_workbook,
@@ -102,8 +104,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     capture = sub.add_parser("capture", help="按资产族与等级生成采集脚本")
     capture.add_argument("--pack", type=Path, required=True, help="规则包目录")
-    capture.add_argument("--family", required=True, choices=["server", "database"])
-    capture.add_argument("--level", required=True, type=int, choices=[2, 3])
+    capture.add_argument(
+        "--family", required=True, choices=["server", "database", "network"]
+    )
+    capture.add_argument("--level", required=True, type=int, choices=[2, 3, 4])
     capture.add_argument("--out", type=Path, help="输出脚本路径；省略则打印到标准输出")
 
     records = sub.add_parser("records", help="生成公司格式记录表（每资产一张 sheet）")
@@ -295,18 +299,16 @@ def _cmd_export(args) -> int:
                 issues = build_issue_rows(
                     result,
                     pack.items_for_level(project.level),
-                    TextLibrary(pack.texts),
+                    TextLibrary(pack.all_texts()),
                     confirmed,
                 )
-                library = pack.major
+                library = pack.major_library()
                 if library is None:
                     raise CliError("重大隐患规则库未装载")
-                version = compute_rule_version(
-                    [pack.root / pack.meta.high_risk, pack.root / pack.meta.major]
-                )
+                version = compute_rule_version(pack.rule_files())
                 ensure_major_confirmations(
                     issues,
-                    pack.high_risk,
+                    pack.all_high_risk(),
                     library,
                     project.level,
                     result,
@@ -330,7 +332,7 @@ def _cmd_export(args) -> int:
                 print(f"自检：{len(issues)} 行，问题编号连续，25 列齐全")
             else:
                 rows = build_major_rows(
-                    issues, pack.high_risk, project.level, confirmed, library
+                    issues, pack.all_high_risk(), project.level, confirmed, library
                 )
                 template = getattr(args, "template", None) or find_template(
                     pack.root, "major_risk.xlsx"
@@ -376,13 +378,20 @@ def _cmd_export(args) -> int:
     raise CliError(f"未知表类型：{args.table}")
 
 
-def _lint_pack(pack: Pack) -> list[str]:
+def _lint_target(
+    label: str,
+    checks: ChecksMap,
+    rules: RuleSet,
+    items: dict[int, list],
+    high_risk: list[dict],
+    major,
+) -> list[str]:
     problems: list[str] = []
-    titles = set(pack.checks.titles())
+    titles = set(checks.titles())
     seen: set[tuple[int, int, int, str]] = set()
-    for level, items in pack.items.items():
-        by_seq = {item.seq: item for item in items}
-        for rule in pack.rules.rules:
+    for level, level_items in items.items():
+        by_seq = {item.seq: item for item in level_items}
+        for rule in rules.rules:
             if rule.level != level:
                 continue
             if rule.item not in by_seq:
@@ -395,29 +404,58 @@ def _lint_pack(pack: Pack) -> list[str]:
             seen.add(key)
             if not rule.pass_reason or not rule.fail_reason:
                 problems.append(f"item {rule.item} 实施点 {rule.point}：通过/未通过理由不能为空")
-        for item in items:
+        for item in level_items:
             if item.policy.value == "binary" and not item.binary:
                 problems.append(f"{item.item_id}：policy=binary 但 binary=false")
             if item.binary and item.policy.value not in {"binary", "na"}:
                 problems.append(f"{item.item_id}：binary=true 但 policy 不是 binary/na")
-            rule_points = pack.rules.points_for_item(item.seq, level)
+            rule_points = rules.points_for_item(item.seq, level)
             if not rule_points:
                 continue
-            expected = pack.checks.points_for_item(item.seq, level)
+            expected = checks.points_for_item(item.seq, level)
             if expected and rule_points != expected:
                 problems.append(
                     f"{item.item_id}：规则实施点 {sorted(rule_points)} 与 checks_map {sorted(expected)} 不一致"
                 )
-    for record in pack.high_risk:
+    all_seqs = {
+        item.seq for level_items in items.values() for item in level_items
+    }
+    for record in high_risk:
         for seq in record.get("binds_items", []):
-            if seq not in {item.seq for item in pack.items[3]}:
+            if seq not in all_seqs:
                 problems.append(f"{record.get('hr_id')}：引用不存在的 item {seq}")
-    if pack.major is not None:
-        missing = pack.major.missing_hr_ids(
-            str(record.get("hr_id", "")) for record in pack.high_risk
+    if major is not None:
+        missing = major.missing_hr_ids(
+            str(record.get("hr_id", "")) for record in high_risk
         )
         for hr_id in missing:
             problems.append(f"重大隐患规则库未覆盖高风险判例 {hr_id}")
+    prefix = f"{label}：" if label else ""
+    return [f"{prefix}{problem}" for problem in problems]
+
+
+def _lint_pack(pack: Pack) -> list[str]:
+    if not pack.adapters:
+        return _lint_target(
+            "",
+            pack.checks,
+            pack.rules,
+            pack.items,
+            pack.high_risk,
+            pack.major,
+        )
+    problems: list[str] = []
+    for adapter in pack.adapters.values():
+        problems.extend(
+            _lint_target(
+                f"适配器 {adapter.meta.name}",
+                adapter.checks,
+                adapter.rules,
+                pack.items,
+                adapter.high_risk,
+                adapter.major,
+            )
+        )
     return problems
 
 
@@ -428,12 +466,26 @@ def _cmd_lint(args) -> int:
         print(f"[失败] pack 装载：{exc}", file=sys.stderr)
         return 1
     problems = _lint_pack(pack)
-    for level, items in pack.items.items():
-        covered = [item for item in items if pack.rules.for_item(item.seq, level)]
-        auto = [item for item in items if item.mode == "auto" and item.policy.value != "na"]
-        print(
-            f"{level} 级：{len(items)} 项，自动判定项 {len(auto)}，已有规则 {len(covered)}"
-        )
+    targets = list(pack.adapters.values()) or [pack]
+    for target in targets:
+        label = f"适配器 {target.meta.name}" if pack.adapters else "规则包"
+        rules = target.rules
+        manual_all = bool(getattr(target.meta, "manual_all", False))
+        for level, items in pack.items.items():
+            covered = [item for item in items if rules.for_item(item.seq, level)]
+            auto = (
+                []
+                if manual_all
+                else [
+                    item
+                    for item in items
+                    if item.mode == "auto" and item.policy.value != "na"
+                ]
+            )
+            print(
+                f"{label} {level} 级：{len(items)} 项，自动判定项 {len(auto)}，"
+                f"已有规则 {len(covered)}"
+            )
     if problems:
         for problem in problems:
             print(f"[失败] {problem}", file=sys.stderr)

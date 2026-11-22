@@ -38,6 +38,7 @@ _NORMALIZERS = {
     "mysql_audit",
     "mysql_remote_access",
     "mysql_backup",
+    "h3c_config",
 }
 
 _MYSQL_VARIABLES = {
@@ -557,6 +558,303 @@ def _normalize_mysql_backup(block: CheckBlock) -> list[DerivedFact]:
     return facts
 
 
+_H3C_DEFAULT_ACCOUNTS = {
+    "admin",
+    "administrator",
+    "h3c",
+    "root",
+    "test",
+    "guest",
+    "public",
+}
+_H3C_ANONYMOUS_ACCOUNTS = {"anonymous", "guest", "public"}
+
+
+def _h3c_value(block: CheckBlock, pattern: str) -> int | None:
+    match = re.search(pattern, block.text, re.I)
+    if not match:
+        return None
+    try:
+        return int(match.group(1))
+    except (IndexError, TypeError, ValueError):
+        return None
+
+
+def _normalize_h3c_config(block: CheckBlock) -> list[DerivedFact]:
+    """把 H3C 运行配置与状态回显归一为厂商事实；规则只读事实，不直接拼命令。"""
+    facts: list[DerivedFact] = []
+
+    def add(pattern: str, text: str) -> None:
+        lines = _matching(block, pattern)
+        if lines:
+            _add(facts, _fact(block, text, lines))
+
+    names: list[str] = []
+    users: dict[str, dict[str, object]] = {}
+    current: str | None = None
+    password_seen = False
+    for line in block.output:
+        raw = line.text
+        match = re.search(r"^\s*local-user\s+(\S+)", raw, re.I)
+        if match:
+            current = match.group(1)
+            names.append(current)
+            users.setdefault(current, {"password": "", "disabled": False, "roles": []})
+            continue
+        match = re.search(r"^\s*Username:\s*(\S+)", raw, re.I)
+        if match:
+            current = match.group(1)
+            names.append(current)
+            users.setdefault(current, {"password": "", "disabled": False, "roles": []})
+            continue
+        if current is None:
+            continue
+        user = users[current]
+        if re.search(r"^\s+password\s+", raw, re.I):
+            user["password"] = raw.strip()
+            password_seen = True
+        elif re.search(r"^\s+Password:\s*", raw, re.I):
+            user["password"] = raw.strip()
+            password_seen = True
+        if re.search(r"service-type\s+none\b", raw, re.I):
+            user["disabled"] = True
+        role = re.search(r"authorization-attribute\s+user-role\s+(\S+)", raw, re.I)
+        if role:
+            user["roles"].append(role.group(1))
+        level = re.search(r"authorization-attribute\s+level\s+(\d+)", raw, re.I)
+        if level:
+            user["roles"].append(f"level-{level.group(1)}")
+
+    if names:
+        user_lines = _matching(block, r"^\s*(?:local-user|Username:)\s")
+        password_lines = _matching(block, r"^\s*(?:password|Password:)\s")
+        role_lines = _matching(
+            block, r"user-role|authorization-attribute\s+level"
+        )
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:h3c.users.unique={str(len(names) == len(set(names))).lower()}",
+                user_lines,
+            ),
+        )
+        if password_seen:
+            empty = any(
+                not str(user["password"]).strip()
+                or re.search(r"not configured|none|^\s*Password:\s*$", str(user["password"]), re.I)
+                for user in users.values()
+            )
+            _add(
+                facts,
+                _fact(
+                    block,
+                    f"fact:h3c.users.empty_password={'present' if empty else 'none'}",
+                    password_lines,
+                ),
+            )
+        default_present = any(
+            name.lower() in _H3C_DEFAULT_ACCOUNTS
+            and not bool(users[name]["disabled"])
+            for name in users
+        )
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:h3c.users.default_account={'present' if default_present else 'none'}",
+                user_lines,
+            ),
+        )
+        anonymous_present = any(
+            name.lower() in _H3C_ANONYMOUS_ACCOUNTS for name in users
+        )
+        _add(
+            facts,
+            _fact(
+                block,
+                f"fact:h3c.users.anonymous={'present' if anonymous_present else 'none'}",
+                user_lines,
+            ),
+        )
+        roles = {role for user in users.values() for role in user["roles"]}
+        if roles:
+            _add(
+                facts,
+                _fact(
+                    block,
+                    "fact:h3c.roles.privilege_distinct="
+                    f"{str(len(roles) >= 2).lower()}",
+                    role_lines,
+                ),
+            )
+
+    control = None
+    if _matching(block, r"^\s*password-control\s+enable\b"):
+        control = True
+    if _matching(block, r"^\s*undo\s+password-control\s+enable\b"):
+        control = False
+    status = re.search(
+        r"password\s+control\s*:\s*(enabled|disabled)", block.text, re.I
+    )
+    if status:
+        control = status.group(1).lower() == "enabled"
+    if control is not None:
+        add(
+            r"password[\s-]*control",
+            f"fact:h3c.password_control.enabled={str(control).lower()}",
+        )
+
+    aging = (
+        _h3c_value(block, r"password-control\s+aging\s+(\d+)")
+        or _h3c_value(block, r"password\s+aging[^\n]*?(\d+)\s*days?")
+        or _h3c_value(block, r"口令老化[^\n]*?(\d+)\s*天")
+    )
+    if aging is not None:
+        add(r"aging", f"fact:h3c.password_control.aging_days={aging}")
+
+    length = (
+        _h3c_value(block, r"password-control\s+length\s+(\d+)")
+        or _h3c_value(block, r"password\s+length[^\n]*?(\d+)\s*characters?")
+        or _h3c_value(block, r"口令长度[^\n]*?(\d+)")
+    )
+    if length is not None:
+        add(r"length", f"fact:h3c.password_control.length={length}")
+
+    composition = (
+        _h3c_value(block, r"password-control\s+composition\s+type-number\s+(\d+)")
+        or _h3c_value(block, r"password\s+composition[^\n]*?(\d+)\s*types?")
+        or _h3c_value(block, r"口令组成[^\n]*?(\d+)\s*种")
+    )
+    if composition is not None:
+        add(
+            r"composition",
+            f"fact:h3c.password_control.composition_types={composition}",
+        )
+
+    login_attempt = (
+        _h3c_value(block, r"password-control\s+login-attempt\s+(\d+)")
+        or _h3c_value(block, r"login\s+attempt\s+limit\s*:\s*(\d+)")
+        or _h3c_value(block, r"登录失败次数[^\n]*?(\d+)")
+    )
+    if login_attempt is not None:
+        add(
+            r"login.attempt|login-attempt",
+            f"fact:h3c.password_control.login_attempt={login_attempt}",
+        )
+
+    lock_seconds = _h3c_value(block, r"lock-time\s+(\d+)") or _h3c_value(
+        block, r"lock\s+time\s*:\s*(\d+)\s*seconds?"
+    )
+    if lock_seconds is not None:
+        add(
+            r"lock-time|lock\s+time",
+            f"fact:h3c.password_control.lock_minutes={max(1, round(lock_seconds / 60))}",
+        )
+    lock_minutes = _h3c_value(block, r"锁定时间[^\n]*?(\d+)\s*分钟")
+    if lock_minutes is not None:
+        add(
+            r"锁定时间",
+            f"fact:h3c.password_control.lock_minutes={lock_minutes}",
+        )
+
+    idle = (
+        _h3c_value(block, r"idle-timeout\s+(\d+)")
+        or _h3c_value(block, r"idle\s+timeout\s*:\s*(\d+)\s*minutes?")
+        or _h3c_value(block, r"空闲超时[^\n]*?(\d+)\s*分钟")
+    )
+    if idle is not None:
+        add(r"idle-timeout|idle\s+timeout", f"fact:h3c.timeout.idle_minutes={idle}")
+
+    remote: dict[str, bool] = {}
+    for key, pattern in {
+        "ssh": r"^\s*ssh\s+server\s+(enable|disable)\b",
+        "telnet": r"^\s*telnet\s+server\s+(enable|disable)\b",
+        "https": r"^\s*ip\s+https\s+(enable|disable)\b",
+        "http": r"^\s*ip\s+http\s+(enable|disable)\b",
+    }.items():
+        match = re.search(pattern, block.text, re.I | re.M)
+        if match:
+            remote[key] = match.group(1).lower() == "enable"
+    for key, label in {
+        "ssh": "SSH",
+        "telnet": "Telnet",
+        "https": "HTTPS",
+        "http": "HTTP",
+    }.items():
+        match = re.search(
+            rf"{label}\s+server\s*:\s*(enable|disable)", block.text, re.I
+        )
+        if match:
+            remote[key] = match.group(1).lower() == "enable"
+    for key, value in remote.items():
+        add(
+            rf"{key}",
+            f"fact:h3c.remote.{key}_enabled={str(value).lower()}",
+        )
+    if remote:
+        any_enabled = any(remote.values())
+        add(
+            r"server|https|http",
+            f"fact:h3c.remote.any={str(any_enabled).lower()}",
+        )
+        complete = {"ssh", "telnet", "https", "http"} <= set(remote)
+        encrypted = (
+            complete
+            and (remote["ssh"] or remote["https"])
+            and not (remote["telnet"] or remote["http"])
+        )
+        add(
+            r"server|https|http",
+            f"fact:h3c.remote.encrypted={str(encrypted).lower()}",
+        )
+
+    if _matching(block, r"^\s*info-center\s+enable\b"):
+        add(r"info-center", "fact:h3c.audit.info_center=true")
+    if _matching(block, r"^\s*undo\s+info-center\s+enable\b"):
+        add(r"undo\s+info-center", "fact:h3c.audit.info_center=false")
+    center_status = re.search(
+        r"information\s+center\s*:\s*(enabled|disabled)", block.text, re.I
+    )
+    if center_status:
+        add(
+            r"information\s+center",
+            f"fact:h3c.audit.info_center={str(center_status.group(1).lower() == 'enabled').lower()}",
+        )
+    if _matching(block, r"logging\s+buffer[^\n]*enabled|日志缓冲区[^\n]*启用"):
+        add(
+            r"logging\s+buffer|日志缓冲区",
+            "fact:h3c.audit.logbuffer=true",
+        )
+    if _matching(block, r"logging\s+buffer[^\n]*disabled|日志缓冲区[^\n]*关闭"):
+        add(
+            r"logging\s+buffer[^\n]*disabled|日志缓冲区[^\n]*关闭",
+            "fact:h3c.audit.logbuffer=false",
+        )
+    if _matching(block, r"^\s*info-center\s+loghost\s+\S+|log\s+host\s*:\s*\S+"):
+        add(
+            r"loghost|log\s+host",
+            "fact:h3c.audit.loghost=true",
+        )
+    elif "fact:h3c.audit.info_center=true" in {fact.text for fact in facts}:
+        add(r"information\s+center|info-center", "fact:h3c.audit.loghost=false")
+
+    acl_lines = _matching(block, r"^\s*acl\s+(?:number|basic|advanced)\s+\d+")
+    inbound = _matching(block, r"^\s*acl\s+\d+\s+inbound\b")
+    if acl_lines or inbound:
+        add(
+            r"^\s*acl\s+",
+            f"fact:h3c.acl.vty_restricted={str(bool(inbound)).lower()}",
+        )
+
+    if _matching(block, r"^\s*password\s+(?:irreversible-cipher|cipher|hash)\b"):
+        add(r"password\s+(?:irreversible-cipher|cipher|hash)", "fact:h3c.secret_storage.cipher=true")
+    if _matching(block, r"^\s*password\s+simple\b"):
+        add(r"password\s+simple", "fact:h3c.secret_storage.cipher=false")
+
+    return facts
+
+
 def _dispatch(normalize: str, block: CheckBlock) -> list[DerivedFact]:
     if not normalize or block.status in {CheckStatus.FAILED, CheckStatus.SKIPPED}:
         return []
@@ -606,6 +904,8 @@ def _dispatch(normalize: str, block: CheckBlock) -> list[DerivedFact]:
         return _mysql_remote_facts(block)
     if normalize == "mysql_backup":
         return _normalize_mysql_backup(block)
+    if normalize == "h3c_config":
+        return _normalize_h3c_config(block)
     raise ValueError(f"未知 normalize 标识：{normalize}")
 
 

@@ -1,0 +1,118 @@
+checks:
+- title: H3C 账户与权限配置
+  section: ''
+  block_index: 1
+  kind: judge
+  normalize: h3c_config
+  binds:
+  - item: 1
+    level: 3
+    points:
+    - 2
+    - 3
+  - item: 2
+    level: 3
+    points:
+    - 3
+  - item: 5
+    level: 3
+    points:
+    - 2
+  - item: 6
+    level: 3
+    points:
+    - 1
+  - item: 8
+    level: 3
+    points:
+    - 2
+  session:
+  - kind: network
+    pattern: ^\s*display\s+(?:current-configuration|local-users?)\s*$
+- title: H3C 口令控制策略
+  section: ''
+  block_index: 2
+  kind: judge
+  normalize: h3c_config
+  binds:
+  - item: 1
+    level: 3
+    points:
+    - 4
+  - item: 2
+    level: 3
+    points:
+    - 1
+    - 2
+  session:
+  - kind: network
+    pattern: ^\s*display\s+password-control\s*$
+- title: H3C 远程管理加密
+  section: ''
+  block_index: 3
+  kind: judge
+  normalize: h3c_config
+  binds:
+  - item: 3
+    level: 3
+    points:
+    - 2
+  - item: 23
+    level: 3
+    points:
+    - 1
+  - item: 25
+    level: 3
+    points:
+    - 1
+  session:
+  - kind: network
+    pattern: ^\s*display\s+(?:ssh\s+server\s+status|telnet\s+server\s+status|ip\s+https|ip\s+http)\s*$
+- title: H3C 安全审计
+  section: ''
+  block_index: 4
+  kind: judge
+  normalize: h3c_config
+  binds:
+  - item: 12
+    level: 3
+    points:
+    - 1
+    - 3
+  - item: 14
+    level: 3
+    points:
+    - 2
+  session:
+  - kind: network
+    pattern: ^\s*display\s+(?:info-center|logbuffer)\s*$
+- title: H3C 管理终端限制
+  section: ''
+  block_index: 5
+  kind: judge
+  normalize: h3c_config
+  binds:
+  - item: 18
+    level: 3
+    points:
+    - 1
+  session:
+  - kind: network
+    pattern: ^\s*display\s+acl(?:\s+all)?\s*$|^\s*display\s+current-configuration\s*\|\s*include\s+acl\b
+- title: H3C 口令密文存储
+  section: ''
+  block_index: 6
+  kind: judge
+  normalize: h3c_config
+  binds:
+  - item: 24
+    level: 3
+    points:
+    - 1
+  - item: 26
+    level: 3
+    points:
+    - 1
+  session:
+  - kind: network
+    pattern: ^\s*display\s+current-configuration\s*\|\s*include\s+password\b

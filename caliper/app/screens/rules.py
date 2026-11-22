@@ -161,35 +161,56 @@ class RulesScreen(QWidget):
             rows.append((str(item.seq), item.control_point, detail))
         return rows
 
+    @staticmethod
+    def _targets(pack) -> list[tuple[str, object]]:
+        if pack.adapters:
+            return [
+                (adapter.meta.name, adapter)
+                for adapter in pack.adapters.values()
+            ]
+        return [("", pack)]
+
     def _checks_rows(self, pack) -> list[tuple[str, str, str]]:
         rows = []
-        for check in pack.checks.checks:
-            detail = (
-                f"标题：{check.title}\n"
-                f"采集段：{check.section or '—'}（块 {check.block_index}）\n"
-                f"类型：{check.kind}\n"
-                f"系统族：{check.os_family or '—'}\n"
-                f"归一化：{check.normalize or '—'}\n"
-                f"绑定实施点：{len(check.binds)} 个"
-            )
-            rows.append((f"块 {check.block_index}", check.title, detail))
+        for label, target in self._targets(pack):
+            for check in target.checks.checks:
+                detail = (
+                    f"适配器：{label or '—'}\n"
+                    f"标题：{check.title}\n"
+                    f"采集段：{check.section or '—'}（块 {check.block_index}）\n"
+                    f"类型：{check.kind}\n"
+                    f"系统族：{check.os_family or '—'}\n"
+                    f"归一化：{check.normalize or '—'}\n"
+                    f"绑定实施点：{len(check.binds)} 个"
+                )
+                rows.append(
+                    (f"{label} 块 {check.block_index}".strip(), check.title, detail)
+                )
         return rows
 
     def _rules_rows(self, pack) -> list[tuple[str, str, str]]:
         rows = []
-        for rule in pack.rules.rules:
-            detail = (
-                f"规则：{rule.rule_id or '（自动生成）'}\n"
-                f"等级/项/实施点：L{rule.level}-{rule.item}-P{rule.point}\n"
-                f"采集块：{rule.block}\n"
-                f"判定：{rule.expect}"
-            )
-            rows.append((rule.rule_id or f"L{rule.level}-{rule.item}", f"P{rule.point} {rule.block}", detail))
+        for label, target in self._targets(pack):
+            for rule in target.rules.rules:
+                detail = (
+                    f"适配器：{label or '—'}\n"
+                    f"规则：{rule.rule_id or '（自动生成）'}\n"
+                    f"等级/项/实施点：L{rule.level}-{rule.item}-P{rule.point}\n"
+                    f"采集块：{rule.block}\n"
+                    f"判定：{rule.expect}"
+                )
+                rows.append(
+                    (
+                        rule.rule_id or f"L{rule.level}-{rule.item}",
+                        f"{label} P{rule.point} {rule.block}".strip(),
+                        detail,
+                    )
+                )
         return rows
 
     def _high_risk_rows(self, pack) -> list[tuple[str, str, str]]:
         rows = []
-        for entry in pack.high_risk:
+        for entry in pack.all_high_risk():
             hr_id = entry.get("hr_id", "—")
             summary = entry.get("问题概述") or entry.get("问题") or ""
             detail = "\n".join(f"{k}：{v}" for k, v in entry.items())
@@ -198,22 +219,23 @@ class RulesScreen(QWidget):
 
     def _major_rows(self, pack) -> list[tuple[str, str, str]]:
         rows = []
-        if pack.major is None:
+        library = pack.major_library()
+        if library is None:
             return rows
-        for rule in pack.major.rules:
+        for rule in library.rules:
             scores = "　".join(f"{name} {entry.score}" for name, entry in rule.scores.items())
             detail = (
                 f"规则：{rule.id}\n"
                 f"关联高风险判例：{', '.join(rule.hr_ids)}\n"
                 f"三维得分：{scores}\n"
-                f"库版本：{pack.major.version}　阈值：{pack.major.threshold}"
+                f"库版本：{library.version}　阈值：{library.threshold}"
             )
             rows.append((rule.id, f"关联 {len(rule.hr_ids)} 条判例", detail))
         return rows
 
     def _texts_rows(self, pack) -> list[tuple[str, str, str]]:
         rows = []
-        for entry in pack.texts:
+        for entry in pack.all_texts():
             control = entry.get("control_item") or entry.get("控制项") or "—"
             summary = entry.get("问题") or entry.get("问题概述") or ""
             detail = "\n".join(f"{k}：{v}" for k, v in entry.items())
@@ -252,9 +274,22 @@ class RulesScreen(QWidget):
         pack = self._pack
         if pack is None:
             return "—", "—"
-        if key == "major" and pack.major is not None:
-            return pack.major.version, pack.meta.major
+        library = pack.major_library()
+        if key == "major" and library is not None:
+            return library.version, pack.meta.major
         version = pack.meta.version
+        if pack.adapters:
+            adapter_paths = "、".join(
+                adapter.root.name for adapter in pack.adapters.values()
+            )
+            names = {
+                "items": "共享测评项",
+                "checks": "适配器 checks_map",
+                "rules": "适配器 rules",
+                "high_risk": "适配器 high_risk",
+                "texts": "适配器 texts",
+            }
+            return version, f"{adapter_paths}（{names.get(key, '—')}）"
         paths = {
             "items": pack.meta.items.get(str(self.controller.project.level), "—")
             if isinstance(pack.meta.items, dict)

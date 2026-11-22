@@ -18,12 +18,21 @@ _SHELL_PROMPTS = [
     re.compile(r"^(?:bash|sh)-\d+(?:\.\d+)*[#$]\s?(.*)$"),
     re.compile(r"^(?:~|/)[^#$]*[#$]\s?(.*)$"),
 ]
+# H3C/HUAWEI/ZTE 常见用户视图 <H3C> 与系统视图 [H3C]、[~HUAWEI]、[H3C-GE1/0/1]。
+_NETWORK_PROMPTS = [
+    re.compile(r"^<([A-Za-z][\w.-]*)>\s?(.*)$"),
+    re.compile(r"^\[(?:~)?([A-Za-z][\w.-]*)(?:-[^\]]*)?\]\s?(.*)$"),
+]
 _SENSITIVE_RE = re.compile(
     r"(?:--password(?:=|\s)|\bpasswd\s+-|\bpassword\s*\(|\bIDENTIFIED\s+|\bmysql(?:native|admin)?\b[^\n]*\s-p\S)",
     re.I,
 )
 _ERROR_RE = re.compile(
-    r"command not found|permission denied|operation not permitted|access denied|no such file or directory|cannot (?:access|stat|open)\b|^\s*ERROR\s+\d+|^\s*ERROR\s*:\s*",
+    r"command not found|permission denied|operation not permitted|access denied|no such file or directory|cannot (?:access|stat|open)\b|^\s*ERROR\s+\d+|^\s*ERROR\s*:\s*|^\s*Error:\s*|^\s*%\s*(?:Invalid|Unrecognized|Incomplete)\b|^\s*Unrecognized command\b",
+    re.I,
+)
+_NETWORK_WRITE_RE = re.compile(
+    r"^\s*(?:system-view|sys\b|undo\b|save\b|reset\b|reboot\b|delete\b|format\b|startup\b|shutdown\b|no\b|configure\b|conf\s+t\b|write\b)",
     re.I,
 )
 _EMPTY_SET_RE = re.compile(r"^\s*Empty set(?:\s*\([^)]*\))?\s*$", re.I)
@@ -64,12 +73,21 @@ def _prompt(line: str) -> tuple[str, str, bool] | None:
     for pattern in _SHELL_PROMPTS:
         if match := pattern.match(line):
             return "shell", match.group(1).strip(), False
+    for pattern in _NETWORK_PROMPTS:
+        if match := pattern.match(line):
+            return "network", (match.group(2) or "").strip(), False
     return None
 
 
 def _read_only_mysql(command: str) -> bool:
     statements = [part.strip() for part in command.split(";") if part.strip()]
     return bool(statements) and all(re.match(r"^(?:SELECT|SHOW)\b", part, re.I) for part in statements)
+
+
+def _read_only_network(command: str) -> bool:
+    if not re.match(r"^\s*(?:display|show)\b", command, re.I):
+        return False
+    return not _NETWORK_WRITE_RE.search(command)
 
 
 def _meaningful_output(command: _Command) -> list[OutputLine]:
@@ -161,7 +179,9 @@ def parse_session_text(
 
     flush()
     if not prompt_seen:
-        raise SessionParseError(f"{filename}：未识别到高置信 shell/MySQL 提示符")
+        raise SessionParseError(
+            f"{filename}：未识别到高置信 shell/MySQL/网络设备提示符"
+        )
 
     sensitive_lines: list[int] = []
     ignored_lines: list[int] = []
@@ -172,6 +192,9 @@ def parse_session_text(
             sensitive_lines.append(command.line)
             continue
         if command.kind == "mysql" and not _read_only_mysql(command.text):
+            ignored_lines.append(command.line)
+            continue
+        if command.kind == "network" and not _read_only_network(command.text):
             ignored_lines.append(command.line)
             continue
         matches = _match_bindings(command, checks)

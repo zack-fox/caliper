@@ -9,11 +9,17 @@ class AssetType(str, Enum):
     SERVER = "服务器"
     STORAGE = "存储设备"
     DATABASE = "数据库"
+    NETWORK_DEVICE = "网络设备"
+    SECURITY_DEVICE = "安全设备"
 
     @property
     def family(self) -> str:
-        """规则库适用口径：服务器与数据库分开建模。"""
-        return "database" if self is AssetType.DATABASE else "server"
+        """规则库适用口径：服务器、数据库与网络/安全设备分开建模。"""
+        if self is AssetType.DATABASE:
+            return "database"
+        if self in {AssetType.NETWORK_DEVICE, AssetType.SECURITY_DEVICE}:
+            return "network"
+        return "server"
 
 
 class Importance(str, Enum):

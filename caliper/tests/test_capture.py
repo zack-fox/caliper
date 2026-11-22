@@ -96,8 +96,8 @@ def test_rejects_duplicate_title(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     "overrides",
     [
-        {"families": ["network"]},
-        {"levels": [4]},
+        {"families": ["middleware"]},
+        {"levels": [5]},
         {"levels": []},
         {"command": ""},
     ],

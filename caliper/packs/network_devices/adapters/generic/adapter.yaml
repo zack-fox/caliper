@@ -1,0 +1,12 @@
+name: 通用安全设备
+vendor: generic
+aliases:
+- 通用
+- generic
+- 通用安全设备
+levels:
+- 3
+asset_types:
+- 网络设备
+- 安全设备
+manual_all: true

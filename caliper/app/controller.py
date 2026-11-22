@@ -188,8 +188,13 @@ class AppController:
             return str(path.resolve())
         return relative.as_posix()
 
+    def _checks_for_vendor(self, vendor: str = ""):
+        pack = self.pack or self.load_pack()
+        adapter, _ = pack.resolve_adapter(vendor)
+        return adapter.checks if adapter else pack.checks
+
     def inspect_evidence(
-        self, package: str | None, device_name: str = ""
+        self, package: str | None, device_name: str = "", vendor: str = ""
     ) -> EvidencePreview:
         if not package:
             return EvidencePreview(False, "未关联证据包")
@@ -197,9 +202,11 @@ class AppController:
         if not root.exists():
             return EvidencePreview(False, f"证据目录不存在：{root}")
         try:
-            pack = self.pack or self.load_pack()
             loaded = load_evidence(
-                root, host=device_name, level=self.project.level, checks=pack.checks
+                root,
+                host=device_name,
+                level=self.project.level,
+                checks=self._checks_for_vendor(vendor),
             )
         except (EvidenceError, OSError, ControllerError) as exc:
             return EvidencePreview(False, str(exc))
@@ -245,12 +252,18 @@ class AppController:
             analyzed_files=analyzed_files,
         )
 
-    def evidence_details(self, package: str, device_name: str = "") -> EvidencePackage:
+    def evidence_details(
+        self, package: str, device_name: str = "", vendor: str = ""
+    ) -> EvidencePackage:
         """为材料审阅窗口提供经同一装载器校验的证据清单。"""
         root = self.evidence_path(package)
         try:
-            pack = self.pack or self.load_pack()
-            return load_evidence(root, host=device_name, level=self.project.level, checks=pack.checks)
+            return load_evidence(
+                root,
+                host=device_name,
+                level=self.project.level,
+                checks=self._checks_for_vendor(vendor),
+            )
         except (EvidenceError, OSError, ControllerError) as exc:
             raise ControllerError(str(exc)) from exc
 
@@ -372,11 +385,9 @@ class AppController:
         if self.run_result is None:
             raise ControllerError("请先运行判定后再确认重大隐患")
         pack = self.pack or self.load_pack()
-        if pack.major is None:
+        if pack.major_library() is None:
             raise ControllerError("重大隐患规则库未装载")
-        version = compute_rule_version(
-            [pack.root / pack.meta.high_risk, pack.root / pack.meta.major]
-        )
+        version = compute_rule_version(pack.rule_files())
         basis = basis_fingerprints(self.run_result).get(asset_type, "")
         if not basis:
             raise ControllerError("缺少判定依据指纹，需重新运行判定")
@@ -387,19 +398,19 @@ class AppController:
         if self.run_result is None:
             return {}
         pack = self.pack or self.load_pack()
-        library = pack.major
+        library = pack.major_library()
         if library is None:
             return {}
         issues = self.issue_rows()
-        version = compute_rule_version(
-            [pack.root / pack.meta.high_risk, pack.root / pack.meta.major]
-        )
+        version = compute_rule_version(pack.rule_files())
         fingerprints = basis_fingerprints(self.run_result)
         store = self._store()
         reviews: dict[tuple[str, str], MajorReview] = {}
         try:
             for issue in issues:
-                entries = triggers_for(issue.seq, self.project.level, pack.high_risk)
+                entries = triggers_for(
+                    issue.seq, self.project.level, pack.all_high_risk()
+                )
                 if not entries:
                     continue
                 candidates = assess_major(entries, library)
@@ -444,27 +455,23 @@ class AppController:
     def major_rule_version(self) -> str:
         """当前高风险判例 + 重大隐患规则的短版本号，用于界面核对。"""
         pack = self.pack or self.load_pack()
-        return compute_rule_version(
-            [pack.root / pack.meta.high_risk, pack.root / pack.meta.major]
-        )
+        return compute_rule_version(pack.rule_files())
 
     def ensure_major_confirmations(self) -> None:
         """导出前的重大确认门禁；直接复用 core 校验，不在此处放宽条件。"""
         if self.run_result is None:
             raise ControllerError("请先运行判定")
         pack = self.pack or self.load_pack()
-        library = pack.major
+        library = pack.major_library()
         if library is None:
             raise ControllerError("重大隐患规则库未装载")
         issues = self.issue_rows()
-        version = compute_rule_version(
-            [pack.root / pack.meta.high_risk, pack.root / pack.meta.major]
-        )
+        version = compute_rule_version(pack.rule_files())
         store = self._store()
         try:
             _ensure_major_confirmations(
                 issues,
-                pack.high_risk,
+                pack.all_high_risk(),
                 library,
                 self.project.level,
                 self.run_result,
@@ -492,7 +499,7 @@ class AppController:
         return build_issue_rows(
             self.run_result,
             pack.items_for_level(self.project.level),
-            TextLibrary(pack.texts),
+            TextLibrary(pack.all_texts()),
             self.confirmations(),
         )
 
@@ -584,7 +591,10 @@ class AppController:
         self.ensure_major_confirmations()
         pack = self.pack or self.load_pack()
         rows = build_major_rows(
-            self.issue_rows(), pack.high_risk, self.project.level, self.confirmations()
+            self.issue_rows(),
+            pack.all_high_risk(),
+            self.project.level,
+            self.confirmations(),
         )
         try:
             template = find_template(pack.root, "major_risk.xlsx")

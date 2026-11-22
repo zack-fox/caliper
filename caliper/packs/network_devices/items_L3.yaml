@@ -1,0 +1,618 @@
+- item_id: L3-CES1-01
+  level: 3
+  seq: 1
+  unit_no: 1
+  控制点: 身份鉴别
+  控制项: a）应对登录的用户进行身份标识和鉴别，身份标识具有唯一性，身份鉴别信息具有复杂度要求并定期更换；
+  重要程度: 重要
+  检查内容: '方法：核查＋测试。
+
+    核查步骤：
+
+    1）核查是否在用户登录时采用了身份鉴别措施（说明空口令账户情况）： 登录路由器/交换机时，是否进行了身份验证，例如需要输入账户、口令，非空口令登录，使用账户口令等方式进行验证则符合
+
+    2）核查用户列表，测试用户身份标识是否具有唯一性，不存在相同用户名的账户，各用户名均不同则为符合 输入display current-configuration或display local-users，出现类似下类用户配置，查看是否有相同用户名及空口令用户： local-user netadmin（用户名） password irreversible-cipher xxxxxx（密码） local-user network-admin（用户名） password irreversible-cipher xxxxxx（密码）
+
+    3）询问及查看所有在使用的账户所使用的口令组成情况是否满足“长度不小于8位，包含大写字母、小写字母、数字、特殊符号中的任意三种（4选3）”，满足条件则符合
+
+    4）核查用户鉴别信息是否满足复杂度要求并定期更换（长度至少8位，口令复杂度4选3，口令有效期小于等于90天），满足条件则符合 【注：H3C网络设备设置密码管理功能，需要开启全局密码管理功能。 (1)  进入系统视图 system-view (2)  开启全局密码管理功能（若未启用password-control enable，则策略不生效） password-control enable 缺省情况下，全局密码管理功能处于关闭状态。】 在开启全局密码管理功能后，输入display password-control，查看是否存在如下类似配置： password aging          ：enable  （90 days）（口令90天过期） password length         ：enable  （8 characters） （口令长度至少8位） passwordi history       ：enable（max history records:10）（口令历史记录的最大条数为10） password composition   ：enable （3 types，1 characters per type）（口令元素的最少组合类型为3种，每种至少包含一个字符）'
+  判断标准: 1、2、3、4项均符合为符合；1、2、3、4项均不符合为不符合；其他情况均为部分符合。
+  policy: mixed_partial
+  mode: auto
+  binary: false
+  manual_points:
+  - point: 1
+    reason: 登录过程是否进行身份鉴别需现场测试，不能仅凭配置回显定论
+- item_id: L3-CES1-02
+  level: 3
+  seq: 2
+  unit_no: 2
+  控制点: 身份鉴别
+  控制项: b）应具有登录失败处理功能，应配置并启用结束会话、限制非法登录次数和当登录连接超时自动退出等相关措施；
+  重要程度: 重要
+  检查内容: '方法：核查＋测试。
+
+    核查步骤：
+
+    1）核查设备是否配置并启用了非法登录达到一定次数后锁定账户的功能 在开启全局密码管理功能后，输入display password-control，存在如下类似配置： password-control login-attempt 3 exceed locktime 6（分钟） 核查设备是否配置并启用了登录连接超时自动退出的功能； 输入display current-configuration，存在如下类似配置： idle-timeout 10 【注：缺省情况下，H3C网络设备用户超时断开连接的时间为10分钟】 具有则继续查看第2、3项，无则不符合
+
+    2）现场核查是否设置合理的登录失败处理策略（建议值：登录失败小于等于10次，锁定时间大于等于5min，配置参数在范围内则符合）：
+
+    3）现场核查是否设置合理的登录连接超时自动退出处理措施（建议值：小于等于30min，配置参数在范围内则符合） 【注：还可通过测试验证，让现场配合人员尝试错误登录，验证是否具有登录失败处理策略（查看返回信息），以及是否生效。成功登录后等待5分钟，验证是否超时自动退出登录】 1不符合，则该测评项判定为不符合 其余情况为部分符合'
+  判断标准: 1、2、3均符合为符合；2、3均不符合为不符合。
+  policy: mixed_partial
+  mode: auto
+  binary: false
+- item_id: L3-CES1-03
+  level: 3
+  seq: 3
+  unit_no: 3
+  控制点: 身份鉴别
+  控制项: c）当进行远程管理时，应采取必要措施防止鉴别信息在网络传输过程中被窃听；
+  重要程度: 关键
+  检查内容: '方法：核查＋测试。
+
+    核查步骤：
+
+    1）现场核查及询问管理员是否进行远程管理： 在特权模式，输入display current-configuration或display telnet/ssh/http server status，查看是否开启远程管理方式，是否具有如下参数： 【 telnet server enable    //开启telnet服务 ssh server enable    //开启ssh服务 http server enable     //开启http服务 】 具有则继续查看第2项，无则不适用
+
+    2）现场核查鉴别信息传输过程中是否加密： 是否设置了仅允许SSH、HTTPS方式进行，是则符合 输入display current-configuration，存在如下类似配置： local-user test password cipher 456%A£FT service-type ssh level 3 ssh user test authentication-type password User- interface vty 0 4 Protocol inbound ssh 【注：还可通过测试验证，让现场配合人员使用SSH、HTTPS、Telnet、HTTP方式进行连接，确认是否能够成功建立连接。（若开启了远程管理方式，但无法通过远程连接工具建立连接，需核查管理地址是否在允许范围内。）】 执行第1项命令后无相关服务状态，则未涉及远程管理，判定为不适用'
+  判断标准: 2不符合为不符合；1、2均符合为符合。
+  policy: binary
+  mode: auto
+  binary: true
+  manual_points:
+  - point: 1
+    reason: 是否实际通过远程方式管理设备需访谈确认，若未启用远程管理应判定为不适用
+- item_id: L3-CES1-04
+  level: 3
+  seq: 4
+  unit_no: 4
+  控制点: 身份鉴别
+  控制项: d）应采用口令、密码技术、生物技术等两种或两种以上组合的鉴别技术对用户进行身份鉴别，且其中一种鉴别技术至少应使用密码技术来实现。
+  重要程度: 关键
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）是否采用两种或以上鉴别技术： 核查登录过程，除账号+口令外，是否采用密码技术、生物技术等两种或两种以上组合的鉴别技术对用户进行身份鉴别，是则符合
+
+    2）其中一种鉴别技术是否使用密码技术来实现： 其中一种鉴别技术至少应使用密码技术来实现，如使用USB Key、令牌、TOTP一次一密技术措施等，是则符合 【注：短信验证码、APP生成的动态口令，属于双重身份鉴别，但不含密码技术】 1项不符合，则该测评项判定为不符合'
+  判断标准: 1、2项均符合为符合；其他情况均为部分符合。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-05
+  level: 3
+  seq: 5
+  unit_no: 5
+  控制点: 访问控制
+  控制项: a）应对登录的用户分配账户和权限；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查是否为用户设置了账户和权限 通过核查方式，在特权模式下输入display current-configuration 或 display local-users，查看各用户账号、状态，与管理员核实状态为活动的账户的作用是否能够与实际使用人员一一对应
+
+    2）核查是否存在匿名账户，若存在，核查是否禁用或限制匿名账户的访问'
+  判断标准: 1、2项均符合为符合；1、2项均不符合为不符合；其他情况均为部分符合。
+  policy: mixed_partial
+  mode: auto
+  binary: false
+  manual_points:
+  - point: 1
+    reason: 账户权限分配是否遵循最小权限需结合访谈确认
+- item_id: L3-CES1-06
+  level: 3
+  seq: 6
+  unit_no: 6
+  控制点: 访问控制
+  控制项: b）应重命名或删除默认账户，修改默认账户的默认口令；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查是否存在默认账户或易猜测账户： 在特权模式下输入display current-configuration或display local-users，查看是否存在默认账户（如Admin、admin、h3c、Administrator、administrator等），若存在，还需核查是否进行了禁用；若不存在默认账户或对默认账户进行了禁用则符合
+
+    2）核查默认账户是否更改为复杂口令（账户状态为活动可用）： 查验已存在的默认账户口令是否为默认口令或简单口令，口令较为复杂则为符合，口令易猜测或是网上公开的厂商默认口令则为不符合 1或2项为符合则复合，否则为不符合'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: binary
+  mode: auto
+  binary: true
+  manual_points:
+  - point: 2
+    reason: 默认口令是否已修改无法从密文回显确认，需登录测试
+- item_id: L3-CES1-07
+  level: 3
+  seq: 7
+  unit_no: 7
+  控制点: 访问控制
+  控制项: c）应及时删除或停用多余的、过期的账户，避免共享账户的存在；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查是否存在多余的账户，以及管理员用户与设备中的账户是否一一对应 输入display current-configuration 或 display local-users，查看每条类似如下命令所配置的用户名与管理员核实该账户是否确实、必要： local-user userl service-type telnet user privilege level 2 local-user user2 service-type ftp user privilede level 3
+
+    2）是否存在过期的账户： 与现场配合人员确认各账户的用途，确认是否存在过期账户，无则符合
+
+    3）是否不存在多人共用同一账户的情况： 确认各个账户的使用情况，各账户均有一一对应的管理人员使用，是则符合'
+  判断标准: 1、2、3项均符合为符合；1、2、3项均不符合为不符合；其他情况均为部分符合。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-08
+  level: 3
+  seq: 8
+  unit_no: 8
+  控制点: 访问控制
+  控制项: d）应授予管理用户所需的最小权限，实现管理用户的权限分离；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查设备中的账户是否进行了角色划分，例如划分为系统管理员、安全管理员、 审计管理员等角色
+
+    2）核查管理用户的权限是否已经分离 输入display current-configuration命令，存在如下类似配置： local-user userl service-type telnet user privilege level 2 local-user user2 service-type ftp user privilede level 3 local-user user3 service-type ftp user privilede level 15
+
+    3）管理用户的权限是否进行分离，各自的权限是否为任务所需的最小权限： 查看各账户的privilege level 等级是否不一致，如系统管理员仅具有除审计权限外的全部管理权限，安全管理员仅具有配置安全策略的权限，审计管理员仅具有管理审计功能的权限，各账户仅具有管理设备所需的最小权限，则符合'
+  判断标准: 1、2、3项均符合为符合；1、2、3项均不符合为不符合；其他情况均为部分符合。
+  policy: mixed_partial
+  mode: auto
+  binary: false
+  manual_points:
+  - point: 1
+    reason: 管理用户角色划分与权限分离需访谈确认
+  - point: 3
+    reason: 是否按最小权限原则分配权限需结合访谈确认
+- item_id: L3-CES1-09
+  level: 3
+  seq: 9
+  unit_no: 9
+  控制点: 访问控制
+  控制项: e）应由授权主体配置访问控制策略，访问控制策略规定主体对客体的访问规则；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查是否由授权主体（如管理用户）负责配置访问控制策略： 核查账户权限，由具体由哪个账户（一般是超级管理员）负责访问控制策略的配置，默认符合
+
+    2）用户是否有可越权访问的情况 验证不同权限的账户，是否能越权操作，默认符合'
+  判断标准: 1、2项均符合为符合。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-10
+  level: 3
+  seq: 10
+  unit_no: 10
+  控制点: 访问控制
+  控制项: f）访问控制的粒度应达到主体为用户级或进程级，客体为文件、数据库表级；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）此项默认符合'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-11
+  level: 3
+  seq: 11
+  unit_no: 11
+  控制点: 访问控制
+  控制项: g）应对重要主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查是否具备设置安全标记的功能
+
+    2）能够实现控制主体对有安全标记信息资源的访问 1项不符合或2项不符合则为不符合'
+  判断标准: 1、2项均符合为符合。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-12
+  level: 3
+  seq: 12
+  unit_no: 12
+  控制点: 安全审计
+  控制项: a）应启用安全审计功能，审计覆盖到每个用户，对重要的用户行为和重要安全事件进行审计；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查是否开启了安全审计功能，开启了审计功能则符合 输入display logbuffer，存在如下类似 配置： Logging buffer configuration and contents:enabled
+
+    2）核查安全审计范围是否覆盖每个用户，审计范围覆盖每个用户则符合（交换机开启了日志功能该项默认符合）
+
+    3）核查是否已对重要的用户行为和重要安全事件进行审计，对重要用户行为和重要安全事件进行了审计则符合（交换机开启了日志功能该项默认符合） 输入display logbuffer，存在如下类似 配置。 Logging buffer configuration and contents:enabled Allowed max buffer size : 1024 Actual buffer size : 512 Channel number : 4 , Channel name : logbuffer Dropped messages : 0 Overwritten messages : 0 Current messages : 91
+
+    4）3符合则符合 其余情况为部分符合'
+  判断标准: 1不符合则不符合。
+  policy: mixed_partial
+  mode: auto
+  binary: false
+  manual_points:
+  - point: 2
+    reason: 审计范围是否覆盖每个用户需结合设备日志与用户清单确认
+- item_id: L3-CES1-13
+  level: 3
+  seq: 13
+  unit_no: 13
+  控制点: 安全审计
+  控制项: b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查审计记录是否包含事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息，审计记录包含上述信息则符合'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-14
+  level: 3
+  seq: 14
+  unit_no: 14
+  控制点: 安全审计
+  控制项: c）应对审计记录进行保护，定期备份，避免受到未预期的删除、修改或覆盖等；
+  重要程度: 重要
+  检查内容: '方法：访谈＋核查。
+
+    核查步骤：
+
+    1）访谈管理员，了解和核查审计记录的保护措施，无法对审计记录进行操作或仅审计管理员账户可对审计记录进行操作则符合
+
+    2）核查是否定时导出设备审计记录（情况较少）或将设备日志发送到日志服务器或日志审计系统等，如果部署了日志服务器或日志审计系统，则登录日志服务器或审计系统，核查被测交换机的日志是否在收集范围内，对审计记录进行了备份且在日志服务器或日志审计系统收集范围内则符合 输入display info-center，存在如下类似配置： Information Center: enabled Log host: the interface name of the source address : Vlan-interface1
+
+    3）0.2（日志服务器地址）, channel number : 2, channel name : loghost language : english, host facility local : 7
+
+    4）2符合则符合 其余情况为部分符合'
+  判断标准: 1、2不符合则不符合。
+  policy: mixed_partial
+  mode: auto
+  binary: false
+  manual_points:
+  - point: 1
+    reason: 审计记录保护措施是否有效需现场核查
+- item_id: L3-CES1-15
+  level: 3
+  seq: 15
+  unit_no: 15
+  控制点: 安全审计
+  控制项: d）应对审计进程进行保护，防止未经授权的中断。
+  重要程度: 重要
+  检查内容: '方法：核查＋测试。
+
+    核查步骤：
+
+    1）在业主单位的允许下，通过测试方法，登录非审计管理员权限账户输入undo info-center enable命令，核查是否能关闭设备的审计功能，以验证审计功能是否受到了保护（执行 undo info-center enable 命令行后，设备上产生的Log、Trap和Debug信息都不再记录） 1符合则符合，否则不符合'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-17
+  level: 3
+  seq: 16
+  unit_no: 17
+  控制点: 入侵防范
+  控制项: a）应遵循最小安装的原则，仅安装需要的组件和应用程序；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）网络设备所需的组件和应用程序出厂前由相关厂商进行了固定化配置，出厂后不再涉及安装其他组件和应用程序，故不适用'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: na
+  mode: na
+  binary: false
+- item_id: L3-CES1-18
+  level: 3
+  seq: 17
+  unit_no: 18
+  控制点: 入侵防范
+  控制项: b）应关闭不需要的系统服务、默认共享和高危端口；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）此项默认不适用'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: na
+  mode: na
+  binary: false
+- item_id: L3-CES1-19
+  level: 3
+  seq: 18
+  unit_no: 19
+  控制点: 入侵防范
+  控制项: c）应通过设定终端接入方式或网络地址范围对通过网络进行管理的管理终端进行限制；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查设备配置文件是否对终端接入范围进行了限制，
+
+    2）输入display acl，存在如下类似配置： acl number 2001 rule 10 permit source 10,1.100.0 0.0.0.255       //限制10.1.100.0网段内的终端可登录访问设备 user-interface vty 0 4 acl 2001 inbound authentication-mode scheme user privilege level 1
+
+    3）若设备仅允许在本地机房通过设备console口登录进行管理，也符合要求 1或2符合则符合'
+  判断标准: 1、2均不符合则不符合。
+  policy: binary
+  mode: auto
+  binary: true
+- item_id: L3-CES1-20
+  level: 3
+  seq: 19
+  unit_no: 20
+  控制点: 入侵防范
+  控制项: d）应提供数据有效性检验功能，保证通过人机接口输入或通过通信接口输入的内容符合系统设定要求；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）此项默认不适用'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-21
+  level: 3
+  seq: 20
+  unit_no: 21
+  控制点: 入侵防范
+  控制项: e）应能发现可能存在的已知漏洞，并在经过充分测试评估后，及时修补漏洞；
+  重要程度: 重要
+  检查内容: '方法：访谈＋核查＋测试。
+
+    核查步骤：
+
+    1）访谈管理员是否定期对设备进行了漏洞扫描或者渗透测试，核查漏扫报告是否存在高风险漏洞（管理员定期进行了漏洞扫描，且不存在高风险漏洞）
+
+    2）如漏扫/渗透报告存在高风险漏洞，访谈管理员是否在经过充分的测试和评估后及时修补了漏洞（管理员定期对高风险漏洞进行了修补）
+
+    3）2符合则符合 其余情况为部分符合'
+  判断标准: 1或2不符合则不符合。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-22
+  level: 3
+  seq: 21
+  unit_no: 22
+  控制点: 入侵防范
+  控制项: f）应能够检测到对重要节点进行入侵的行为，并在发生严重入侵事件时提供报警。
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）此项默认不适用'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-24
+  level: 3
+  seq: 22
+  unit_no: 24
+  控制点: 可信验证
+  控制项: a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）询问是否部署了可信验证技术的设备 查看是否部署相应的可信验证设备，如果有则该点符合
+
+    2）查看相应的可信验证设备是否具备以下功能 是否基于可信根对计算设备的系统引导程序、系统程序、重要配置参数等进行可信验证，如果具有以上功能则该点符合
+
+    3）验证检测到计算设备的可信性受到破坏后是否进行报警 能够检测可信性受到破坏后进行报警，如果可以报警，则该点符合 1不符合或2、3均不符合，则为不符合'
+  判断标准: 1、2、3项均符合为符合。
+  policy: manual
+  mode: manual
+  binary: false
+  optional_clause: true
+- item_id: L3-CES1-25
+  level: 3
+  seq: 23
+  unit_no: 25
+  控制点: 数据完整性
+  控制项: a）应采用校验技术或密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查远程管理设备时采用的是否为加密传输的协议（SSH或HTTPS），采用加密传输的协议进行远程管理则能保证鉴别数据在传输过程中的完整性，该项符合'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: binary
+  mode: auto
+  binary: true
+- item_id: L3-CES1-26
+  level: 3
+  seq: 24
+  unit_no: 26
+  控制点: 数据完整性
+  控制项: b）应采用校验技术或密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等。
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查设备中的账户口令是否以密文形式存放（以密文形式存放则能保证鉴别数据在存储过程中完整性） 输入display current-configuration或display local-users，出现类似下类用户配置： local-user netadmin（用户名） password irreversible-cipher $c333kK6PWyha6eFuCtZ0QfnE1jVsmBOaiw==   //登录口令密文形式存放 local-user network-admin（用户名） password irreversible-cipher 3pMPmSNUJDQwJEM04Bz1ZZvwN4Pcu8w==   //登录口令密文形式存放'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: binary
+  mode: auto
+  binary: true
+- item_id: L3-CES1-27
+  level: 3
+  seq: 25
+  unit_no: 27
+  控制点: 数据保密性
+  控制项: a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查远程管理设备时采用的是否为加密传输的协议（SSH或HTTPS），采用加密传输的协议进行远程管理则能保证鉴别数据在传输过程中的保密性，该项符合'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: binary
+  mode: auto
+  binary: true
+- item_id: L3-CES1-28
+  level: 3
+  seq: 26
+  unit_no: 28
+  控制点: 数据保密性
+  控制项: b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查设备中的账户口令是否以密文形式存放（以密文形式存放则能保证鉴别数据在存储过程中保密性） 输入display current-configuration或display local-users，出现类似下类用户配置： local-user netadmin（用户名） password irreversible-cipher $c333kK6PWyha6eFuCtZ0QfnE1jVsmBOaiw==   //登录口令密文形式存放 local-user network-admin（用户名） password irreversible-cipher 3pMPmSNUJDQwJEM04Bz1ZZvwN4Pcu8w==   //登录口令密文形式存放'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: binary
+  mode: auto
+  binary: true
+- item_id: L3-CES1-29
+  level: 3
+  seq: 27
+  unit_no: 29
+  控制点: 数据备份恢复
+  控制项: a）应提供重要数据的本地数据备份与恢复功能；
+  重要程度: 重要
+  检查内容: '方法：核查＋测试。
+
+    核查步骤：
+
+    1）核查是否定期对设备配置数据进行备份
+
+    2）询问管理员备份周期和备份方式
+
+    3）核查备份记录是否与备份策略一致
+
+    4）核查近期数据恢复测试记录 其余情况为部分符合'
+  判断标准: 1、2、3、4均符合则符合；1不符合则不符合。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-30
+  level: 3
+  seq: 28
+  unit_no: 30
+  控制点: 数据备份恢复
+  控制项: b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地；
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）此项默认不适用'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: na
+  mode: na
+  binary: false
+- item_id: L3-CES1-31
+  level: 3
+  seq: 29
+  unit_no: 31
+  控制点: 数据备份恢复
+  控制项: c）应提供重要数据处理系统的热冗余，保证系统的高可用性。
+  重要程度: 重要
+  检查内容: '方法：现场核查。
+
+    核查步骤：
+
+    1）核查重要数据处理系统（包括边界路由器、核心交换机等）是否采用热冗余方式部署'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-23
+  level: 3
+  seq: 30
+  unit_no: 23
+  控制点: 恶意代码防范
+  控制项: a）应采用免受恶意代码攻击的技术措施或主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。
+  重要程度: 重要
+  检查内容: '方法：访谈＋核查。
+
+    核查步骤：见测评项要求，结合本对象实际核查。'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-32
+  level: 3
+  seq: 31
+  unit_no: 32
+  控制点: 剩余信息保护
+  控制项: a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除；
+  重要程度: 重要
+  检查内容: '方法：访谈＋核查。
+
+    核查步骤：见测评项要求，结合本对象实际核查。'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-33
+  level: 3
+  seq: 32
+  unit_no: 33
+  控制点: 剩余信息保护
+  控制项: b）应保证存有敏感数据的存储空间被释放或重新分配前得到完全清除。
+  重要程度: 重要
+  检查内容: '方法：访谈＋核查。
+
+    核查步骤：见测评项要求，结合本对象实际核查。'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-34
+  level: 3
+  seq: 33
+  unit_no: 34
+  控制点: 个人信息保护
+  控制项: a）应仅采集和保存业务必需的用户个人信息；
+  重要程度: 重要
+  检查内容: '方法：访谈＋核查。
+
+    核查步骤：见测评项要求，结合本对象实际核查。'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: manual
+  mode: manual
+  binary: false
+- item_id: L3-CES1-35
+  level: 3
+  seq: 34
+  unit_no: 35
+  控制点: 个人信息保护
+  控制项: b）应禁止未授权访问和非法使用用户个人信息。
+  重要程度: 重要
+  检查内容: '方法：访谈＋核查。
+
+    核查步骤：见测评项要求，结合本对象实际核查。'
+  判断标准: 各子项全部满足为符合，任一子项不满足为不符合（无部分符合）。
+  policy: manual
+  mode: manual
+  binary: false
