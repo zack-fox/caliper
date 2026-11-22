@@ -18,7 +18,7 @@ setup-gui:
 	$(PY) -m pip install -e ".[gui]"
 
 syntax:
-	$(PY) -m compileall -q core packs app adapters
+	$(PY) -m compileall -q core packs app adapters tools
 
 lint:
 	$(PY) -m core.contracts.selfcheck

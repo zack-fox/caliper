@@ -1,0 +1,1998 @@
+{
+  "domains": {
+    "network": {
+      "source": "等保测评指导书—网络设备（安全设备）.xlsx",
+      "sheets": 15,
+      "records": 440,
+      "by_sheet": [
+        {
+          "sheet": "H3C（二级）",
+          "level": 2,
+          "object": "H3C",
+          "object_kind": "vendor",
+          "rows": 23
+        },
+        {
+          "sheet": "HUAWEI（二级）",
+          "level": 2,
+          "object": "HUAWEI",
+          "object_kind": "vendor",
+          "rows": 23
+        },
+        {
+          "sheet": "Cisco（二级） ",
+          "level": 2,
+          "object": "Cisco",
+          "object_kind": "vendor",
+          "rows": 23
+        },
+        {
+          "sheet": "中兴ZTE（二级）",
+          "level": 2,
+          "object": "中兴ZTE",
+          "object_kind": "vendor",
+          "rows": 23
+        },
+        {
+          "sheet": "安全设备（通用模板）（二级）",
+          "level": 2,
+          "object": "安全设备（通用模板）",
+          "object_kind": "generic_template",
+          "rows": 23
+        },
+        {
+          "sheet": "H3C（三级）",
+          "level": 3,
+          "object": "H3C",
+          "object_kind": "vendor",
+          "rows": 34
+        },
+        {
+          "sheet": "HUAWEI（三级）",
+          "level": 3,
+          "object": "HUAWEI",
+          "object_kind": "vendor",
+          "rows": 34
+        },
+        {
+          "sheet": "Cisco（三级）",
+          "level": 3,
+          "object": "Cisco",
+          "object_kind": "vendor",
+          "rows": 34
+        },
+        {
+          "sheet": "中兴ZTE（三级）",
+          "level": 3,
+          "object": "中兴ZTE",
+          "object_kind": "vendor",
+          "rows": 34
+        },
+        {
+          "sheet": "安全设备（通用模板）（三级）",
+          "level": 3,
+          "object": "安全设备（通用模板）",
+          "object_kind": "generic_template",
+          "rows": 34
+        },
+        {
+          "sheet": "H3C（四级）",
+          "level": 4,
+          "object": "H3C",
+          "object_kind": "vendor",
+          "rows": 31
+        },
+        {
+          "sheet": "HUAWEI（四级）",
+          "level": 4,
+          "object": "HUAWEI",
+          "object_kind": "vendor",
+          "rows": 31
+        },
+        {
+          "sheet": "Cisco（四级）",
+          "level": 4,
+          "object": "Cisco",
+          "object_kind": "vendor",
+          "rows": 31
+        },
+        {
+          "sheet": "中兴ZTE（四级）",
+          "level": 4,
+          "object": "中兴ZTE",
+          "object_kind": "vendor",
+          "rows": 31
+        },
+        {
+          "sheet": "安全设备（通用模板）（四级）",
+          "level": 4,
+          "object": "安全设备（通用模板）",
+          "object_kind": "generic_template",
+          "rows": 31
+        }
+      ]
+    },
+    "database": {
+      "source": "等保测评指导书—数据库.xlsx",
+      "sheets": 9,
+      "records": 277,
+      "by_sheet": [
+        {
+          "sheet": "【二级】MySQL数据库",
+          "level": 2,
+          "object": "MySQL",
+          "object_kind": "db_engine",
+          "rows": 23
+        },
+        {
+          "sheet": "【二级】Oracle数据库",
+          "level": 2,
+          "object": "Oracle",
+          "object_kind": "db_engine",
+          "rows": 23
+        },
+        {
+          "sheet": "【二级】SQL Sever数据库",
+          "level": 2,
+          "object": "SQLSever",
+          "object_kind": "db_engine",
+          "rows": 23
+        },
+        {
+          "sheet": "【三级】MySQL数据库",
+          "level": 3,
+          "object": "MySQL",
+          "object_kind": "db_engine",
+          "rows": 34
+        },
+        {
+          "sheet": "【三级】Oracle数据库",
+          "level": 3,
+          "object": "Oracle",
+          "object_kind": "db_engine",
+          "rows": 34
+        },
+        {
+          "sheet": "【三级】SQL Sever数据库",
+          "level": 3,
+          "object": "SQLSever",
+          "object_kind": "db_engine",
+          "rows": 34
+        },
+        {
+          "sheet": "【四级】MySQL数据库",
+          "level": 4,
+          "object": "MySQL",
+          "object_kind": "db_engine",
+          "rows": 36
+        },
+        {
+          "sheet": "【四级】Oracle数据库",
+          "level": 4,
+          "object": "Oracle",
+          "object_kind": "db_engine",
+          "rows": 35
+        },
+        {
+          "sheet": "【四级】SQL Sever数据库",
+          "level": 4,
+          "object": "SQLSever",
+          "object_kind": "db_engine",
+          "rows": 35
+        }
+      ]
+    },
+    "os": {
+      "source": "等保测评指导书—操作系统.xlsx",
+      "sheets": 18,
+      "records": 546,
+      "by_sheet": [
+        {
+          "sheet": "【二级】Windows操作系统",
+          "level": 2,
+          "object": "Windows",
+          "object_kind": "os_family",
+          "rows": 23
+        },
+        {
+          "sheet": "【二级】Linux操作系统",
+          "level": 2,
+          "object": "Linux",
+          "object_kind": "os_family",
+          "rows": 23
+        },
+        {
+          "sheet": "【二级】AIX操作系统",
+          "level": 2,
+          "object": "AIX",
+          "object_kind": "os_family",
+          "rows": 23
+        },
+        {
+          "sheet": "【二级】ESXI操作系统",
+          "level": 2,
+          "object": "ESXI",
+          "object_kind": "os_family",
+          "rows": 23
+        },
+        {
+          "sheet": "【二级】Solaris操作系统",
+          "level": 2,
+          "object": "Solaris",
+          "object_kind": "os_family",
+          "rows": 23
+        },
+        {
+          "sheet": "【二级】Ubuntu（Debian）操作系统",
+          "level": 2,
+          "object": "Ubuntu（Debian）",
+          "object_kind": "os_family",
+          "rows": 23
+        },
+        {
+          "sheet": "【三级】Windows操作系统",
+          "level": 3,
+          "object": "Windows",
+          "object_kind": "os_family",
+          "rows": 34
+        },
+        {
+          "sheet": "【三级】Linux操作系统",
+          "level": 3,
+          "object": "Linux",
+          "object_kind": "os_family",
+          "rows": 34
+        },
+        {
+          "sheet": "【三级】AIX操作系统",
+          "level": 3,
+          "object": "AIX",
+          "object_kind": "os_family",
+          "rows": 34
+        },
+        {
+          "sheet": "【三级】ESXI操作系统",
+          "level": 3,
+          "object": "ESXI",
+          "object_kind": "os_family",
+          "rows": 34
+        },
+        {
+          "sheet": "【三级】Solaris操作系统",
+          "level": 3,
+          "object": "Solaris",
+          "object_kind": "os_family",
+          "rows": 34
+        },
+        {
+          "sheet": "【三级】Ubuntu（Debian）操作系统 ",
+          "level": 3,
+          "object": "Ubuntu（Debian）",
+          "object_kind": "os_family",
+          "rows": 34
+        },
+        {
+          "sheet": "【四级】Windows操作系统",
+          "level": 4,
+          "object": "Windows",
+          "object_kind": "os_family",
+          "rows": 34
+        },
+        {
+          "sheet": "【四级】Linux操作系统 ",
+          "level": 4,
+          "object": "Linux",
+          "object_kind": "os_family",
+          "rows": 34
+        },
+        {
+          "sheet": "【四级】AIX操作系统",
+          "level": 4,
+          "object": "AIX",
+          "object_kind": "os_family",
+          "rows": 34
+        },
+        {
+          "sheet": "【四级】ESXI操作系统",
+          "level": 4,
+          "object": "ESXI",
+          "object_kind": "os_family",
+          "rows": 34
+        },
+        {
+          "sheet": "【四级】Solaris操作系统",
+          "level": 4,
+          "object": "Solaris",
+          "object_kind": "os_family",
+          "rows": 34
+        },
+        {
+          "sheet": "【四级】Ubuntu（Debian）操作系统 ",
+          "level": 4,
+          "object": "Ubuntu（Debian）",
+          "object_kind": "os_family",
+          "rows": 34
+        }
+      ]
+    }
+  },
+  "totals": {
+    "sheets": 42,
+    "records": 1263
+  },
+  "shared_units": {
+    "database-L2": {
+      "objects": [
+        "MySQL",
+        "Oracle",
+        "SQLSever"
+      ],
+      "shared_units": 23
+    },
+    "database-L3": {
+      "objects": [
+        "MySQL",
+        "Oracle",
+        "SQLSever"
+      ],
+      "shared_units": 34
+    },
+    "database-L4": {
+      "objects": [
+        "MySQL",
+        "Oracle",
+        "SQLSever"
+      ],
+      "shared_units": 36
+    },
+    "network-L2": {
+      "objects": [
+        "Cisco",
+        "H3C",
+        "HUAWEI",
+        "中兴ZTE",
+        "安全设备（通用模板）"
+      ],
+      "shared_units": 23
+    },
+    "network-L3": {
+      "objects": [
+        "Cisco",
+        "H3C",
+        "HUAWEI",
+        "中兴ZTE",
+        "安全设备（通用模板）"
+      ],
+      "shared_units": 34
+    },
+    "network-L4": {
+      "objects": [
+        "Cisco",
+        "H3C",
+        "HUAWEI",
+        "中兴ZTE",
+        "安全设备（通用模板）"
+      ],
+      "shared_units": 31
+    },
+    "os-L2": {
+      "objects": [
+        "AIX",
+        "ESXI",
+        "Linux",
+        "Solaris",
+        "Ubuntu（Debian）",
+        "Windows"
+      ],
+      "shared_units": 23
+    },
+    "os-L3": {
+      "objects": [
+        "AIX",
+        "ESXI",
+        "Linux",
+        "Solaris",
+        "Ubuntu（Debian）",
+        "Windows"
+      ],
+      "shared_units": 34
+    },
+    "os-L4": {
+      "objects": [
+        "AIX",
+        "ESXI",
+        "Linux",
+        "Solaris",
+        "Ubuntu（Debian）",
+        "Windows"
+      ],
+      "shared_units": 34
+    }
+  },
+  "duplicate_units": [],
+  "missing_units": [
+    {
+      "domain": "database",
+      "level": 3,
+      "expected_range": "1..35",
+      "actual_count": 34,
+      "missing_numbers": [
+        16
+      ]
+    },
+    {
+      "domain": "network",
+      "level": 3,
+      "expected_range": "1..35",
+      "actual_count": 34,
+      "missing_numbers": [
+        16
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "expected_range": "1..35",
+      "actual_count": 34,
+      "missing_numbers": [
+        16
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "domain": "database",
+      "level": 2,
+      "unit_no": "L2-CES1-18",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）应采用校验技术保证重要数据在传输过程中的完整性。",
+      "right_object": "Oracle",
+      "right_text": "a）应采用校验技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等；"
+    },
+    {
+      "domain": "database",
+      "level": 2,
+      "unit_no": "L2-CES1-20",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "b）应提供异地数据备份功能，利用通信网络将重要数据定时批量传送至备份场地。",
+      "right_object": "Oracle",
+      "right_text": "b）应提供异地实时备份功能，利用通信网络将重要数据定时批量备份至备份场地。"
+    },
+    {
+      "domain": "database",
+      "level": 2,
+      "unit_no": "L2-CES1-20",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "b）应提供异地数据备份功能，利用通信网络将重要数据定时批量传送至备份场地。",
+      "right_object": "SQLSever",
+      "right_text": "b）应提供异地实时备份功能，利用通信网络将重要数据定时批量传送至备份场地。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-11",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "g）应对重要主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。",
+      "right_object": "Oracle",
+      "right_text": "g）应对主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-11",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "g）应对重要主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。",
+      "right_object": "SQLSever",
+      "right_text": "g）应对主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-13",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息：",
+      "right_object": "Oracle",
+      "right_text": "b）审计记录应包括事件的日期和时间、事件类型、主体标识、客体标识和结果等；"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-13",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息：",
+      "right_object": "SQLSever",
+      "right_text": "b）审计记录应包括事件的日期和时间、事件类型、事件是否成功及其他与审计相关的信息："
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-22",
+      "field": "控制点",
+      "left_object": "MySQL",
+      "left_text": "恶意代码防范",
+      "right_object": "Oracle",
+      "right_text": "可信验证"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-22",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）应采用免受恶意代码攻击的技术措施或主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。",
+      "right_object": "Oracle",
+      "right_text": "a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的所有执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心，并进行动态关联感知。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-22",
+      "field": "控制点",
+      "left_object": "MySQL",
+      "left_text": "恶意代码防范",
+      "right_object": "SQLSever",
+      "right_text": "可信验证"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-22",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）应采用免受恶意代码攻击的技术措施或主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。",
+      "right_object": "SQLSever",
+      "right_text": "a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心，并进行动态关联感知。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-23",
+      "field": "控制点",
+      "left_object": "MySQL",
+      "left_text": "可信验证",
+      "right_object": "Oracle",
+      "right_text": "数据完整性"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-23",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。",
+      "right_object": "Oracle",
+      "right_text": "a）应采用密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等；"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-23",
+      "field": "控制点",
+      "left_object": "MySQL",
+      "left_text": "可信验证",
+      "right_object": "SQLSever",
+      "right_text": "数据完整性"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-23",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。",
+      "right_object": "SQLSever",
+      "right_text": "a）应采用密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等："
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-24",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）应采用校验技术或密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等：",
+      "right_object": "Oracle",
+      "right_text": "b）应采用密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等；"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-24",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）应采用校验技术或密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等：",
+      "right_object": "SQLSever",
+      "right_text": "b）应采用密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-25",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "b）应采用校验技术或密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等；",
+      "right_object": "Oracle",
+      "right_text": "c）在可能涉及法律责任认定的应用中，应采用密码技术提供数据原发证据和数据接收证据，实现数据原发行为的抗抵赖和数据接收行为的抗抵赖。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-25",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "b）应采用校验技术或密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等；",
+      "right_object": "SQLSever",
+      "right_text": "c）在可能涉及法律责任认定的应用中，应采用密码技术提供数据原发证据和数据接收证据，实现数据原发行为的抗抵赖和数据接收行为的抗抵赖"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-26",
+      "field": "控制点",
+      "left_object": "MySQL",
+      "left_text": "数据完整性",
+      "right_object": "Oracle",
+      "right_text": "数据保密性"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-26",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "c)在可能涉及法律责任认定的应用中，应采用密码技术提供数据原发证据和数据接收证据，实现数据原发行为的抗抵赖和数据接收行为的抗抵赖。",
+      "right_object": "Oracle",
+      "right_text": "a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等；"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-26",
+      "field": "控制点",
+      "left_object": "MySQL",
+      "left_text": "数据完整性",
+      "right_object": "SQLSever",
+      "right_text": "数据保密性"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-26",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "c)在可能涉及法律责任认定的应用中，应采用密码技术提供数据原发证据和数据接收证据，实现数据原发行为的抗抵赖和数据接收行为的抗抵赖。",
+      "right_object": "SQLSever",
+      "right_text": "a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等："
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-27",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等：",
+      "right_object": "Oracle",
+      "right_text": "b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-27",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）应采用密码技术保证重要数据在传输过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等：",
+      "right_object": "SQLSever",
+      "right_text": "b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-28",
+      "field": "控制点",
+      "left_object": "MySQL",
+      "left_text": "数据保密性",
+      "right_object": "Oracle",
+      "right_text": "数据备份恢复"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-28",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。",
+      "right_object": "Oracle",
+      "right_text": "a）应提供重要数据的本地数据备份与恢复功能；"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-28",
+      "field": "控制点",
+      "left_object": "MySQL",
+      "left_text": "数据保密性",
+      "right_object": "SQLSever",
+      "right_text": "数据备份恢复"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-28",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "b）应采用密码技术保证重要数据在存储过程中的保密性，包括但不限于鉴别数据、重要业务数据和重要个人信息等。",
+      "right_object": "SQLSever",
+      "right_text": "a）应提供重要数据的本地数据备份与恢复功能："
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-29",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）应提供重要数据的本地数据备份与恢复功能：",
+      "right_object": "Oracle",
+      "right_text": "b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地；"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-29",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）应提供重要数据的本地数据备份与恢复功能：",
+      "right_object": "SQLSever",
+      "right_text": "b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地："
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-30",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地：",
+      "right_object": "Oracle",
+      "right_text": "c）应提供重要数据处理系统的热冗余，保证系统的高可用性；"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-30",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "b）应提供异地实时备份功能，利用通信网络将重要数据实时备份至备份场地：",
+      "right_object": "SQLSever",
+      "right_text": "c）应提供重要数据处理系统的热冗余，保证系统的高可用性。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-31",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "c）应提供重要数据处理系统的热冗余，保证系统的高可用性。",
+      "right_object": "Oracle",
+      "right_text": "d）应建立异地灾难备份中心，提供业务应用的实时切换。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-31",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "c）应提供重要数据处理系统的热冗余，保证系统的高可用性。",
+      "right_object": "SQLSever",
+      "right_text": "d）应建立异地灾难备份中心，提供业务应用的实时切换。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-32",
+      "field": "控制点",
+      "left_object": "MySQL",
+      "left_text": "数据备份恢复",
+      "right_object": "Oracle",
+      "right_text": "剩余信息保护"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-32",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "d）应建立异地灾难备份中心，提供业务应用的实施切换",
+      "right_object": "Oracle",
+      "right_text": "a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除；"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-32",
+      "field": "控制点",
+      "left_object": "MySQL",
+      "left_text": "数据备份恢复",
+      "right_object": "SQLSever",
+      "right_text": "剩余信息保护"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-32",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "d）应建立异地灾难备份中心，提供业务应用的实施切换",
+      "right_object": "SQLSever",
+      "right_text": "a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除："
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-33",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除：",
+      "right_object": "Oracle",
+      "right_text": "b）应保证存有敏感数据的存储空间被释放或重新分配前得到完全清除。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-33",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）应保证鉴别信息所在的存储空间被释放或重新分配前得到完全清除：",
+      "right_object": "SQLSever",
+      "right_text": "b）应保证存有敏感数据的存储空间被释放或重新分配前得到完全清除。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-34",
+      "field": "控制点",
+      "left_object": "MySQL",
+      "left_text": "剩余信息保护",
+      "right_object": "Oracle",
+      "right_text": "个人信息保护"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-34",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "b）应保证存有敏感数据的存储空间被释放或重新分配前得到完全清除。",
+      "right_object": "Oracle",
+      "right_text": "a）应仅采集和保存业务必需的用户个人信息；"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-34",
+      "field": "控制点",
+      "left_object": "MySQL",
+      "left_text": "剩余信息保护",
+      "right_object": "SQLSever",
+      "right_text": "个人信息保护"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-34",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "b）应保证存有敏感数据的存储空间被释放或重新分配前得到完全清除。",
+      "right_object": "SQLSever",
+      "right_text": "a）应仅采集和保存业务必需的用户个人信息："
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-35",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）应仅采集和保存业务必需的用户个人信息：",
+      "right_object": "Oracle",
+      "right_text": "b）应禁止未授权访问和非法使用用户个人信息。"
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "unit_no": "L4-CES1-35",
+      "field": "测评项",
+      "left_object": "MySQL",
+      "left_text": "a）应仅采集和保存业务必需的用户个人信息：",
+      "right_object": "SQLSever",
+      "right_text": "b）应禁止未授权访问和非法使用用户个人信息。"
+    },
+    {
+      "domain": "network",
+      "level": 4,
+      "unit_no": "L4-CES1-12",
+      "field": "控制点",
+      "left_object": "H3C",
+      "left_text": "安全审计",
+      "right_object": "中兴ZTE",
+      "right_text": "访问控制"
+    },
+    {
+      "domain": "network",
+      "level": 4,
+      "unit_no": "L4-CES1-13",
+      "field": "控制点",
+      "left_object": "H3C",
+      "left_text": "安全审计",
+      "right_object": "中兴ZTE",
+      "right_text": "访问控制"
+    },
+    {
+      "domain": "network",
+      "level": 4,
+      "unit_no": "L4-CES1-13",
+      "field": "测评项",
+      "left_object": "H3C",
+      "left_text": "b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息；",
+      "right_object": "安全设备（通用模板）",
+      "right_text": "b)审计记录应包括事件的日期和时间、事件类型、主体标识、客体标识和结果等"
+    },
+    {
+      "domain": "network",
+      "level": 4,
+      "unit_no": "L4-CES1-14",
+      "field": "控制点",
+      "left_object": "H3C",
+      "left_text": "安全审计",
+      "right_object": "中兴ZTE",
+      "right_text": "访问控制"
+    },
+    {
+      "domain": "network",
+      "level": 4,
+      "unit_no": "L4-CES1-15",
+      "field": "控制点",
+      "left_object": "H3C",
+      "left_text": "安全审计",
+      "right_object": "中兴ZTE",
+      "right_text": "访问控制"
+    },
+    {
+      "domain": "network",
+      "level": 4,
+      "unit_no": "L4-CES1-22",
+      "field": "测评项",
+      "left_object": "H3C",
+      "left_text": "a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。",
+      "right_object": "安全设备（通用模板）",
+      "right_text": "a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的所有执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心，并进行动态关联感知。"
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "unit_no": "L2-CES1-09",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息：",
+      "right_object": "Ubuntu（Debian）",
+      "right_text": "b）审计记录应包括事件的日期和时间、用户、事件类型、主体标识、客体标识和结果等；"
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "unit_no": "L2-CES1-16",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "a）应安装防恶意代码软件或配置具有相应功能的软件，并定期进行升级和更新防恶意代码库。",
+      "right_object": "Solaris",
+      "right_text": "a）应采用免受恶意代码攻击的技术措施或主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。"
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "unit_no": "L2-CES1-17",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在应用程序的关键执行环节进行动态可信验证，在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。",
+      "right_object": "Linux",
+      "right_text": "a）可基于可信根对计算设备的系统引导程序、系统程序、重要配置参数和应用程序等进行可信验证，并在检测到其可信性受到破坏后进行报警，并将验证结果形成审计记录送至安全管理中心。"
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "unit_no": "L2-CES1-18",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "a）应采用校验技术保证重要数据在传输过程中的完整性。",
+      "right_object": "ESXI",
+      "right_text": "a）应采用校验技术重要数据在传输过程中的完整性。"
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "unit_no": "L2-CES1-18",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "a）应采用校验技术保证重要数据在传输过程中的完整性。",
+      "right_object": "Solaris",
+      "right_text": "a）应采用校验技术或密码技术保证重要数据在传输过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等。"
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "unit_no": "L2-CES1-18",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "a）应采用校验技术保证重要数据在传输过程中的完整性。",
+      "right_object": "Ubuntu（Debian）",
+      "right_text": "a）应采用校验技术重要数据在传输过程中的完整性。"
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "unit_no": "L2-CES1-20",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "b）应提供异地实时备份功能，利用通信网络将重要数据定时批量传送至备份场地。",
+      "right_object": "Linux",
+      "right_text": "b）应提供异地备份功能，利用通信网络将重要数据定时批量传输至备份场地；"
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "unit_no": "L2-CES1-20",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "b）应提供异地实时备份功能，利用通信网络将重要数据定时批量传送至备份场地。",
+      "right_object": "AIX",
+      "right_text": "b）应提供异地数据备份功能，利用通信网络将重要数据定时批量传送至备用场地。"
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "unit_no": "L2-CES1-20",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "b）应提供异地实时备份功能，利用通信网络将重要数据定时批量传送至备份场地。",
+      "right_object": "ESXI",
+      "right_text": "b）应提供异地实时备份功能，利用通信网络将重要数据定时批量备份至备份场地。"
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "unit_no": "L2-CES1-20",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "b）应提供异地实时备份功能，利用通信网络将重要数据定时批量传送至备份场地。",
+      "right_object": "Solaris",
+      "right_text": "b）应提供异地实时备份功能，利用通信网络将重要数据定时批量备份至备份场地。"
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "unit_no": "L2-CES1-20",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "b）应提供异地实时备份功能，利用通信网络将重要数据定时批量传送至备份场地。",
+      "right_object": "Ubuntu（Debian）",
+      "right_text": "b）应提供异地备份功能，利用通信网络将重要数据定时批量传输至备份场地；"
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "unit_no": "L3-CES1-13",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "b）审计记录应包括事件的日期和时间、用户、事件类型、事件是否成功及其他与审计相关的信息：",
+      "right_object": "Ubuntu（Debian）",
+      "right_text": "b）审计记录应包括事件的日期和时间、用户、事件类型、主体标识、客体标识和结果等；"
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "unit_no": "L3-CES1-26",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "b）应采用校验技术或密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等。",
+      "right_object": "Ubuntu（Debian）",
+      "right_text": "b）应采用密码技术保证重要数据在存储过程中的完整性，包括但不限于鉴别数据、重要业务数据、重要审计数据、重要配置数据、重要视频数据和重要个人信息等。"
+    },
+    {
+      "domain": "os",
+      "level": 4,
+      "unit_no": "L4-CES1-11",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "g）应对主体、客体设置安全标记，并依据安全标记和强制访问控制规则确定主体对客体的访问。",
+      "right_object": "Linux",
+      "right_text": "g）应对重要主体、客体设置安全标记，并依据安全标记和强制访问控制规则确定主体对客体的访问。"
+    },
+    {
+      "domain": "os",
+      "level": 4,
+      "unit_no": "L4-CES1-11",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "g）应对主体、客体设置安全标记，并依据安全标记和强制访问控制规则确定主体对客体的访问。",
+      "right_object": "AIX",
+      "right_text": "g）应对主体、设置安全标记，并依据安全标记和强制访问控制规则确定主体对客体的访问。"
+    },
+    {
+      "domain": "os",
+      "level": 4,
+      "unit_no": "L4-CES1-11",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "g）应对主体、客体设置安全标记，并依据安全标记和强制访问控制规则确定主体对客体的访问。",
+      "right_object": "ESXI",
+      "right_text": "g）应对主体、设置安全标记，并依据安全标记和强制访问控制规则确定主体对客体的访问。"
+    },
+    {
+      "domain": "os",
+      "level": 4,
+      "unit_no": "L4-CES1-11",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "g）应对主体、客体设置安全标记，并依据安全标记和强制访问控制规则确定主体对客体的访问。",
+      "right_object": "Solaris",
+      "right_text": "g）应对主体和客体设置安全标记，并控制主体对有安全标记信息资源的访问。"
+    },
+    {
+      "domain": "os",
+      "level": 4,
+      "unit_no": "L4-CES1-11",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "g）应对主体、客体设置安全标记，并依据安全标记和强制访问控制规则确定主体对客体的访问。",
+      "right_object": "Ubuntu（Debian）",
+      "right_text": "g）应对重要主体、客体设置安全标记，并依据安全标记和强制访问控制规则确定主体对客体的访问。"
+    },
+    {
+      "domain": "os",
+      "level": 4,
+      "unit_no": "L4-CES1-13",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "b）审计记录应包括事件的日期和时间、事件类型、主体标识、客体标识和结果等；",
+      "right_object": "Linux",
+      "right_text": "b）审计记录应包括事件的日期和时间、用户、事件类型、主体标识、客体标识和结果等；"
+    },
+    {
+      "domain": "os",
+      "level": 4,
+      "unit_no": "L4-CES1-13",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "b）审计记录应包括事件的日期和时间、事件类型、主体标识、客体标识和结果等；",
+      "right_object": "Ubuntu（Debian）",
+      "right_text": "b）审计记录应包括事件的日期和时间、用户、事件类型、主体标识、客体标识和结果等；"
+    },
+    {
+      "domain": "os",
+      "level": 4,
+      "unit_no": "L4-CES1-22",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "a）应采用主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。",
+      "right_object": "Linux",
+      "right_text": "a）应采主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。"
+    },
+    {
+      "domain": "os",
+      "level": 4,
+      "unit_no": "L4-CES1-22",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "a）应采用主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。",
+      "right_object": "Solaris",
+      "right_text": "a）应采主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。"
+    },
+    {
+      "domain": "os",
+      "level": 4,
+      "unit_no": "L4-CES1-22",
+      "field": "测评项",
+      "left_object": "Windows",
+      "left_text": "a）应采用主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。",
+      "right_object": "Ubuntu（Debian）",
+      "right_text": "a）应采主动免疫可信验证机制及时识别入侵和病毒行为，并将其有效阻断。"
+    }
+  ],
+  "fill_rates": {
+    "database": {
+      "operation_guide": 1.0,
+      "result_pass": 0.9314,
+      "result_partial": 0.444,
+      "result_fail": 0.9314,
+      "result_na": 0.3285,
+      "problem": 0.9567,
+      "threat": 0.9314,
+      "harm": 0.935,
+      "high_risk_case": 1.0,
+      "major_risk": 1.0,
+      "risk_value": 0.9025,
+      "remediation": 0.935
+    },
+    "network": {
+      "operation_guide": 1.0,
+      "result_pass": 0.6932,
+      "result_partial": 0.3455,
+      "result_fail": 0.7273,
+      "result_na": 0.3932,
+      "problem": 1.0,
+      "threat": 0.7273,
+      "harm": 0.8977,
+      "high_risk_case": 1.0,
+      "major_risk": 1.0,
+      "risk_value": 0.7273,
+      "remediation": 0.8977
+    },
+    "os": {
+      "operation_guide": 1.0,
+      "result_pass": 0.8315,
+      "result_partial": 0.4267,
+      "result_fail": 0.8681,
+      "result_na": 0.2381,
+      "problem": 0.9139,
+      "threat": 0.8645,
+      "harm": 0.9634,
+      "high_risk_case": 1.0,
+      "major_risk": 1.0,
+      "risk_value": 0.8205,
+      "remediation": 0.9634
+    }
+  },
+  "themes": {
+    "database": {
+      "个人信息保护": 18,
+      "入侵防范": 51,
+      "剩余信息保护": 15,
+      "可信验证": 9,
+      "安全审计": 33,
+      "恶意代码防范": 7,
+      "数据保密性": 12,
+      "数据备份恢复": 27,
+      "数据完整性": 18,
+      "访问控制": 54,
+      "身份鉴别": 33
+    },
+    "network": {
+      "个人信息保护": 20,
+      "入侵防范": 85,
+      "剩余信息保护": 15,
+      "可信验证": 15,
+      "安全审计": 51,
+      "恶意代码防范": 10,
+      "数据保密性": 20,
+      "数据备份恢复": 45,
+      "数据完整性": 30,
+      "访问控制": 94,
+      "身份鉴别": 55
+    },
+    "os": {
+      "个人信息保护": 24,
+      "入侵防范": 102,
+      "剩余信息保护": 30,
+      "可信验证": 18,
+      "安全审计": 66,
+      "恶意代码防范": 18,
+      "数据保密性": 24,
+      "数据备份恢复": 54,
+      "数据完整性": 36,
+      "访问控制": 108,
+      "身份鉴别": 66
+    }
+  },
+  "field_stats": {
+    "database": {
+      "operation_guide": {
+        "empty": 0,
+        "not_applicable": 0
+      },
+      "result_pass": {
+        "empty": 0,
+        "not_applicable": 19
+      },
+      "result_partial": {
+        "empty": 0,
+        "not_applicable": 154
+      },
+      "result_fail": {
+        "empty": 0,
+        "not_applicable": 19
+      },
+      "result_na": {
+        "empty": 0,
+        "not_applicable": 186
+      },
+      "problem": {
+        "empty": 12,
+        "not_applicable": 0
+      },
+      "threat": {
+        "empty": 0,
+        "not_applicable": 19
+      },
+      "harm": {
+        "empty": 12,
+        "not_applicable": 6
+      },
+      "high_risk_case": {
+        "empty": 0,
+        "not_applicable": 0
+      },
+      "major_risk": {
+        "empty": 0,
+        "not_applicable": 0
+      },
+      "risk_value": {
+        "empty": 0,
+        "not_applicable": 27
+      },
+      "remediation": {
+        "empty": 12,
+        "not_applicable": 6
+      }
+    },
+    "network": {
+      "operation_guide": {
+        "empty": 0,
+        "not_applicable": 0
+      },
+      "result_pass": {
+        "empty": 0,
+        "not_applicable": 135
+      },
+      "result_partial": {
+        "empty": 0,
+        "not_applicable": 288
+      },
+      "result_fail": {
+        "empty": 0,
+        "not_applicable": 120
+      },
+      "result_na": {
+        "empty": 0,
+        "not_applicable": 267
+      },
+      "problem": {
+        "empty": 0,
+        "not_applicable": 0
+      },
+      "threat": {
+        "empty": 0,
+        "not_applicable": 120
+      },
+      "harm": {
+        "empty": 0,
+        "not_applicable": 45
+      },
+      "high_risk_case": {
+        "empty": 0,
+        "not_applicable": 0
+      },
+      "major_risk": {
+        "empty": 0,
+        "not_applicable": 0
+      },
+      "risk_value": {
+        "empty": 0,
+        "not_applicable": 120
+      },
+      "remediation": {
+        "empty": 0,
+        "not_applicable": 45
+      }
+    },
+    "os": {
+      "operation_guide": {
+        "empty": 0,
+        "not_applicable": 0
+      },
+      "result_pass": {
+        "empty": 0,
+        "not_applicable": 92
+      },
+      "result_partial": {
+        "empty": 0,
+        "not_applicable": 313
+      },
+      "result_fail": {
+        "empty": 0,
+        "not_applicable": 72
+      },
+      "result_na": {
+        "empty": 0,
+        "not_applicable": 416
+      },
+      "problem": {
+        "empty": 47,
+        "not_applicable": 0
+      },
+      "threat": {
+        "empty": 0,
+        "not_applicable": 74
+      },
+      "harm": {
+        "empty": 0,
+        "not_applicable": 20
+      },
+      "high_risk_case": {
+        "empty": 0,
+        "not_applicable": 0
+      },
+      "major_risk": {
+        "empty": 0,
+        "not_applicable": 0
+      },
+      "risk_value": {
+        "empty": 0,
+        "not_applicable": 98
+      },
+      "remediation": {
+        "empty": 0,
+        "not_applicable": 20
+      }
+    }
+  },
+  "empty_records": [
+    {
+      "domain": "database",
+      "level": 2,
+      "object": "MySQL",
+      "unit_no": "L2-CES1-11",
+      "fields": [
+        "问题描述（不符合情形）",
+        "危害分析",
+        "整改建议"
+      ]
+    },
+    {
+      "domain": "database",
+      "level": 2,
+      "object": "MySQL",
+      "unit_no": "L2-CES1-12",
+      "fields": [
+        "问题描述（不符合情形）",
+        "危害分析",
+        "整改建议"
+      ]
+    },
+    {
+      "domain": "database",
+      "level": 2,
+      "object": "MySQL",
+      "unit_no": "L2-CES1-14",
+      "fields": [
+        "问题描述（不符合情形）",
+        "危害分析",
+        "整改建议"
+      ]
+    },
+    {
+      "domain": "database",
+      "level": 3,
+      "object": "MySQL",
+      "unit_no": "L3-CES1-17",
+      "fields": [
+        "问题描述（不符合情形）",
+        "危害分析",
+        "整改建议"
+      ]
+    },
+    {
+      "domain": "database",
+      "level": 3,
+      "object": "MySQL",
+      "unit_no": "L3-CES1-18",
+      "fields": [
+        "问题描述（不符合情形）",
+        "危害分析",
+        "整改建议"
+      ]
+    },
+    {
+      "domain": "database",
+      "level": 3,
+      "object": "MySQL",
+      "unit_no": "L3-CES1-20",
+      "fields": [
+        "问题描述（不符合情形）",
+        "危害分析",
+        "整改建议"
+      ]
+    },
+    {
+      "domain": "database",
+      "level": 3,
+      "object": "MySQL",
+      "unit_no": "L3-CES1-22",
+      "fields": [
+        "问题描述（不符合情形）",
+        "危害分析",
+        "整改建议"
+      ]
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "object": "MySQL",
+      "unit_no": "L4-CES1-16",
+      "fields": [
+        "问题描述（不符合情形）",
+        "危害分析",
+        "整改建议"
+      ]
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "object": "MySQL",
+      "unit_no": "L4-CES1-17",
+      "fields": [
+        "问题描述（不符合情形）",
+        "危害分析",
+        "整改建议"
+      ]
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "object": "MySQL",
+      "unit_no": "L4-CES1-19",
+      "fields": [
+        "问题描述（不符合情形）",
+        "危害分析",
+        "整改建议"
+      ]
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "object": "MySQL",
+      "unit_no": "L4-CES1-21",
+      "fields": [
+        "问题描述（不符合情形）",
+        "危害分析",
+        "整改建议"
+      ]
+    },
+    {
+      "domain": "database",
+      "level": 4,
+      "object": "MySQL",
+      "unit_no": "L4-CES1-22",
+      "fields": [
+        "问题描述（不符合情形）",
+        "危害分析",
+        "整改建议"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-01",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-02",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-03",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-04",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-05",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-06",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-07",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-08",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-09",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-10",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-11",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-12",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-13",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-15",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-16",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-18",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-19",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-20",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 2,
+      "object": "Linux",
+      "unit_no": "L2-CES1-21",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-01",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-02",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-03",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-04",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-05",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-06",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-07",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-08",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-09",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-10",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-12",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-13",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-14",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-15",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-17",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-18",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-19",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-21",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-22",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-23",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-25",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-27",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-28",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-29",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-30",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-31",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-32",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    },
+    {
+      "domain": "os",
+      "level": 3,
+      "object": "Linux",
+      "unit_no": "L3-CES1-33",
+      "fields": [
+        "问题描述（不符合情形）"
+      ]
+    }
+  ]
+}
