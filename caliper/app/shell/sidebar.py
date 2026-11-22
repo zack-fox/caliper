@@ -18,15 +18,15 @@ from app.shell.navigation import NAV_STEPS, NavStep
 from app.theme.theme import restyle
 from app.theme.tokens import SIDEBAR_EXPANDED_WIDTH, SIDEBAR_WIDTH
 
-# 折叠态只显示单字占位，完整名称保留在 tooltip 中。
+# 折叠态显示两字缩写，完整名称保留在 tooltip 中。
 COMPACT_LABELS: dict[str, str] = {
-    "overview": "◎",
-    "evidence": "材",
-    "results": "查",
-    "issues": "问",
-    "risk": "险",
-    "export": "导",
-    "rules": "规",
+    "overview": "概览",
+    "evidence": "材料",
+    "results": "核查",
+    "issues": "问题",
+    "risk": "风险",
+    "export": "导出",
+    "rules": "规则",
 }
 
 

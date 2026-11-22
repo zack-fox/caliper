@@ -98,6 +98,10 @@ class EvidenceScreen(QWidget):
         refresh_button.setObjectName("subtle")
         refresh_button.clicked.connect(self.refresh)
         self.header.add_action(refresh_button)
+        self.remove_remediation_button = QPushButton("删除整改材料")
+        self.remove_remediation_button.setObjectName("subtle")
+        self.remove_remediation_button.clicked.connect(self._remove_remediation)
+        self.header.add_action(self.remove_remediation_button)
         layout.addWidget(self.header)
 
         # ---- 双栏主体 ----
@@ -592,6 +596,38 @@ class EvidenceScreen(QWidget):
         self.assets_changed.emit()
         if failed:
             QMessageBox.warning(self, "部分整改材料未上传", "\n".join(failed))
+
+    def _remove_remediation(self) -> None:
+        asset = self._current_asset()
+        if asset is None:
+            QMessageBox.information(self, "提示", "请先在资产表选择设备")
+            return
+        files = self.controller.remediation_files(asset)
+        if not files:
+            QMessageBox.information(self, "提示", "该设备暂无整改材料")
+            return
+        labels = [path.name for path in files]
+        choice, accepted = QInputDialog.getItem(
+            self, "删除整改材料", f"{asset.device_name} 的整改材料", labels, 0, False
+        )
+        if not accepted:
+            return
+        if (
+            QMessageBox.question(
+                self,
+                "确认删除",
+                f"确定删除整改材料「{choice}」？该操作不可撤销。",
+            )
+            != QMessageBox.Yes
+        ):
+            return
+        try:
+            self.controller.detach_remediation(asset.device_name, choice)
+        except ControllerError as exc:
+            QMessageBox.warning(self, "删除失败", str(exc))
+            return
+        self.refresh()
+        self.assets_changed.emit()
 
     def _add_asset(
         self,

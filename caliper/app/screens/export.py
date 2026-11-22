@@ -92,6 +92,7 @@ class ExportScreen(QWidget):
         self.result_card = result_card
         self.issue_card = issue_card
         self.major_card = major_card
+        self.asset_card = asset_card
         self._cards_host = QWidget()
         cards_layout = QVBoxLayout(self._cards_host)
         cards_layout.setContentsMargins(0, 0, 0, 0)
@@ -145,10 +146,18 @@ class ExportScreen(QWidget):
         card.add(hint)
         card.hint_label = hint
         card.hint_desc = desc
+        card.target_label = QLabel("尚未导出")
+        card.target_label.setObjectName("muted")
+        card.target_label.setWordWrap(True)
+        card.add(card.target_label)
         button = QPushButton(button_text)
         button.clicked.connect(handler)
         card.add_action(button)
         return card
+
+    def _set_target(self, card: Card, target: Path) -> None:
+        card.target_label.setText(f"最近生成：{target.name}")
+        card.target_label.setToolTip(str(target))
 
     def _path_row(self, caption: str, field: QLineEdit, handler) -> QHBoxLayout:
         row = QHBoxLayout()
@@ -347,6 +356,7 @@ class ExportScreen(QWidget):
         self.log.append(f"[完成] {target}")
         self.log.append("[自检] 必填 / IP / 作业指导书 全部通过")
         self._mark(self.status_asset, "已完成", "ok")
+        self._set_target(self.asset_card, target)
 
     def _export_issue(self) -> None:
         if not self._apply_output():
@@ -363,6 +373,7 @@ class ExportScreen(QWidget):
         for problem in problems:
             self.log.append(f"[自检失败] {problem}")
         self._mark(self.status_issue, "已完成" if not problems else "有告警", "ok" if not problems else "warn")
+        self._set_target(self.issue_card, target)
 
     def _export_major(self) -> None:
         if not self._apply_output():
@@ -379,6 +390,7 @@ class ExportScreen(QWidget):
         for problem in problems:
             self.log.append(f"[自检失败] {problem}")
         self._mark(self.status_major, "已完成" if not problems else "有告警", "ok" if not problems else "warn")
+        self._set_target(self.major_card, target)
 
     def _export(self) -> None:
         if not self._apply_output():
@@ -390,6 +402,7 @@ class ExportScreen(QWidget):
             self._mark(self.status_result, "失败", "bad")
             return
         self.log.append(f"[完成] {target}")
+        self._set_target(self.result_card, target)
         if problems:
             for problem in problems:
                 self.log.append(f"[自检] {problem}")

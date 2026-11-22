@@ -130,6 +130,14 @@ QToolButton#nav:checked {
     border-left: 2px solid @primary@;
     padding-left: 10px;
 }
+QToolButton#nav[compact="true"] {
+    padding: 9px 0;
+    text-align: center;
+    font-size: 12px;
+}
+QToolButton#nav[compact="true"]:checked {
+    padding-left: 0;
+}
 QFrame#sidebar_footer { background: @nav_alt@; border: none; border-radius: 8px; }
 QLabel#sidebar_footer_key { color: @nav_section@; font-size: 11px; background: transparent; }
 QLabel#sidebar_footer_value {

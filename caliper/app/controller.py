@@ -724,5 +724,25 @@ class AppController:
             grouped.setdefault(issue_no, []).append(path)
         return grouped
 
+    def detach_remediation(self, device_name: str, filename: str) -> None:
+        """删除单个整改材料；目录清空后清掉资产的整改包登记。"""
+        asset = self.project.asset_by_device(device_name)
+        if asset is None:
+            raise ControllerError(f"设备不存在：{device_name}")
+        for path in self.remediation_files(asset):
+            if path.name != filename:
+                continue
+            try:
+                path.unlink()
+            except OSError as exc:
+                raise ControllerError(f"删除整改材料失败：{exc}") from exc
+            if not self.remediation_files(asset):
+                self.update_asset(
+                    device_name,
+                    asset.model_copy(update={"remediation_package": None}),
+                )
+            return
+        raise ControllerError(f"整改材料不存在：{filename}")
+
     def expected_result_filename(self) -> str:
         return RESULT_FILENAME

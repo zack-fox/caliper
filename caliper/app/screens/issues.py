@@ -155,6 +155,7 @@ class IssuesScreen(QWidget):
         header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         header.setSectionResizeMode(QHeaderView.Interactive)
         header.setSectionResizeMode(5, QHeaderView.Stretch)
+        header.setMinimumSectionSize(64)
         for column, width in (
             (0, 52),
             (1, 64),

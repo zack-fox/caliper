@@ -8,12 +8,13 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest  # noqa: E402
 from PySide6.QtCore import QCoreApplication, QEvent  # noqa: E402
-from PySide6.QtWidgets import QApplication, QPushButton  # noqa: E402
+from PySide6.QtWidgets import QApplication, QMessageBox, QPushButton  # noqa: E402
 
 from app.controller import AppController, ControllerError  # noqa: E402
 from app.screens.dialogs import RecordPreviewDialog  # noqa: E402
 from app.screens.issues import PREVIEW_COLUMNS, IssuesScreen  # noqa: E402
 from app.screens.results import ResultsScreen  # noqa: E402
+from app.screens.risk import RiskScreen  # noqa: E402
 from app.widgets import ComplianceBadge  # noqa: E402
 from core.contracts.enums import AssetType, Importance  # noqa: E402
 from core.contracts.verdict import Verdict  # noqa: E402
@@ -203,6 +204,25 @@ def test_issue_detail_lists_linked_remediation(qapp, tmp_path):
     text = screen.detail.text()
     assert "关联整改材料" in text
     assert "整改说明.md" in text
+    screen.close()
+
+
+def test_risk_batch_confirm_selected_rows(qapp, tmp_path, monkeypatch):
+    controller, _asset = _controller_with_run(tmp_path)
+    screen = RiskScreen(controller)
+    if not screen._rows:
+        pytest.skip("当前证据没有高风险候选")
+
+    monkeypatch.setattr(
+        QMessageBox, "question", lambda *args, **kwargs: QMessageBox.Yes
+    )
+    screen.table.selectAll()
+    screen._batch_confirm(True)
+    assert any(review.confirmed for _issue, review in screen._rows)
+
+    screen.table.selectAll()
+    screen._batch_confirm(False)
+    assert all(not review.confirmed for _issue, review in screen._rows)
     screen.close()
 
 

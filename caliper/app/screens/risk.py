@@ -80,12 +80,22 @@ class RiskScreen(QWidget):
         self.table.setShowGrid(False)
         self.table.verticalHeader().setVisible(False)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.table.setSelectionMode(QTableWidget.SingleSelection)
+        self.table.setSelectionMode(QTableWidget.ExtendedSelection)
+        self.table.itemSelectionChanged.connect(self._on_selection_changed)
         header = self.table.horizontalHeader()
         header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         header.setSectionResizeMode(QHeaderView.Interactive)
-        header.setSectionResizeMode(3, QHeaderView.Stretch)
-        for column, width in ((0, 62), (1, 74), (2, 110), (4, 220), (5, 190), (6, 130), (7, 150)):
+        header.setMinimumSectionSize(56)
+        for column, width in (
+            (0, 56),
+            (1, 64),
+            (2, 88),
+            (3, 170),
+            (4, 120),
+            (5, 160),
+            (6, 110),
+            (7, 100),
+        ):
             self.table.setColumnWidth(column, width)
 
         self.empty = EmptyState(
@@ -96,6 +106,22 @@ class RiskScreen(QWidget):
         self.stack.addWidget(self.table)
         self.stack.addWidget(self.empty)
         table_card.add(self.stack, 1)
+
+        batch_row = QHBoxLayout()
+        batch_row.setSpacing(6)
+        batch_hint = QLabel("多选后可批量处理：")
+        batch_hint.setObjectName("muted")
+        batch_row.addWidget(batch_hint)
+        self.batch_confirm_button = QPushButton("确认选中")
+        self.batch_confirm_button.setObjectName("subtle")
+        self.batch_confirm_button.clicked.connect(lambda: self._batch_confirm(True))
+        self.batch_undo_button = QPushButton("撤销选中")
+        self.batch_undo_button.setObjectName("subtle")
+        self.batch_undo_button.clicked.connect(lambda: self._batch_confirm(False))
+        batch_row.addWidget(self.batch_confirm_button)
+        batch_row.addWidget(self.batch_undo_button)
+        batch_row.addStretch(1)
+        table_card.body.addLayout(batch_row)
 
         self.count = QLabel("尚未生成核查结果")
         self.count.setObjectName("muted")
@@ -249,7 +275,6 @@ class RiskScreen(QWidget):
             f"共 {high} 条高风险候选，其中 {major} 条达到重大隐患阈值，"
             f"{confirmed} 条已确认有效"
         )
-        self.table.itemSelectionChanged.connect(self._on_selection_changed)
 
     def _set_stats(self, high: int, major: int, confirmed: int) -> None:
         self.stat_high.set_value(str(high))
@@ -359,6 +384,46 @@ class RiskScreen(QWidget):
         self.confirm_button.setText("撤销确认" if review.confirmed else "确认重大隐患")
         self._current_review = review
         self._current_issue = issue
+
+    def _batch_confirm(self, confirmed: bool) -> None:
+        selected = sorted(
+            index.row() for index in self.table.selectionModel().selectedRows()
+        )
+        targets = [
+            self._rows[row]
+            for row in selected
+            if 0 <= row < len(self._rows)
+            and self._rows[row][0] is not None
+            and self._rows[row][1].confirmed != confirmed
+        ]
+        if not targets:
+            QMessageBox.information(
+                self,
+                "没有可处理项",
+                "请先多选候选；已处于目标状态的行会被跳过。",
+            )
+            return
+        action = "确认" if confirmed else "撤销"
+        if (
+            QMessageBox.question(
+                self,
+                f"批量{action}",
+                f"确定对选中的 {len(targets)} 条候选执行「{action}」？",
+            )
+            != QMessageBox.Yes
+        ):
+            return
+        failed = []
+        for issue, _review in targets:
+            try:
+                self.controller.set_major_confirmed(
+                    issue.item_id, issue.asset_type, confirmed
+                )
+            except ControllerError as exc:
+                failed.append(str(exc))
+        self.refresh()
+        if failed:
+            QMessageBox.warning(self, "部分候选未处理", "\n".join(failed))
 
     def _confirm_selected(self) -> None:
         if not getattr(self, "_current_review", None) or not getattr(self, "_current_issue", None):
