@@ -199,6 +199,43 @@ def test_vendor_level3_end_to_end(tmp_path, vendor, case, package) -> None:
     assert run.item_by_seq(7).verdict is Verdict.UNCOLLECTED
 
 
+@pytest.mark.parametrize("level", [2, 4])
+@pytest.mark.parametrize(
+    ("vendor", "case", "package", "adapter"),
+    [
+        ("H3C", "network_h3c_l3", "pkg-h3c", "h3c"),
+        ("HUAWEI", "network_huawei_l3", "pkg-huawei", "huawei"),
+        ("Cisco", "network_cisco_l3", "pkg-cisco", "cisco"),
+        ("中兴ZTE", "network_zte_l3", "pkg-zte", "zte"),
+    ],
+)
+def test_vendor_level2_and_level4_end_to_end(
+    tmp_path, level: int, vendor: str, case: str, package: str, adapter: str
+) -> None:
+    pack = load_pack(PACK_DIR)
+    project = _project(tmp_path, vendor, package, level, case)
+    run = run_project(project, pack).asset_runs[0]
+
+    assert run.adapter == adapter
+    assert len(run.items) == {2: 23, 4: 31}[level]
+    assert not any("未映射" in line for line in run.diagnostics), run.diagnostics
+    items = {item.seq: item for item in pack.items_for_level(level)}
+    for item in run.items:
+        if items[item.seq].mode != "auto":
+            continue
+        for point in item.points:
+            if point.manual:
+                continue
+            assert point.passed is True, (
+                vendor,
+                level,
+                item.seq,
+                point.point,
+                point.reason,
+            )
+    assert run.item_by_seq(2).verdict is Verdict.COMPLIANT
+
+
 def test_vendor_cannot_consume_other_vendor_evidence(tmp_path) -> None:
     pack = load_pack(PACK_DIR)
     project = _project(tmp_path, "HUAWEI", "pkg-h3c", 3, "network_h3c_l3")
