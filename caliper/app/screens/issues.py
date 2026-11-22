@@ -440,6 +440,22 @@ class IssuesScreen(QWidget):
             f"{html.escape(value or '—')}</p>"
             for name, value in fields
         )
+        related = issue.values.get("关联资产", "")
+        materials = [
+            path.name.split("__", 1)[-1]
+            for asset in self.controller.project.assets
+            if asset.device_name and asset.device_name in related
+            for path in self.controller.remediation_by_issue(asset).get(issue.issue_no, [])
+        ]
+        material_text = (
+            "、".join(materials)
+            if materials
+            else "暂无关联整改材料，可在「材料与资产」页选中该设备后上传"
+        )
+        body += (
+            f"<p style='margin:0 0 8px 0'><b>关联整改材料</b><br/>"
+            f"{html.escape(material_text)}</p>"
+        )
         if review is None:
             risk = "无高风险命中"
         elif review.confirmed:

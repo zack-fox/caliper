@@ -552,6 +552,25 @@ class EvidenceScreen(QWidget):
                 self, "提示", "请先在资产表选择设备，再上传该设备的整改材料"
             )
             return
+        none_label = "不关联具体问题"
+        issue_nos = sorted(
+            {
+                issue.issue_no
+                for issue in self.controller.issue_rows()
+                if asset.device_name in issue.values.get("关联资产", "")
+            }
+        )
+        choice, accepted = QInputDialog.getItem(
+            self,
+            "关联问题",
+            f"{asset.device_name} 的整改材料对应哪个问题编号？",
+            [none_label] + issue_nos,
+            0,
+            False,
+        )
+        if not accepted:
+            return
+        issue_no = "" if choice == none_label else choice
         start = str(self.controller.evidence_root_path())
         paths, _ = QFileDialog.getOpenFileNames(
             self,
@@ -564,7 +583,9 @@ class EvidenceScreen(QWidget):
         failed: list[str] = []
         for path in paths:
             try:
-                self.controller.attach_remediation(asset.device_name, Path(path))
+                self.controller.attach_remediation(
+                    asset.device_name, Path(path), issue_no
+                )
             except ControllerError as exc:
                 failed.append(f"{Path(path).name}：{exc}")
         self.refresh()

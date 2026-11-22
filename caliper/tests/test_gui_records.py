@@ -184,6 +184,28 @@ def test_issues_remediation_view_keeps_detail(qapp, tmp_path):
     screen.close()
 
 
+def test_issue_detail_lists_linked_remediation(qapp, tmp_path):
+    controller, asset = _controller_with_run(tmp_path)
+    issue = next(
+        row
+        for row in controller.issue_rows()
+        if row.values["关联资产"] == asset.device_name
+    )
+    source = tmp_path / "整改说明.md"
+    source.write_text("已整改", encoding="utf-8")
+    controller.project = controller.project.model_copy(
+        update={"assets": [asset], "evidence_root": tmp_path / "evidence"}
+    )
+    controller.attach_remediation(asset.device_name, source, issue.issue_no)
+
+    screen = IssuesScreen(controller)
+    screen._show_detail(issue)
+    text = screen.detail.text()
+    assert "关联整改材料" in text
+    assert "整改说明.md" in text
+    screen.close()
+
+
 def _controller_with_domains(tmp_path):
     """服务器 + 数据库两台资产，用于领域页签、筛选与检查器回归。"""
     controller = AppController()

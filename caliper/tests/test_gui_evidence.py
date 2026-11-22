@@ -260,3 +260,24 @@ def test_upload_remediation_copies_and_marks_asset(qapp, tmp_path):
     screen = _screen(controller)
     assert "整改 2 份" in screen.table.item(0, EVIDENCE_COLUMN).text()
     screen.close()
+
+
+def test_remediation_can_link_to_issue_number(qapp, tmp_path):
+    controller = AppController()
+    controller.project = controller.project.model_copy(
+        update={"evidence_root": tmp_path / "evidence"}
+    )
+    controller.add_asset(_asset(device_name="整改设备"))
+    source = tmp_path / "整改说明.md"
+    source.write_text("已整改", encoding="utf-8")
+
+    controller.attach_remediation("整改设备", source, "T001")
+
+    asset = controller.project.asset_by_device("整改设备")
+    assert asset is not None
+    grouped = controller.remediation_by_issue(asset)
+    assert [path.name for path in grouped["T001"]] == ["T001__整改说明.md"]
+    assert grouped.get("") is None
+    screen = _screen(controller)
+    assert "整改 1 份" in screen.table.item(0, EVIDENCE_COLUMN).text()
+    screen.close()

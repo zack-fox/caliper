@@ -670,8 +670,13 @@ class AppController:
         assets = [asset for asset in self.project.assets if asset.device_name != device_name]
         self.project = self.project.model_copy(update={"assets": assets})
 
-    def attach_remediation(self, device_name: str, source: Path) -> Path:
-        """把整改材料复制到证据根目录 remediation/<设备名>/，并登记到资产。"""
+    def attach_remediation(
+        self, device_name: str, source: Path, issue_no: str = ""
+    ) -> Path:
+        """把整改材料复制到证据根目录 remediation/<设备名>/，并登记到资产。
+
+        指定 issue_no 时文件名加 `<问题编号>__` 前缀，便于问题详情追溯。
+        """
         asset = self.project.asset_by_device(device_name)
         if asset is None:
             raise ControllerError(f"设备不存在：{device_name}")
@@ -682,10 +687,13 @@ class AppController:
         )
         folder.mkdir(parents=True, exist_ok=True)
         source = Path(source)
-        target = folder / source.name
+        prefix = f"{issue_no.strip()}__" if issue_no.strip() else ""
+        if prefix and source.name.startswith(prefix):
+            prefix = ""
+        target = folder / f"{prefix}{source.name}"
         index = 1
         while target.exists():
-            target = folder / f"{source.stem}-{index}{source.suffix}"
+            target = folder / f"{prefix}{source.stem}-{index}{source.suffix}"
             index += 1
         try:
             shutil.copy2(source, target)
@@ -706,6 +714,15 @@ class AppController:
         if not folder.is_dir():
             return []
         return sorted(path for path in folder.iterdir() if path.is_file())
+
+    def remediation_by_issue(self, asset: Asset) -> dict[str, list[Path]]:
+        """按 `<问题编号>__` 前缀分组；无前缀归入空字符串（未关联问题）。"""
+        grouped: dict[str, list[Path]] = {}
+        for path in self.remediation_files(asset):
+            head, sep, _rest = path.name.partition("__")
+            issue_no = head if sep and head else ""
+            grouped.setdefault(issue_no, []).append(path)
+        return grouped
 
     def expected_result_filename(self) -> str:
         return RESULT_FILENAME
